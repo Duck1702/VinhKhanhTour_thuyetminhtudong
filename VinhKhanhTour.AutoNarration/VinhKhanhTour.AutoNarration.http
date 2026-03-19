@@ -1,0 +1,17 @@
+@VinhKhanhTour.AutoNarration_HostAddress = http://localhost:5292
+
+GET {{VinhKhanhTour.AutoNarration_HostAddress}}/api/locations
+Accept: application/json
+
+###
+
+POST {{VinhKhanhTour.AutoNarration_HostAddress}}/api/narrations
+Content-Type: application/json
+
+{
+	"locationId": "oc-tuoc-nuong",
+	"targetLanguage": "en",
+	"speakingRate": 1.0
+}
+
+###
