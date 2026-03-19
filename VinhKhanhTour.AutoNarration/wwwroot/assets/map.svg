@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="Minh họa bản đồ khám phá Vĩnh Khánh">
+  <rect width="640" height="420" rx="32" fill="#08111d"/>
+  <g opacity="0.85">
+    <rect x="64" y="52" width="512" height="316" rx="24" fill="#101c2d" stroke="#263751"/>
+    <path d="M110 90h420M110 150h340M110 210h250M110 270h370" stroke="#213149" stroke-width="8" stroke-linecap="round"/>
+    <path d="M170 80v250M260 80v250M350 80v250M440 80v250M510 80v250" stroke="#213149" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="220" cy="176" r="18" fill="#f7a046"/>
+    <circle cx="322" cy="234" r="18" fill="#7dd3fc"/>
+    <circle cx="438" cy="150" r="18" fill="#9f7aea"/>
+    <circle cx="492" cy="260" r="18" fill="#ffcf70"/>
+    <path d="M220 176L322 234L438 150L492 260" fill="none" stroke="#f5f7fb" stroke-width="4" stroke-dasharray="10 10"/>
+  </g>
+  <text x="320" y="390" text-anchor="middle" fill="#f5f7fb" font-family="Arial, sans-serif" font-size="22" font-weight="700">Gợi ý lộ trình trải nghiệm phố ẩm thực Vĩnh Khánh</text>
+</svg>

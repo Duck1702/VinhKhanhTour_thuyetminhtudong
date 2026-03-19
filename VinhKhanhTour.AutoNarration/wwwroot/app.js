@@ -12,6 +12,7 @@ const voiceName = document.getElementById('voiceName');
 const speakingRate = document.getElementById('speakingRate');
 
 let currentLocations = [];
+let narrationBusy = false;
 
 async function loadLocations() {
   const response = await fetch('/api/locations');
@@ -28,10 +29,20 @@ async function loadLocations() {
 function renderLocations(locations) {
   locationsGrid.innerHTML = locations.map((location, index) => `
     <article class="card" style="animation-delay:${index * 80}ms">
-      <span class="tag">${escapeHtml(location.category)}</span>
+      <div class="card-visual">
+        <img src="${getCardImage(location.id)}" alt="${escapeHtml(location.name)}" />
+      </div>
+      <div class="card-head">
+        <span class="tag">${escapeHtml(location.category)}</span>
+        <span class="pill">${escapeHtml(location.bestTime)}</span>
+      </div>
       <h3>${escapeHtml(location.name)}</h3>
+      <p>${escapeHtml(location.shortIntro)}</p>
       <p>${escapeHtml(location.descriptionVi)}</p>
-      <button class="button button-secondary" data-location-id="${escapeHtml(location.id)}">Dùng cho thuyết minh</button>
+      <div class="card-meta">
+        <span><strong>Điểm nhấn:</strong> ${escapeHtml(location.highlight)}</span>
+      </div>
+      <button class="button button-secondary" data-location-id="${escapeHtml(location.id)}">Tạo thuyết minh riêng</button>
     </article>
   `).join('');
 
@@ -50,9 +61,43 @@ function fillLocationSelect(locations) {
   `).join('');
 }
 
-narrationForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
+function getCardImage(locationId) {
+  const images = {
+    'com-tam-hoa-binh': '/assets/hero-night.svg',
+    'oc-tuoc-nuong': '/assets/street-food.svg',
+    'nuoc-mia-sau-rieng': '/assets/hero-night.svg',
+    'banh-trang-nuong-pho-dem': '/assets/street-food.svg',
+    'che-dem-vinh-khanh': '/assets/map.svg'
+  };
 
+  return images[locationId] ?? '/assets/map.svg';
+}
+
+function buildNarrationText(location) {
+  return `${location.name} thuộc nhóm ${location.category}. ${location.shortIntro} ${location.highlight}. ${location.descriptionVi}`;
+}
+
+async function createNarrationForLocation(location) {
+  if (narrationBusy) {
+    return;
+  }
+
+  narrationBusy = true;
+  locationSelect.value = location.id;
+  customText.value = buildNarrationText(location);
+  narrationForm.querySelector('button').disabled = true;
+  narrationForm.querySelector('button').textContent = 'Đang tạo...';
+
+  try {
+    await generateNarration();
+  } finally {
+    narrationBusy = false;
+    narrationForm.querySelector('button').disabled = false;
+    narrationForm.querySelector('button').textContent = 'Tạo thuyết minh';
+  }
+}
+
+async function generateNarration() {
   const selectedLocationId = locationSelect.value;
   const payload = {
     locationId: selectedLocationId,
@@ -62,33 +107,56 @@ narrationForm.addEventListener('submit', async (event) => {
     speakingRate: Number.parseFloat(speakingRate.value) || 1
   };
 
-  narrationForm.querySelector('button').disabled = true;
-  narrationForm.querySelector('button').textContent = 'Đang tạo...';
+  const response = await fetch('/api/narrations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
 
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || 'Tạo thuyết minh thất bại.');
+  }
+
+  narrationResult.classList.remove('hidden');
+  translatedText.textContent = result.translatedText;
+  usedVoice.textContent = result.voiceName;
+  audioPlayer.src = result.audioUrl;
+  audioLink.href = result.audioUrl;
+  audioLink.textContent = `Mở file audio: ${result.audioUrl}`;
+}
+
+narrationForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
   try {
-    const response = await fetch('/api/narrations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || 'Tạo thuyết minh thất bại.');
-    }
-
-    narrationResult.classList.remove('hidden');
-    translatedText.textContent = result.translatedText;
-    usedVoice.textContent = result.voiceName;
-    audioPlayer.src = result.audioUrl;
-    audioLink.href = result.audioUrl;
-    audioLink.textContent = `Mở file audio: ${result.audioUrl}`;
+    await generateNarration();
   } catch (error) {
     alert(error.message);
   } finally {
-    narrationForm.querySelector('button').disabled = false;
-    narrationForm.querySelector('button').textContent = 'Tạo thuyết minh';
+    if (!narrationBusy) {
+      narrationForm.querySelector('button').disabled = false;
+      narrationForm.querySelector('button').textContent = 'Tạo thuyết minh';
+    }
+  }
+});
+
+locationsGrid.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-location-id]');
+  if (!button) {
+    return;
+  }
+
+  const location = currentLocations.find(item => item.id === button.dataset.locationId);
+  if (!location) {
+    return;
+  }
+
+  try {
+    await createNarrationForLocation(location);
+    document.querySelector('#thuyet-minh').scrollIntoView({ behavior: 'smooth' });
+  } catch (error) {
+    alert(error.message);
   }
 });
 

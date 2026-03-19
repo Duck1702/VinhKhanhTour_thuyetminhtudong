@@ -5,9 +5,12 @@ Website giới thiệu phố ẩm thực Vĩnh Khánh kết hợp API thuyết m
 ## Điểm nổi bật
 
 - Trang chủ giới thiệu phố Vĩnh Khánh theo phong cách hiện đại.
+- Có thêm trang chi tiết `/about.html` để giới thiệu sâu hơn về khu phố.
 - Danh sách món và địa điểm mẫu được lấy từ API.
 - Tạo thuyết minh đa ngôn ngữ bằng Azure Translator và Azure Speech.
 - Audio MP3 được lưu trong `wwwroot/audio` và phát ngay trên trình duyệt.
+- Mỗi món có nút tạo thuyết minh riêng để bấm là chạy ngay.
+- Giao diện dùng ảnh minh họa SVG cục bộ trong `wwwroot/assets`.
 
 ## Chạy dự án
 
@@ -64,8 +67,15 @@ Trang chủ `/` có:
 
 - Hero giới thiệu dự án.
 - Phần giới thiệu khu phố.
+- Lộ trình gợi ý cho người xem.
 - Danh sách món đặc trưng.
 - Form tạo thuyết minh và phát audio.
+
+Trang chi tiết `/about.html` có:
+
+- Mô tả tổng quan về phố ẩm thực Vĩnh Khánh.
+- Gợi ý lộ trình trải nghiệm.
+- Hai khối hình minh họa để dùng trong thuyết trình hoặc demo.
 
 ## Mở rộng tiếp theo
 

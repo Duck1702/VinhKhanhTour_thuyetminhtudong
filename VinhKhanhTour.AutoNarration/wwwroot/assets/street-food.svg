@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-label="Minh họa món ốc nướng và đồ ăn đêm">
+  <rect width="640" height="420" rx="32" fill="#0b1422"/>
+  <circle cx="520" cy="90" r="80" fill="#f7a046" opacity="0.22"/>
+  <circle cx="120" cy="320" r="120" fill="#7dd3fc" opacity="0.12"/>
+  <g transform="translate(90,70)">
+    <rect x="0" y="210" width="460" height="50" rx="25" fill="#1b2840"/>
+    <ellipse cx="200" cy="150" rx="150" ry="70" fill="#f2c37f"/>
+    <ellipse cx="200" cy="145" rx="120" ry="50" fill="#d48c52"/>
+    <path d="M84 120c48-30 112-36 172-24 48 10 86 32 120 60-48 26-96 40-158 42-58 1-106-14-134-36z" fill="#8b4a29" opacity="0.9"/>
+    <circle cx="122" cy="132" r="12" fill="#ffdf8b"/>
+    <circle cx="176" cy="118" r="11" fill="#7dd3fc"/>
+    <circle cx="228" cy="126" r="14" fill="#9f7aea"/>
+    <circle cx="276" cy="120" r="12" fill="#f7a046"/>
+    <circle cx="320" cy="140" r="10" fill="#ffcf70"/>
+    <rect x="86" y="36" width="250" height="36" rx="18" fill="#f7a046"/>
+    <text x="210" y="61" text-anchor="middle" fill="#172033" font-family="Arial, sans-serif" font-size="18" font-weight="700">Ốc nướng mỡ hành</text>
+    <rect x="314" y="58" width="84" height="18" rx="9" fill="#7dd3fc"/>
+    <rect x="332" y="82" width="112" height="18" rx="9" fill="#9f7aea"/>
+  </g>
+</svg>
