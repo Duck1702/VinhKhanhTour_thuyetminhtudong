@@ -8,53 +8,63 @@ public sealed class InMemoryLocationContentService : ILocationContentService
     [
         new StreetLocation
         {
-            Id = "com-tam-hoa-binh",
-            Name = "Cơm tấm Hòa Bình",
-            Category = "Món chính",
-            ShortIntro = "Món ăn no bụng, hợp làm điểm mở đầu cho hành trình ăn tối.",
-            BestTime = "18:00 - 21:00",
-            Highlight = "Sườn nướng thơm và chả trứng đậm vị",
-            DescriptionVi = "Cơm tấm tại Vĩnh Khánh nổi bật với sườn nướng thơm, bì mềm và chả trứng đậm vị. Đây là lựa chọn phù hợp cho du khách muốn ăn tối nhanh nhưng vẫn đậm chất Sài Gòn."
+            Id = "oc-oanh",
+            Name = "Ốc Oanh",
+            Category = "Ốc / hải sản",
+            Address = "534 Vĩnh Khánh, Khánh Hội Ward",
+            OpeningHours = "13:00 - 00:00",
+            ShortIntro = "Điểm dừng nổi tiếng nhất của Vĩnh Khánh, phù hợp để mở đầu hành trình ăn đêm.",
+            BestTime = "Sau 18:00",
+            Highlight = "Cua rang muối, tôm nướng, ốc sốt cay",
+            DescriptionVi = "Ốc Oanh là điểm đến quen thuộc của nhiều thực khách trên phố ẩm thực Vĩnh Khánh. Quán nổi bật với cua rang muối, tôm nướng và các món ốc đậm vị, không gian luôn nhộn nhịp vào buổi tối."
         },
         new StreetLocation
         {
-            Id = "oc-tuoc-nuong",
-            Name = "Ốc và bạch tuộc nướng",
-            Category = "Hải sản",
-            ShortIntro = "Món đặc trưng nhất của phố ăn đêm, nhiều hương vị và rất náo nhiệt.",
+            Id = "oc-vu",
+            Name = "Ốc Vũ",
+            Category = "Ốc / hải sản",
+            Address = "37 Vĩnh Khánh, Khánh Hội Ward",
+            OpeningHours = "12:00 - 06:00 & 12:00 - 00:00 (trừ thứ Sáu 12:00 - 00:00)",
+            ShortIntro = "Quán được nhiều người ghé khi muốn ăn khuya và thử cách chế biến giữ trọn độ tươi.",
+            BestTime = "Từ 20:00 đến khuya",
+            Highlight = "Sò điệp nướng trứng, ốc tỏi nướng muối ớt, càng cua rang muối",
+            DescriptionVi = "Ốc Vũ nổi tiếng với cách chế biến giữ được độ tươi của nguyên liệu. Các món được gọi nhiều nhất là sò điệp nướng trứng, ốc tỏi nướng muối ớt và càng cua rang muối, rất phù hợp cho hành trình ăn đêm kéo dài."
+        },
+        new StreetLocation
+        {
+            Id = "thao-oc",
+            Name = "Thảo Ốc",
+            Category = "Ốc / hải sản",
+            Address = "383 Vĩnh Khánh, Khánh Hội Ward",
+            OpeningHours = "09:00 - 02:00",
+            ShortIntro = "Từ một xe ốc nhỏ, nay trở thành điểm dừng quen thuộc với hải sản tươi giá hợp lý.",
             BestTime = "19:00 - 23:30",
-            Highlight = "Ốc nướng mỡ hành, bạch tuộc sa tế, sò điệp phô mai",
-            DescriptionVi = "Phố ẩm thực Vĩnh Khánh nổi tiếng về các quán ốc nướng mỡ hành, bạch tuộc sa tế và sò điệp phô mai. Không gian náo nhiệt, thích hợp để trải nghiệm văn hóa ăn đêm địa phương."
+            Highlight = "Ốc, nghêu, sò, mực, tôm và lẩu hải sản",
+            DescriptionVi = "Thảo Ốc xuất phát từ một xe ốc nhỏ và phát triển thành quán hải sản được nhiều du khách lẫn người địa phương yêu thích. Thực đơn tập trung vào ốc, nghêu, sò, mực và tôm với cách chế biến đậm đà."
         },
         new StreetLocation
         {
-            Id = "nuoc-mia-sau-rieng",
-            Name = "Nước mía sầu riêng",
-            Category = "Đồ uống",
-            ShortIntro = "Thức uống béo ngọt, giúp cân bằng vị sau khi ăn món nướng.",
-            BestTime = "Sau 20:00",
-            Highlight = "Vị sầu riêng hòa cùng nước mía mát lạnh",
-            DescriptionVi = "Một thức uống được nhiều bạn trẻ yêu thích là nước mía kết hợp sầu riêng, tạo vị ngọt béo đặc trưng. Đây là món giải nhiệt phù hợp sau khi thưởng thức các món nướng cay."
+            Id = "oc-sau-no",
+            Name = "Ốc Sáu Nở",
+            Category = "Ốc / hải sản",
+            Address = "128 Vĩnh Khánh, Khánh Hội Ward",
+            OpeningHours = "16:00 - 02:30",
+            ShortIntro = "Quán rộng, dễ ngồi lâu và hợp cho nhóm bạn hoặc gia đình đi ăn đêm.",
+            BestTime = "Sau 18:30",
+            Highlight = "Ốc sốt trứng muối, nghêu hấp thái, ốc dừa nướng",
+            DescriptionVi = "Ốc Sáu Nở là lựa chọn quen thuộc của những ai thích không gian rộng và món ăn đậm đà. Quán nổi bật với ốc sốt trứng muối, nghêu hấp Thái và ốc dừa nướng, phù hợp cho nhóm đông người."
         },
         new StreetLocation
         {
-            Id = "banh-trang-nuong-pho-dem",
-            Name = "Bánh tráng nướng phố đêm",
-            Category = "Ăn vặt",
-            ShortIntro = "Món ăn vặt giòn thơm, dễ cầm tay và rất hợp đi dạo.",
-            BestTime = "17:30 - 22:00",
-            Highlight = "Trứng, xúc xích, phô mai và hành phi",
-            DescriptionVi = "Bánh tráng nướng tại đây có nhiều topping như trứng, xúc xích, phô mai và hành phi. Món ăn giòn, thơm, giá hợp lý và rất phù hợp để vừa đi dạo vừa thưởng thức."
-        },
-        new StreetLocation
-        {
-            Id = "che-dem-vinh-khanh",
-            Name = "Chè đêm Vĩnh Khánh",
-            Category = "Tráng miệng",
-            ShortIntro = "Món tráng miệng giúp kết thúc hành trình bằng vị ngọt thanh.",
-            BestTime = "20:00 - 24:00",
-            Highlight = "Chè đậu, chè khúc bạch, tàu hũ đá",
-            DescriptionVi = "Khu vực này có nhiều quán chè truyền thống và chè hiện đại, từ chè đậu, chè khúc bạch đến tàu hũ đá. Vị ngọt thanh giúp cân bằng sau bữa ăn nhiều đạm và gia vị."
+            Id = "be-oc",
+            Name = "Bê Ốc",
+            Category = "Ốc / hải sản",
+            Address = "58/44 Vĩnh Khánh, Khánh Hội Ward",
+            OpeningHours = "15:00 - 00:00",
+            ShortIntro = "Dừng chân cuối hành trình khi muốn ăn nhẹ, thưởng vị ốc và hải sản trong không gian thoải mái.",
+            BestTime = "Cuối buổi tối",
+            Highlight = "Món ốc tươi, chế biến vừa vị, giá dễ tiếp cận",
+            DescriptionVi = "Bê Ốc là nơi phù hợp để kết thúc chuyến đi Vĩnh Khánh bằng một phần ốc hoặc hải sản nhẹ hơn. Quán có không gian thoải mái, món ăn vừa vị và mức giá phù hợp với nhiều nhóm khách."
         }
     ];
 

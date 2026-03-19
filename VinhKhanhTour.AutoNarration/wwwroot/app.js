@@ -40,6 +40,8 @@ function renderLocations(locations) {
       <p>${escapeHtml(location.shortIntro)}</p>
       <p>${escapeHtml(location.descriptionVi)}</p>
       <div class="card-meta">
+        <span><strong>Địa chỉ:</strong> ${escapeHtml(location.address)}</span>
+        <span><strong>Giờ mở cửa:</strong> ${escapeHtml(location.openingHours)}</span>
         <span><strong>Điểm nhấn:</strong> ${escapeHtml(location.highlight)}</span>
       </div>
       <button class="button button-secondary" data-location-id="${escapeHtml(location.id)}">Tạo thuyết minh riêng</button>
@@ -63,11 +65,11 @@ function fillLocationSelect(locations) {
 
 function getCardImage(locationId) {
   const images = {
-    'com-tam-hoa-binh': '/assets/hero-night.svg',
-    'oc-tuoc-nuong': '/assets/street-food.svg',
-    'nuoc-mia-sau-rieng': '/assets/hero-night.svg',
-    'banh-trang-nuong-pho-dem': '/assets/street-food.svg',
-    'che-dem-vinh-khanh': '/assets/map.svg'
+    'oc-oanh': '/assets/vinh-khanh-street.jpg',
+    'oc-vu': '/assets/vinh-khanh-street.jpg',
+    'thao-oc': '/assets/vinh-khanh-street.jpg',
+    'oc-sau-no': '/assets/vinh-khanh-banner.jpg',
+    'be-oc': '/assets/vinh-khanh-banner.jpg'
   };
 
   return images[locationId] ?? '/assets/map.svg';
