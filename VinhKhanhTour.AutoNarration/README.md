@@ -1,21 +1,24 @@
-# VinhKhanhTour.AutoNarration (C#)
+# VinhKhanhTour.AutoNarration
 
-Website và API thuyết minh tự động đa ngôn ngữ cho phố ẩm thực Vĩnh Khánh, viết bằng ASP.NET Core.
+Website giới thiệu phố ẩm thực Vĩnh Khánh kết hợp API thuyết minh tự động đa ngôn ngữ, xây bằng ASP.NET Core.
 
-## Chức năng chính
+## Điểm nổi bật
 
-- Trang chủ giới thiệu phố ẩm thực Vĩnh Khánh với giao diện hiện đại.
-- Danh sách món/điểm ăn uống nổi bật được đổ dữ liệu từ API.
-- Tạo thuyết minh tự động đa ngôn ngữ bằng Azure Translator + Azure Speech.
-- Lưu audio MP3 vào `wwwroot/audio` và phát ngay trên website.
+- Trang chủ giới thiệu phố Vĩnh Khánh theo phong cách hiện đại.
+- Danh sách món và địa điểm mẫu được lấy từ API.
+- Tạo thuyết minh đa ngôn ngữ bằng Azure Translator và Azure Speech.
+- Audio MP3 được lưu trong `wwwroot/audio` và phát ngay trên trình duyệt.
 
-## Yêu cầu
+## Chạy dự án
 
-- .NET SDK 9.0+
-- Azure AI Translator (Key + Region)
-- Azure AI Speech (Key + Region)
+```bash
+dotnet restore
+dotnet run
+```
 
-## Cấu hình
+Mở đường dẫn hiển thị trong terminal để xem website.
+
+## Cấu hình Azure AI
 
 Cập nhật `appsettings.json`:
 
@@ -29,24 +32,10 @@ Cập nhật `appsettings.json`:
 }
 ```
 
-## Chạy dự án
-
-```bash
-dotnet restore
-dotnet run
-```
-
-Sau khi chạy, mở trình duyệt tại địa chỉ ứng dụng hiển thị trong terminal để xem website.
-
 ## API chính
 
-### 1) Lấy danh sách nội dung
-
-`GET /api/locations`
-
-### 2) Tạo thuyết minh
-
-`POST /api/narrations`
+- `GET /api/locations`: lấy danh sách nội dung mẫu.
+- `POST /api/narrations`: tạo bản dịch và audio thuyết minh.
 
 Body mẫu:
 
@@ -58,7 +47,7 @@ Body mẫu:
 }
 ```
 
-Hoặc gửi nội dung tiếng Việt tùy chỉnh:
+Hoặc dùng nội dung tùy chỉnh:
 
 ```json
 {
@@ -69,23 +58,17 @@ Hoặc gửi nội dung tiếng Việt tùy chỉnh:
 }
 ```
 
-Kết quả trả về gồm:
-
-- `translatedText`: nội dung sau dịch.
-- `voiceName`: giọng đã dùng.
-- `audioUrl`: link file MP3 đã tạo.
-
 ## Giao diện website
 
-Trang chủ ở `/` gồm:
+Trang chủ `/` có:
 
-- Hero giới thiệu phố ẩm thực Vĩnh Khánh.
-- Khối giới thiệu lý do nên chọn khu phố này.
-- Danh sách món/điểm mẫu lấy từ API.
-- Form tạo thuyết minh để phát audio ngay trên trình duyệt.
+- Hero giới thiệu dự án.
+- Phần giới thiệu khu phố.
+- Danh sách món đặc trưng.
+- Form tạo thuyết minh và phát audio.
 
-## Gợi ý mở rộng
+## Mở rộng tiếp theo
 
-- Kết nối database (SQL Server) thay cho dữ liệu in-memory.
-- Thêm cơ chế cache audio theo `locationId + targetLanguage` để tiết kiệm chi phí API.
-- Chuyển sang Blazor nếu muốn giao diện tương tác sâu hơn hoặc làm app dạng web app đầy đủ.
+- Kết nối SQL Server thay cho dữ liệu in-memory.
+- Thêm cache audio theo `locationId + targetLanguage`.
+- Chuyển UI sang Blazor nếu muốn tương tác sâu hơn.
