@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Danh sách món ngon và điểm đến trên phố ẩm thực Vĩnh Khánh." />
+  <title>Món ngon - Vĩnh Khánh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="page-full">
+  <nav>
+    <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
+    <ul class="nav-links">
+      <li><a href="/">Tổng quan</a></li>
+      <li><a href="/mon-ngon.html">Món ngon</a></li>
+      <li><a href="/ban-do.html">Bản đồ</a></li>
+      <li><a href="/ai-routing.html">AI Routing</a></li>
+      <li><a href="/audio-tts.html">Audio TTS</a></li>
+      <li><a href="/about.html">Chi tiết</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <h1 data-i18n="food_hero_title">Món ngon & Điểm đến</h1>
+    <p class="subtitle" data-i18n="food_hero_subtitle">Danh sách đầy đủ các quán và món nổi bật trên phố ẩm thực Vĩnh Khánh.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="/audio-tts.html">Tạo thuyết minh cho món này</a>
+    </div>
+  </div>
+
+  <section class="content-wide">
+    <div class="section-header">
+      <div class="icon">📍</div>
+      <div>
+        <div class="section-num">Module 01</div>
+        <h2 data-i18n="food_section_title">Danh sách Món ngon & Điểm đến (POI)</h2>
+      </div>
+    </div>
+    <div id="locationsGrid" class="card-grid">
+      <article class="card card-skeleton">Đang tải dữ liệu...</article>
+    </div>
+  </section>
+
+  <script src="/i18n.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/location-i18n.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

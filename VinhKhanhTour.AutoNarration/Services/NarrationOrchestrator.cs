@@ -1,4 +1,7 @@
 using VinhKhanhTour.AutoNarration.Models;
+using VinhKhanhTour.AutoNarration.Options;
+using Microsoft.Extensions.Options;
+using System.Text;
 
 namespace VinhKhanhTour.AutoNarration.Services;
 
@@ -8,17 +11,23 @@ public sealed class NarrationOrchestrator
     private readonly ITranslationService _translationService;
     private readonly ISpeechSynthesisService _speechSynthesisService;
     private readonly IWebHostEnvironment _environment;
+    private readonly IAdminManagementService _adminManagementService;
+    private readonly AdminOptions _adminOptions;
 
     public NarrationOrchestrator(
         ILocationContentService locationContentService,
         ITranslationService translationService,
         ISpeechSynthesisService speechSynthesisService,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IAdminManagementService adminManagementService,
+        IOptions<AdminOptions> adminOptions)
     {
         _locationContentService = locationContentService;
         _translationService = translationService;
         _speechSynthesisService = speechSynthesisService;
         _environment = environment;
+        _adminManagementService = adminManagementService;
+        _adminOptions = adminOptions.Value;
     }
 
     public async Task<GenerateNarrationResponse> GenerateAsync(
@@ -50,14 +59,50 @@ public sealed class NarrationOrchestrator
         }
 
         var targetLanguage = request.TargetLanguage.Trim();
-        var translatedText = await _translationService.TranslateAsync(sourceTextVi!, "vi", targetLanguage, cancellationToken);
+        var translatedText = string.Empty;
+        var usedFallback = false;
 
-        var (audioBytes, voiceName) = await _speechSynthesisService.SynthesizeToMp3Async(
-            translatedText,
-            targetLanguage,
-            request.VoiceName,
-            request.SpeakingRate,
-            cancellationToken);
+        try
+        {
+            translatedText = await _translationService.TranslateAsync(sourceTextVi!, "vi", targetLanguage, cancellationToken);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            usedFallback = true;
+            translatedText = BuildFallbackTranslation(sourceTextVi!, targetLanguage);
+        }
+
+        var voiceName = request.VoiceName;
+        if (string.IsNullOrWhiteSpace(voiceName))
+        {
+            voiceName = _adminManagementService
+                .GetVoiceProfiles()
+                .Where(x => x.IsActive && x.Language.Equals(targetLanguage, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(x => x.Scenario.Equals("default", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .Select(x => x.VoiceName)
+                .FirstOrDefault();
+        }
+
+        byte[] audioBytes;
+        string resolvedVoiceName;
+        var audioExtension = ".mp3";
+
+        try
+        {
+            (audioBytes, resolvedVoiceName) = await _speechSynthesisService.SynthesizeToMp3Async(
+                translatedText,
+                targetLanguage,
+                voiceName,
+                request.SpeakingRate,
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
+        {
+            usedFallback = true;
+            resolvedVoiceName = "demo-fallback-tone";
+            audioBytes = BuildFallbackWaveAudio();
+            audioExtension = ".wav";
+        }
 
         var webRoot = _environment.WebRootPath;
         if (string.IsNullOrWhiteSpace(webRoot))
@@ -68,11 +113,30 @@ public sealed class NarrationOrchestrator
         var audioDir = Path.Combine(webRoot, "audio");
         Directory.CreateDirectory(audioDir);
 
-        var fileName = $"narration-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}.mp3";
+        var fileName = $"narration-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}{audioExtension}";
         var audioPath = Path.Combine(audioDir, fileName);
         await File.WriteAllBytesAsync(audioPath, audioBytes, cancellationToken);
 
         var audioUrl = $"{baseUrl.TrimEnd('/')}/audio/{fileName}";
+
+        var sourceChars = sourceTextVi!.Length;
+        var outputChars = translatedText.Length;
+        var estimatedCostUsd = usedFallback
+            ? 0m
+            : (sourceChars / 1_000_000m) * _adminOptions.TranslationCostPerMillionChars
+                + (outputChars / 1_000_000m) * _adminOptions.TtsCostPerMillionChars;
+
+        _adminManagementService.TrackAiUsage(new AiUsageLogEntry
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            LocationId = request.LocationId,
+            TargetLanguage = targetLanguage,
+            VoiceName = resolvedVoiceName,
+            SourceChars = sourceChars,
+            OutputChars = outputChars,
+            EstimatedCostUsd = decimal.Round(estimatedCostUsd, 6),
+            GeneratedAt = DateTimeOffset.UtcNow
+        });
 
         return new GenerateNarrationResponse
         {
@@ -81,9 +145,57 @@ public sealed class NarrationOrchestrator
             SourceTextVi = sourceTextVi!,
             TranslatedText = translatedText,
             TargetLanguage = targetLanguage,
-            VoiceName = voiceName,
+            VoiceName = resolvedVoiceName,
             AudioUrl = audioUrl,
             GeneratedAt = DateTimeOffset.UtcNow
         };
+    }
+
+    private static string BuildFallbackTranslation(string sourceTextVi, string targetLanguage)
+    {
+        if (targetLanguage.Equals("vi", StringComparison.OrdinalIgnoreCase))
+        {
+            return sourceTextVi;
+        }
+
+        return $"[DEMO {targetLanguage.ToUpperInvariant()}] {sourceTextVi}";
+    }
+
+    private static byte[] BuildFallbackWaveAudio()
+    {
+        const int sampleRate = 16000;
+        const short channels = 1;
+        const short bitsPerSample = 16;
+        const double seconds = 1.8;
+        var sampleCount = (int)(sampleRate * seconds);
+        var dataSize = sampleCount * channels * (bitsPerSample / 8);
+
+        using var stream = new MemoryStream(44 + dataSize);
+        using var writer = new BinaryWriter(stream, Encoding.ASCII, leaveOpen: true);
+
+        writer.Write(Encoding.ASCII.GetBytes("RIFF"));
+        writer.Write(36 + dataSize);
+        writer.Write(Encoding.ASCII.GetBytes("WAVE"));
+        writer.Write(Encoding.ASCII.GetBytes("fmt "));
+        writer.Write(16);
+        writer.Write((short)1);
+        writer.Write(channels);
+        writer.Write(sampleRate);
+        writer.Write(sampleRate * channels * (bitsPerSample / 8));
+        writer.Write((short)(channels * (bitsPerSample / 8)));
+        writer.Write(bitsPerSample);
+        writer.Write(Encoding.ASCII.GetBytes("data"));
+        writer.Write(dataSize);
+
+        for (var i = 0; i < sampleCount; i++)
+        {
+            var t = i / (double)sampleRate;
+            var envelope = Math.Min(1.0, t * 6.0) * Math.Min(1.0, (seconds - t) * 6.0);
+            var sample = (short)(Math.Sin(2 * Math.PI * 740 * t) * 0.18 * short.MaxValue * envelope);
+            writer.Write(sample);
+        }
+
+        writer.Flush();
+        return stream.ToArray();
     }
 }

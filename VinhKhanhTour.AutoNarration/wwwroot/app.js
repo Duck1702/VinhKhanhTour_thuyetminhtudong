@@ -6,61 +6,47 @@ const translatedText = document.getElementById('translatedText');
 const usedVoice = document.getElementById('usedVoice');
 const audioPlayer = document.getElementById('audioPlayer');
 const audioLink = document.getElementById('audioLink');
+const templateSelect = document.getElementById('templateSelect');
 const customText = document.getElementById('customText');
 const languageSelect = document.getElementById('languageSelect');
 const voiceName = document.getElementById('voiceName');
 const speakingRate = document.getElementById('speakingRate');
 
+const routeForm = document.getElementById('routeForm');
+const visitorType = document.getElementById('visitorType');
+const budgetLevel = document.getElementById('budgetLevel');
+const startHour = document.getElementById('startHour');
+const guestCount = document.getElementById('guestCount');
+const preferences = document.getElementById('preferences');
+const mustTry = document.getElementById('mustTry');
+const routeResult = document.getElementById('routeResult');
+const routeTitle = document.getElementById('routeTitle');
+const routeSummary = document.getElementById('routeSummary');
+const routeStrategy = document.getElementById('routeStrategy');
+const routeGeneratedBy = document.getElementById('routeGeneratedBy');
+const routeStops = document.getElementById('routeStops');
+
 let currentLocations = [];
+let currentTemplates = [];
 let narrationBusy = false;
+const SITE_LANGUAGE_KEY = 'siteLanguage';
 
-async function loadLocations() {
-  const response = await fetch('/api/locations');
-  if (!response.ok) {
-    throw new Error('Không tải được dữ liệu địa điểm.');
-  }
-
-  const data = await response.json();
-  currentLocations = Array.isArray(data) ? data : (data.value ?? []);
-  renderLocations(currentLocations);
-  fillLocationSelect(currentLocations);
+function tr(key) {
+  return window.siteI18n?.translate?.(key, getPreferredLanguage()) ?? key;
 }
 
-function renderLocations(locations) {
-  locationsGrid.innerHTML = locations.map((location, index) => `
-    <article class="card" style="animation-delay:${index * 80}ms">
-      <div class="card-visual">
-        <img src="${getCardImage(location.id)}" alt="${escapeHtml(location.name)}" />
-      </div>
-      <div class="card-head">
-        <span class="tag">${escapeHtml(location.category)}</span>
-        <span class="pill">${escapeHtml(location.bestTime)}</span>
-      </div>
-      <h3>${escapeHtml(location.name)}</h3>
-      <p>${escapeHtml(location.shortIntro)}</p>
-      <p>${escapeHtml(location.descriptionVi)}</p>
-      <div class="card-meta">
-        <span><strong>Địa chỉ:</strong> ${escapeHtml(location.address)}</span>
-        <span><strong>Giờ mở cửa:</strong> ${escapeHtml(location.openingHours)}</span>
-        <span><strong>Điểm nhấn:</strong> ${escapeHtml(location.highlight)}</span>
-      </div>
-      <button class="button button-secondary" data-location-id="${escapeHtml(location.id)}">Tạo thuyết minh riêng</button>
-    </article>
-  `).join('');
-
-  locationsGrid.querySelectorAll('[data-location-id]').forEach(button => {
-    button.addEventListener('click', () => {
-      locationSelect.value = button.dataset.locationId;
-      customText.value = '';
-      document.querySelector('#thuyet-minh').scrollIntoView({ behavior: 'smooth' });
-    });
-  });
+function getPreferredLanguage() {
+  const queryLang = new URLSearchParams(window.location.search).get('lang');
+  return queryLang || localStorage.getItem(SITE_LANGUAGE_KEY) || 'vi';
 }
 
-function fillLocationSelect(locations) {
-  locationSelect.innerHTML = locations.map(location => `
-    <option value="${escapeHtml(location.id)}">${escapeHtml(location.name)} - ${escapeHtml(location.category)}</option>
-  `).join('');
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
 }
 
 function getCardImage(locationId) {
@@ -75,34 +61,103 @@ function getCardImage(locationId) {
   return images[locationId] ?? '/assets/map.svg';
 }
 
-function buildNarrationText(location) {
-  return `${location.name} thuộc nhóm ${location.category}. ${location.shortIntro} ${location.highlight}. ${location.descriptionVi}`;
-}
-
-async function createNarrationForLocation(location) {
-  if (narrationBusy) {
+function renderLocations(locations) {
+  if (!locationsGrid) {
     return;
   }
 
-  narrationBusy = true;
-  locationSelect.value = location.id;
-  customText.value = buildNarrationText(location);
-  narrationForm.querySelector('button').disabled = true;
-  narrationForm.querySelector('button').textContent = 'Đang tạo...';
+  locationsGrid.innerHTML = locations.map((location, index) => `
+    <article class="card" style="animation-delay:${index * 80}ms">
+      <img class="card-visual" src="${getCardImage(location.id)}" alt="${escapeHtml(location.name)}" />
+      <div class="card-head">
+        <span class="tag">${escapeHtml(location.category)}</span>
+        <span class="tag" style="background:var(--bg); color:var(--text-secondary); border: 1px solid var(--border);">${escapeHtml(location.bestTime)}</span>
+      </div>
+      <h3>${escapeHtml(location.name)}</h3>
+      <p>${escapeHtml(location.shortIntro)}</p>
+      <p>${escapeHtml(location.descriptionVi)}</p>
+      <div class="card-meta">
+        <span><strong>${escapeHtml(tr('card_address'))}:</strong> ${escapeHtml(location.address)}</span>
+        <span><strong>${escapeHtml(tr('card_hours'))}:</strong> ${escapeHtml(location.openingHours)}</span>
+        <span><strong>${escapeHtml(tr('card_highlight'))}:</strong> ${escapeHtml(location.highlight)}</span>
+      </div>
+      <button type="button" class="button button-secondary" data-location-id="${escapeHtml(location.id)}">${escapeHtml(tr('btn_narrate_private'))}</button>
+    </article>
+  `).join('');
+}
 
-  try {
-    await generateNarration();
-  } finally {
-    narrationBusy = false;
-    narrationForm.querySelector('button').disabled = false;
-    narrationForm.querySelector('button').textContent = 'Tạo thuyết minh';
+function fillLocationSelect(locations) {
+  if (!locationSelect) {
+    return;
+  }
+
+  locationSelect.innerHTML = locations.map(location => `
+    <option value="${escapeHtml(location.id)}">${escapeHtml(location.name)} - ${escapeHtml(location.category)}</option>
+  `).join('');
+}
+
+async function loadLocations() {
+  const response = await fetch('/api/locations');
+  if (!response.ok) {
+    throw new Error(tr('map_status_no_api'));
+  }
+
+  const data = await response.json();
+  const preferredLanguage = getPreferredLanguage();
+  currentLocations = (Array.isArray(data) ? data : (data.value ?? []))
+    .map((item) => window.localizeLocationData ? window.localizeLocationData(item, preferredLanguage) : item);
+  renderLocations(currentLocations);
+  fillLocationSelect(currentLocations);
+
+  if (locationSelect) {
+    const locationFromQuery = new URLSearchParams(window.location.search).get('locationId');
+    const langFromQuery = new URLSearchParams(window.location.search).get('lang');
+    const selectedLang = langFromQuery || localStorage.getItem(SITE_LANGUAGE_KEY);
+
+    if (languageSelect && selectedLang) {
+      languageSelect.value = selectedLang;
+    }
+
+    if (locationFromQuery) {
+      const selected = currentLocations.find((x) => x.id === locationFromQuery);
+      if (selected) {
+        locationSelect.value = selected.id;
+        if (customText) {
+          customText.value = buildNarrationText(selected);
+        }
+      }
+    }
   }
 }
 
+async function loadNarrationTemplates() {
+  if (!templateSelect) {
+    return;
+  }
+
+  const response = await fetch('/api/narration-templates');
+  if (!response.ok) {
+    return;
+  }
+
+  currentTemplates = await response.json();
+  templateSelect.innerHTML = `
+    <option value="">${escapeHtml(tr('template_none'))}</option>
+    ${(currentTemplates ?? []).map(template => `<option value="${escapeHtml(template.id)}">${escapeHtml(template.title)} (${escapeHtml(template.targetLanguage)})</option>`).join('')}
+  `;
+}
+
+function buildNarrationText(location) {
+  return `${location.name}. ${location.category}. ${location.shortIntro} ${location.highlight}. ${location.descriptionVi}`;
+}
+
 async function generateNarration() {
-  const selectedLocationId = locationSelect.value;
+  if (!locationSelect || !customText || !languageSelect || !voiceName || !speakingRate) {
+    return;
+  }
+
   const payload = {
-    locationId: selectedLocationId,
+    locationId: locationSelect.value,
     customTextVi: customText.value.trim() || null,
     targetLanguage: languageSelect.value,
     voiceName: voiceName.value.trim() || null,
@@ -116,61 +171,218 @@ async function generateNarration() {
   });
 
   const result = await response.json();
-
   if (!response.ok) {
-    throw new Error(result.message || 'Tạo thuyết minh thất bại.');
+    throw new Error(result.detail || result.message || tr('narration_failed'));
   }
 
-  narrationResult.classList.remove('hidden');
-  translatedText.textContent = result.translatedText;
-  usedVoice.textContent = result.voiceName;
-  audioPlayer.src = result.audioUrl;
-  audioLink.href = result.audioUrl;
-  audioLink.textContent = `Mở file audio: ${result.audioUrl}`;
+  if (narrationResult) {
+    narrationResult.classList.remove('hidden');
+  }
+  if (translatedText) {
+    translatedText.textContent = result.translatedText;
+  }
+  if (usedVoice) {
+    usedVoice.textContent = result.voiceName;
+  }
+  if (audioPlayer) {
+    audioPlayer.src = result.audioUrl;
+  }
+  if (audioLink) {
+    audioLink.href = result.audioUrl;
+    audioLink.textContent = `${tr('audio_open_file')}: ${result.audioUrl}`;
+  }
 }
 
-narrationForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
+async function createNarrationForLocation(location) {
+  if (!narrationForm) {
+    const selectedLang = languageSelect?.value || localStorage.getItem(SITE_LANGUAGE_KEY) || 'vi';
+    window.location.href = `/audio-tts.html?locationId=${encodeURIComponent(location.id)}&lang=${encodeURIComponent(selectedLang)}`;
+    return;
+  }
+
+  if (!locationSelect || !customText || narrationBusy) {
+    return;
+  }
+
+  narrationBusy = true;
+  locationSelect.value = location.id;
+  customText.value = buildNarrationText(location);
+
+  const button = narrationForm.querySelector('button');
+  if (button) {
+    button.disabled = true;
+    button.textContent = tr('state_generating');
+  }
+
   try {
     await generateNarration();
-  } catch (error) {
-    alert(error.message);
   } finally {
-    if (!narrationBusy) {
-      narrationForm.querySelector('button').disabled = false;
-      narrationForm.querySelector('button').textContent = 'Tạo thuyết minh';
+    narrationBusy = false;
+    if (button) {
+      button.disabled = false;
+      button.textContent = tr('btn_audio_tts');
     }
   }
-});
-
-locationsGrid.addEventListener('click', async (event) => {
-  const button = event.target.closest('[data-location-id]');
-  if (!button) {
-    return;
-  }
-
-  const location = currentLocations.find(item => item.id === button.dataset.locationId);
-  if (!location) {
-    return;
-  }
-
-  try {
-    await createNarrationForLocation(location);
-    document.querySelector('#thuyet-minh').scrollIntoView({ behavior: 'smooth' });
-  } catch (error) {
-    alert(error.message);
-  }
-});
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
 }
 
-loadLocations().catch(error => {
-  locationsGrid.innerHTML = `<article class="card-skeleton">${escapeHtml(error.message)}</article>`;
-});
+function renderRoutePlan(plan) {
+  if (!routeResult || !routeTitle || !routeSummary || !routeStrategy || !routeGeneratedBy || !routeStops) {
+    return;
+  }
+
+  routeResult.classList.remove('hidden');
+  routeTitle.textContent = plan.title;
+  routeSummary.textContent = plan.summary;
+  routeStrategy.textContent = plan.strategy;
+  routeGeneratedBy.textContent = plan.generatedBy;
+  routeStops.innerHTML = (plan.stops ?? []).map((stop, index) => `
+    <div class="timeline-item">
+      <h4>${index + 1}. ${escapeHtml(stop.name)}</h4>
+      <p><strong>${escapeHtml(tr('card_address'))}:</strong> ${escapeHtml(stop.address)}</p>
+      <p><strong>${escapeHtml(tr('route_why_visit'))}:</strong> ${escapeHtml(stop.why)}</p>
+      <p><strong>${escapeHtml(tr('route_try_dish'))}:</strong> ${escapeHtml(stop.recommendedDish)}</p>
+      <p><strong>${escapeHtml(tr('route_best_time'))}:</strong> ${escapeHtml(stop.bestTime)}</p>
+    </div>
+  `).join('');
+}
+
+function initNarrationEvents() {
+  if (!narrationForm) {
+    return;
+  }
+
+  narrationForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const submitBtn = narrationForm.querySelector('button');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = tr('state_generating');
+    }
+
+    try {
+      await generateNarration();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      if (!narrationBusy && submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = tr('btn_audio_tts');
+      }
+    }
+  });
+
+  if (templateSelect) {
+    templateSelect.addEventListener('change', () => {
+      const selected = currentTemplates.find(item => item.id === templateSelect.value);
+      if (!selected || !customText || !languageSelect || !voiceName || !locationSelect) {
+        return;
+      }
+
+      customText.value = selected.sourceTextVi ?? '';
+      languageSelect.value = selected.targetLanguage ?? languageSelect.value;
+      voiceName.value = selected.voiceName ?? '';
+      if (selected.locationId) {
+        locationSelect.value = selected.locationId;
+      }
+    });
+  }
+}
+
+function initLocationsEvents() {
+  if (!locationsGrid) {
+    return;
+  }
+
+  locationsGrid.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-location-id]');
+    if (!button) {
+      return;
+    }
+
+    const location = currentLocations.find(item => item.id === button.dataset.locationId);
+    if (!location) {
+      return;
+    }
+
+    try {
+      await createNarrationForLocation(location);
+      const targetSection = document.querySelector('#thuyet-minh');
+      if (targetSection) {
+        targetSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+}
+
+function initRouteEvents() {
+  if (!routeForm || !visitorType || !budgetLevel || !startHour || !guestCount || !preferences || !mustTry) {
+    return;
+  }
+
+  routeForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const payload = {
+      visitorType: visitorType.value.trim() || null,
+      budgetLevel: budgetLevel.value || null,
+      startHour: startHour.value || null,
+      guestCount: guestCount.value ? Number.parseInt(guestCount.value, 10) : null,
+      preferences: preferences.value.trim() || null,
+      mustTry: mustTry.value.trim() || null,
+      language: getPreferredLanguage()
+    };
+
+    const button = routeForm.querySelector('button');
+    if (button) {
+      button.disabled = true;
+      button.textContent = tr('state_suggesting');
+    }
+
+    try {
+      const response = await fetch('/api/routes/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || tr('route_failed'));
+      }
+
+      renderRoutePlan(result);
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = tr('btn_route_suggest');
+      }
+    }
+  });
+}
+
+async function initPage() {
+  initNarrationEvents();
+  initLocationsEvents();
+  initRouteEvents();
+
+  try {
+    if (locationsGrid || locationSelect) {
+      await loadLocations();
+    }
+
+    if (templateSelect) {
+      await loadNarrationTemplates();
+    }
+  } catch (error) {
+    if (locationsGrid) {
+      locationsGrid.innerHTML = `<article class="card-skeleton">${escapeHtml(error.message)}</article>`;
+    }
+  }
+}
+
+void initPage();

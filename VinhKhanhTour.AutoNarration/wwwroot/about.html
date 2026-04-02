@@ -4,87 +4,97 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Trang chi tiết giới thiệu phố ẩm thực Vĩnh Khánh, các món nổi bật và gợi ý trải nghiệm." />
-  <title>Giới thiệu chi tiết - Phố Ẩm Thực Vĩnh Khánh</title>
+  <title>Chi tiết - Phố Ẩm Thực Vĩnh Khánh</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="page-shell page-shell-compact">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Giới thiệu chi tiết</p>
-        <h1>Vĩnh Khánh sau ánh đèn</h1>
-      </div>
-      <nav class="topnav">
-        <a href="/">Trang chủ</a>
-        <a href="/#mon-ngon">Món ngon</a>
-        <a href="/#thuyet-minh">Thuyết minh</a>
-      </nav>
-    </header>
 
-    <main class="detail-layout">
-      <section class="detail-hero panel">
-        <div class="detail-hero-copy">
-          <p class="hero-kicker">Không khí phố đêm, món nóng, âm thanh rộn ràng</p>
-          <h2>Phố ẩm thực Vĩnh Khánh là điểm đến phù hợp cho hành trình khám phá Sài Gòn về đêm</h2>
-          <p class="hero-text">
-            Khu phố này nổi bật bởi những quán ăn phục vụ muộn, menu đa dạng từ cơm tấm, hải sản nướng, đồ uống mát lạnh đến món tráng miệng.
-            Website của bạn có thể dùng trang này để giới thiệu, rồi dẫn người xem quay về trang chủ để nghe thuyết minh tự động.
-          </p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="/#thuyet-minh">Nghe thuyết minh</a>
-            <a class="button button-secondary" href="/#mon-ngon">Xem món nổi bật</a>
-          </div>
-        </div>
-        <div class="detail-hero-media">
-          <img src="/assets/vinh-khanh-banner.jpg" alt="Ảnh thực tế phố ẩm thực Vĩnh Khánh vào buổi tối" />
-        </div>
-      </section>
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
+    <ul class="nav-links">
+      <li><a href="/">Tổng quan</a></li>
+      <li><a href="/mon-ngon.html">Món ngon</a></li>
+      <li><a href="/ban-do.html">Bản đồ</a></li>
+      <li><a href="/ai-routing.html">AI Routing</a></li>
+      <li><a href="/audio-tts.html">Audio TTS</a></li>
+      <li><a href="/about.html">Chi tiết</a></li>
+    </ul>
+  </nav>
 
-      <section class="section panel">
-        <div class="section-heading">
-          <p class="eyebrow">Gợi ý trải nghiệm</p>
-          <h2>Đi như thế nào cho hợp lý?</h2>
-        </div>
-        <div class="timeline-grid">
-          <article>
-            <h3>Đi từ quận 1 sang</h3>
-            <p>Đồng Khởi → Tôn Đức Thắng → cầu Khánh Hội → Đoàn Như Hài → Hoàng Diệu → rẽ vào Vĩnh Khánh.</p>
-          </article>
-          <article>
-            <h3>Ăn ở Ốc Oanh, Ốc Vũ, Thảo Ốc</h3>
-            <p>Ba quán này là cụm điểm mạnh nhất nếu muốn cảm nhận đúng phong vị ốc, hải sản và không khí nhộn nhịp.</p>
-          </article>
-          <article>
-            <h3>Kết thúc ở Bê Ốc hoặc quán nhẹ hơn</h3>
-            <p>Chọn một quán có không gian thoải mái để kết hành trình, sau đó quay về hoặc ghé món ngọt bên ngoài phố.</p>
-          </article>
-          <article>
-            <h3>Khung giờ đẹp nhất</h3>
-            <p>Đi từ sau 18:00; khoảng 20:00 là lúc phố đông và sáng đèn nhất.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section panel">
-        <div class="section-heading">
-          <p class="eyebrow">Điểm nổi bật</p>
-          <h2>Hình ảnh minh họa trong website</h2>
-        </div>
-        <div class="visual-grid">
-          <figure class="visual-card">
-            <img src="/assets/vinh-khanh-street.jpg" alt="Ảnh thực tế khu phố ẩm thực Vĩnh Khánh" />
-            <figcaption>Ảnh thật làm background và mở đầu cho phần giới thiệu.</figcaption>
-          </figure>
-          <figure class="visual-card">
-            <img src="/assets/vinh-khanh-banner.jpg" alt="Ảnh thực tế phố ẩm thực Vĩnh Khánh ban đêm" />
-            <figcaption>Banner phố đêm dùng cho trang chi tiết và phần thuyết minh.</figcaption>
-          </figure>
-        </div>
-      </section>
-    </main>
+  <!-- HERO DETAIL -->
+  <div class="hero" style="padding-bottom: 3rem;">
+    <h1 data-i18n="detail_hero_title">Vĩnh Khánh sau ánh đèn</h1>
+    <p class="subtitle" data-i18n="detail_hero_subtitle">Không khí phố đêm, tiếng lóc cóc của đầu bếp gõ chảo, ánh lửa rực ráng xen lẫn mùi vị hải sản ngập tràn Sài Gòn quy tụ lại nơi này.</p>
+    
+    <div class="hero-actions">
+      <a class="button button-primary" href="/audio-tts.html">Nghe thuyết minh Audio</a>
+      <a class="button button-secondary" href="/mon-ngon.html">Danh sách món ngon</a>
+    </div>
   </div>
+
+  <!-- ROUTE PLAN -->
+  <section id="lo-trinh">
+    <div class="section-header">
+      <div class="icon">🧭</div>
+      <div>
+        <div class="section-num">Detail 01</div>
+        <h2>Gợi ý trải nghiệm (Timeline)</h2>
+      </div>
+    </div>
+    
+    <div class="timeline">
+      <div class="timeline-item">
+        <h4>1. Từ Quận 1 di chuyển qua (18:00)</h4>
+        <p>Hướng đi dọc ngã Đồng Khởi → Tôn Đức Thắng → Cầu Khánh Hội → Đoàn Như Hài → Hoàng Diệu → Vĩnh Khánh.</p>
+      </div>
+      <div class="timeline-item">
+        <h4>2. Điểm mạnh chính (19:00 - 21:00)</h4>
+        <p>Ghé các trụ cột như Ốc Oanh, Ốc Vũ, Thảo Ốc. Nơi đây là điểm nóng nhất, rất nhộn nhịp.</p>
+      </div>
+      <div class="timeline-item">
+        <h4>3. Trạm nghỉ cuối (22:00)</h4>
+        <p>Cảm nhận nhịp chậm hơn tại những quán Bê Ốc hoặc nhâm nhi đồ ngọt trước khi kết thúc lịch trình.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VISUALS -->
+  <section id="hinh-anh">
+    <div class="section-header">
+      <div class="icon">📸</div>
+      <div>
+        <div class="section-num">Detail 02</div>
+        <h2>Hình ảnh nổi bật</h2>
+      </div>
+    </div>
+    
+    <div class="card-grid">
+      <figure class="card">
+        <img class="card-visual" src="/assets/vinh-khanh-street.jpg" alt="Phố ẩm thực Vĩnh Khánh" />
+        <h3>Khung cảnh ban ngày / ban đầu</h3>
+        <p>Khung cảnh khu phố chưa lên đèn hoặc các quán bắt đầu dọn hàng từ buổi chiều.</p>
+      </figure>
+      
+      <figure class="card">
+        <img class="card-visual" src="/assets/vinh-khanh-banner.jpg" alt="Vĩnh Khánh ban đêm" />
+        <h3>Hoạt động sôi nổi về đêm</h3>
+        <p>Góc không gian ban đêm, biển bảng đèn neon và hàng dài xe chở khách đông đúc.</p>
+      </figure>
+    </div>
+  </section>
+
+  <!-- HIGHLIGHT -->
+  <section id="luu-y">
+    <div class="highlight info">
+      <strong>Lưu ý:</strong> Cấu trúc trang này cũng được tối ưu hóa cho PWA để giảm thiểu dung lượng tải lại trang (cache asset) trên thiết bị di động.
+    </div>
+  </section>
+
+  <script src="/i18n.js"></script>
+  <script src="/nav.js"></script>
 </body>
 </html>

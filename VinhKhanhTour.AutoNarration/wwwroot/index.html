@@ -4,179 +4,176 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Website giới thiệu phố ẩm thực Vĩnh Khánh và tạo thuyết minh tự động đa ngôn ngữ." />
-  <title>Phố Ẩm Thực Vĩnh Khánh</title>
+  <title>Hệ Thống Phố Ẩm Thực Vĩnh Khánh</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="page-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Vĩnh Khánh Food Street</p>
-        <h1>Phố ẩm thực Vĩnh Khánh</h1>
+
+  <div id="languageModal" class="language-modal hidden" role="dialog" aria-modal="true" aria-labelledby="languageModalTitle">
+    <div class="language-modal-card">
+      <h2 id="languageModalTitle">Chọn ngôn ngữ trước khi bắt đầu</h2>
+      <p id="languageModalHint">Nội dung trang chủ và thao tác tạo thuyết minh sẽ theo ngôn ngữ bạn chọn.</p>
+      <div class="language-options">
+        <button class="button button-primary" data-lang-choice="vi">Tiếng Việt</button>
+        <button class="button button-secondary" data-lang-choice="en">English</button>
+        <button class="button button-secondary" data-lang-choice="fr">Français</button>
+        <button class="button button-secondary" data-lang-choice="ja">日本語</button>
+        <button class="button button-secondary" data-lang-choice="ko">한국어</button>
       </div>
-      <nav class="topnav">
-        <a href="#gioi-thieu">Giới thiệu</a>
-        <a href="#mon-ngon">Món ngon</a>
-        <a href="#thuyet-minh">Thuyết minh</a>
-        <a href="/about.html">Chi tiết</a>
-      </nav>
-    </header>
-
-    <main>
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="hero-kicker">Ăn đêm, khám phá, nghe thuyết minh đa ngôn ngữ</p>
-          <h2>Khám phá nhịp sống ẩm thực của phố Vĩnh Khánh theo cách hiện đại</h2>
-          <p class="hero-text">
-            Website này giới thiệu những món tiêu biểu, không khí buổi tối và trải nghiệm ẩm thực đặc trưng của phố Vĩnh Khánh.
-            Bạn có thể chọn ngôn ngữ, tạo giọng đọc tự động và phát ngay trên trình duyệt.
-          </p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="#thuyet-minh">Tạo thuyết minh</a>
-            <a class="button button-secondary" href="#mon-ngon">Xem món nổi bật</a>
-            <a class="button button-secondary" href="/about.html">Xem trang chi tiết</a>
-          </div>
-          <div class="hero-metrics">
-            <article>
-              <strong>5</strong>
-              <span>điểm/món mẫu</span>
-            </article>
-            <article>
-              <strong>3+</strong>
-              <span>ngôn ngữ hỗ trợ</span>
-            </article>
-            <article>
-              <strong>1</strong>
-              <span>nút tạo audio</span>
-            </article>
-          </div>
-        </div>
-        <aside class="hero-card hero-card-image">
-          <div class="hero-card-glow"></div>
-          <img src="/assets/vinh-khanh-banner.jpg" alt="Ảnh thực tế phố ẩm thực Vĩnh Khánh ban đêm" />
-          <div class="hero-card-caption">
-            <p class="hero-card-label">Điểm đến nổi bật</p>
-            <h3>Phố ốc Vĩnh Khánh</h3>
-            <p>
-              Ảnh thật của khu phố ẩm thực, dùng làm background chính của website và trang thuyết minh.
-            </p>
-          </div>
-        </aside>
-      </section>
-
-      <section id="gioi-thieu" class="section panel">
-        <div class="section-heading">
-          <p class="eyebrow">Giới thiệu</p>
-          <h2>Vì sao chọn Vĩnh Khánh?</h2>
-        </div>
-        <div class="info-grid">
-          <article>
-            <h3>Trải nghiệm phố đêm</h3>
-            <p>Vĩnh Khánh nổi tiếng với hoạt động ăn uống về đêm, nhiều quán mở muộn và không khí rất đặc trưng của Sài Gòn.</p>
-          </article>
-          <article>
-            <h3>Ẩm thực đa dạng</h3>
-            <p>Từ cơm tấm, ốc nướng, chè cho đến đồ uống sáng tạo, khu phố này đủ chất liệu để tạo nội dung giới thiệu hấp dẫn.</p>
-          </article>
-          <article>
-            <h3>Phù hợp du lịch thông minh</h3>
-            <p>Website có thể gắn QR tại địa điểm để khách quét và nghe thuyết minh theo ngôn ngữ của họ.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section panel">
-        <div class="section-heading">
-          <p class="eyebrow">Lộ trình gợi ý</p>
-          <h2>Đi theo thứ tự nào cho hợp lý?</h2>
-        </div>
-        <div class="route-layout">
-          <div class="route-map">
-            <img src="/assets/vinh-khanh-street.jpg" alt="Ảnh thực tế khu phố ẩm thực Vĩnh Khánh" />
-          </div>
-          <div class="timeline-grid">
-            <article>
-              <h3>1. Vào phố từ quận 1</h3>
-              <p>Đi từ Đồng Khởi → Tôn Đức Thắng → cầu Khánh Hội → Đoàn Như Hài → Hoàng Diệu → rẽ vào Vĩnh Khánh.</p>
-            </article>
-            <article>
-              <h3>2. Dừng ở Ốc Oanh</h3>
-              <p>534 Vĩnh Khánh, mở từ 13:00 đến 00:00. Hợp để bắt đầu bằng món đậm vị và không khí sôi động.</p>
-            </article>
-            <article>
-              <h3>3. Ghé Ốc Vũ hoặc Thảo Ốc</h3>
-              <p>37 Vĩnh Khánh và 383 Vĩnh Khánh là hai điểm mạnh về hải sản, phù hợp khi phố bắt đầu đông từ sau 18:00.</p>
-            </article>
-            <article>
-              <h3>4. Kết thúc bằng Bê Ốc</h3>
-              <p>58/44 Vĩnh Khánh là điểm dừng nhẹ hơn, phù hợp để kết hành trình trước khi quay về.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section id="mon-ngon" class="section panel">
-        <div class="section-heading">
-          <p class="eyebrow">Món ngon gợi ý</p>
-          <h2>Danh sách nội dung mẫu</h2>
-        </div>
-        <div class="section-note">
-          Bấm nút <strong>Tạo thuyết minh riêng</strong> trên từng món để hệ thống tự điền nội dung và chạy tạo audio.
-        </div>
-        <div id="locationsGrid" class="cards-grid">
-          <article class="card-skeleton">Đang tải dữ liệu...</article>
-        </div>
-      </section>
-
-      <section id="thuyet-minh" class="section panel narration-panel">
-        <div class="section-heading">
-          <p class="eyebrow">Thuyết minh tự động</p>
-          <h2>Tạo audio đa ngôn ngữ</h2>
-        </div>
-        <form id="narrationForm" class="narration-form">
-          <label>
-            Chọn nội dung
-            <select id="locationSelect"></select>
-          </label>
-          <label>
-            Ngôn ngữ đích
-            <select id="languageSelect">
-              <option value="en">English</option>
-              <option value="vi">Tiếng Việt</option>
-              <option value="fr">Français</option>
-              <option value="ja">日本語</option>
-            </select>
-          </label>
-          <label>
-            Nội dung tùy chỉnh
-            <textarea id="customText" rows="4" placeholder="Để trống nếu dùng nội dung gợi ý từ danh sách"></textarea>
-          </label>
-          <div class="form-row">
-            <label>
-              Giọng đọc (tùy chọn)
-              <input id="voiceName" type="text" placeholder="Ví dụ: en-US-JennyNeural" />
-            </label>
-            <label>
-              Tốc độ đọc
-              <input id="speakingRate" type="number" min="0.5" max="2" step="0.05" value="1" />
-            </label>
-          </div>
-          <button type="submit" class="button button-primary">Tạo thuyết minh</button>
-        </form>
-
-        <div id="narrationResult" class="result-box hidden">
-          <h3>Kết quả</h3>
-          <p><strong>Nội dung đã dịch:</strong> <span id="translatedText"></span></p>
-          <p><strong>Giọng:</strong> <span id="usedVoice"></span></p>
-          <audio id="audioPlayer" controls></audio>
-          <a id="audioLink" class="audio-link" href="#" target="_blank" rel="noreferrer">Mở file audio</a>
-        </div>
-      </section>
-    </main>
+    </div>
   </div>
-  <script src="/app.js"></script>
+
+  <!-- OFFLINE BANNER -->
+  <div id="pwaBanner" class="offline-banner">
+    <span>🌐 Hỗ trợ chế độ Offline (PWA) — Bạn có thể truy cập nội dung khi mất kết nối mạng!</span>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
+    <ul class="nav-links">
+      <li><a href="/">Tổng quan</a></li>
+      <li><a href="/mon-ngon.html">Món ngon</a></li>
+      <li><a href="/ban-do.html">Bản đồ</a></li>
+      <li><a href="/ai-routing.html">AI Routing</a></li>
+      <li><a href="/audio-tts.html">Audio TTS</a></li>
+      <li><a href="/about.html">Chi tiết</a></li>
+      <li><a href="/admin.html">Admin</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1 id="heroTitle">Hệ Thống Phố Ẩm Thực Vĩnh Khánh</h1>
+    <p id="heroSubtitle" class="subtitle">Trải nghiệm du lịch ẩm thực hoàn toàn mới với thuyết minh tự động, gợi ý lộ trình AI và kết nối GPS thông minh — Khám phá điểm đến nhộn nhịp nhất về đêm.</p>
+    
+    <div class="badges">
+      <span class="badge">.NET Core API</span>
+      <span class="badge">Vanilla JS + PWA</span>
+      <span class="badge">MapLibre / GPS</span>
+      <span class="badge">Azure / Edge-TTS</span>
+      <span class="badge">AI Generator</span>
+      <span class="badge">Offline-First</span>
+    </div>
+
+    <div class="hero-actions">
+      <a id="heroPrimaryAction" class="button button-primary" href="/audio-tts.html">Tạo thuyết minh Audio</a>
+      <a id="heroSecondaryAction" class="button button-secondary" href="/mon-ngon.html">Xem món nổi bật</a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <section id="stats">
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="value">5+</div>
+        <div class="label">Điểm / Món Mẫu</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">4</div>
+        <div class="label">Ngôn Ngữ Hỗ Trợ</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">100%</div>
+        <div class="label">Auto-Narration</div>
+      </div>
+      <div class="stat-card">
+        <div class="value">24/7</div>
+        <div class="label">AI Routing</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- OVERVIEW -->
+  <section id="gioi-thieu">
+    <div class="section-header">
+      <div class="icon">🏗️</div>
+      <div>
+        <div class="section-num">Chapter 01</div>
+        <h2>Tổng quan dự án</h2>
+      </div>
+    </div>
+    
+    <div class="info-grid card-grid">
+      <article class="card">
+        <h3>1. Trải nghiệm phố đêm</h3>
+        <p>Vĩnh Khánh nổi tiếng với hoạt động ăn uống về đêm, nhiều quán mở muộn và không khí rất đặc trưng của Sài Gòn. Nơi hội tụ của hải sản nướng và bia lạnh.</p>
+      </article>
+      <article class="card">
+        <h3>2. Ẩm thực đa dạng</h3>
+        <p>Từ cơm tấm, ốc nướng, chè cho đến đồ uống sáng tạo, khu phố này đủ chất liệu để tạo nội dung giới thiệu vô cùng hấp dẫn và phong phú.</p>
+      </article>
+      <article class="card">
+        <h3>3. Du lịch thông minh</h3>
+        <p>Website được thiết kế để gắn QR tại các địa điểm. Khách du lịch quét mã, nghe thuyết minh bằng mọi ngôn ngữ và tiếp cận thông tin offline dễ dàng.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="featured-foods">
+    <div class="section-header">
+      <div class="icon">🍤</div>
+      <div>
+        <div class="section-num" id="featuredSectionNum">Chapter 1B</div>
+        <h2 id="featuredSectionTitle">Món/quán nổi bật để tạo thuyết minh nhanh</h2>
+      </div>
+    </div>
+    <div id="homeLocationsGrid" class="card-grid">
+      <article class="card card-skeleton">Đang tải danh sách quán...</article>
+    </div>
+  </section>
+
+  <section id="modules">
+    <div class="section-header">
+      <div class="icon">🧩</div>
+      <div>
+        <div class="section-num">Chapter 02</div>
+        <h2 data-i18n="home_modules_title">Đi tới các phân hệ</h2>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <article class="card">
+        <h3>Món ngon</h3>
+        <p>Xem toàn bộ danh sách điểm đến, món ăn nổi bật và thông tin địa chỉ.</p>
+        <a class="button button-primary" href="/mon-ngon.html">Mở trang Món ngon</a>
+      </article>
+      <article class="card">
+        <h3>Bản đồ</h3>
+        <p>Xem phần mô phỏng map và cách phân bố điểm ăn trên trục Vĩnh Khánh.</p>
+        <a class="button button-primary" href="/ban-do.html">Mở trang Bản đồ</a>
+      </article>
+      <article class="card">
+        <h3>AI Routing</h3>
+        <p>Tạo lộ trình ăn uống gợi ý theo đối tượng khách và ngân sách.</p>
+        <a class="button button-primary" href="/ai-routing.html">Mở AI Routing</a>
+      </article>
+      <article class="card">
+        <h3>Audio TTS</h3>
+        <p>Tạo thuyết minh tự động nhiều ngôn ngữ và phát ngay trên trình duyệt.</p>
+        <a class="button button-primary" href="/audio-tts.html">Mở Audio TTS</a>
+      </article>
+      <article class="card">
+        <h3>Chi tiết</h3>
+        <p>Trang mô tả trải nghiệm đầy đủ, timeline và hình ảnh nổi bật của khu phố.</p>
+        <a class="button button-primary" href="/about.html">Mở Chi tiết</a>
+      </article>
+    </div>
+  </section>
+
+  <!-- PATTERNS / FOOTER -->
+  <section id="footer">
+    <div class="highlight info">
+      <strong>VinhKhanhTour Auto Narration:</strong> Được xây dựng cho việc tự động hóa dịch ngôn ngữ và giọng đọc. Kết hợp API và giao diện UI tĩnh phục vụ PWA.
+    </div>
+  </section>
+
+  <script src="/i18n.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/location-i18n.js"></script>
+  <script src="/home.js"></script>
 </body>
 </html>

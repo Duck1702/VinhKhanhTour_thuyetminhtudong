@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Gợi ý lộ trình ăn uống bằng AI cho phố ẩm thực Vĩnh Khánh." />
+  <title>AI Routing - Vĩnh Khánh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
+    <ul class="nav-links">
+      <li><a href="/">Tổng quan</a></li>
+      <li><a href="/mon-ngon.html">Món ngon</a></li>
+      <li><a href="/ban-do.html">Bản đồ</a></li>
+      <li><a href="/ai-routing.html">AI Routing</a></li>
+      <li><a href="/audio-tts.html">Audio TTS</a></li>
+      <li><a href="/about.html">Chi tiết</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <h1 data-i18n="routing_hero_title">AI Routing</h1>
+    <p class="subtitle" data-i18n="routing_hero_subtitle">Tạo lộ trình ăn uống thông minh theo nhóm khách, khung giờ và ngân sách.</p>
+  </div>
+
+  <section id="lo-trinh-ai">
+    <div class="section-header">
+      <div class="icon">🧠</div>
+      <div>
+        <div class="section-num">Module 03</div>
+        <h2 data-i18n="routing_section_title">Gợi ý lộ trình bằng AI</h2>
+      </div>
+    </div>
+
+    <form id="routeForm" class="form-layout">
+      <label>
+        Loại khách
+        <input id="visitorType" type="text" placeholder="Ví dụ: gia đình, cặp đôi, nhóm bạn" />
+      </label>
+      <label>
+        Ngân sách
+        <select id="budgetLevel">
+          <option value="">Tùy ý</option>
+          <option value="thấp">Thấp</option>
+          <option value="vừa">Vừa</option>
+          <option value="cao">Cao</option>
+        </select>
+      </label>
+      <label>
+        Giờ bắt đầu
+        <input id="startHour" type="time" />
+      </label>
+      <label>
+        Số khách
+        <input id="guestCount" type="number" min="1" step="1" placeholder="2" />
+      </label>
+      <label class="form-row-wide">
+        Sở thích / yêu cầu
+        <textarea id="preferences" rows="3" placeholder="Ví dụ: thích ốc, đi khuya, chỗ ngồi thoải mái, giá dễ chịu"></textarea>
+      </label>
+      <label class="form-row-wide">
+        Món muốn thử
+        <input id="mustTry" type="text" placeholder="Ví dụ: ốc len xào dừa, cua rang muối, sò điệp nướng" />
+      </label>
+      <div class="form-row-wide">
+        <button type="submit" class="button button-primary" style="width: auto;">Gợi ý lộ trình</button>
+      </div>
+    </form>
+
+    <div id="routeResult" class="result-box hidden">
+      <h3 id="routeTitle"></h3>
+      <p><strong>Tóm tắt:</strong> <span id="routeSummary"></span></p>
+      <p><strong>Chiến lược:</strong> <span id="routeStrategy"></span></p>
+      <p><strong>Nguồn gợi ý:</strong> <span id="routeGeneratedBy" class="code-badge"></span></p>
+      <div id="routeStops" class="timeline"></div>
+    </div>
+  </section>
+
+  <script src="/i18n.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

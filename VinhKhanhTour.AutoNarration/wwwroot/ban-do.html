@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Bản đồ mô phỏng khu phố ẩm thực Vĩnh Khánh." />
+  <title>Bản đồ - Vĩnh Khánh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
+    <ul class="nav-links">
+      <li><a href="/">Tổng quan</a></li>
+      <li><a href="/mon-ngon.html">Món ngon</a></li>
+      <li><a href="/ban-do.html">Bản đồ</a></li>
+      <li><a href="/ai-routing.html">AI Routing</a></li>
+      <li><a href="/audio-tts.html">Audio TTS</a></li>
+      <li><a href="/about.html">Chi tiết</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <h1 data-i18n="map_hero_title">Bản đồ Khu Phố</h1>
+    <p class="subtitle" data-i18n="map_hero_subtitle">Mô phỏng bố trí các điểm ăn uống nổi bật và khu vực trải nghiệm tại Vĩnh Khánh.</p>
+  </div>
+
+  <section>
+    <div class="section-header">
+      <div class="icon">🗺️</div>
+      <div>
+        <div class="section-num">Module 02</div>
+        <h2 data-i18n="map_section_title">GPS & Map Pack (Mô phỏng)</h2>
+      </div>
+    </div>
+
+    <p style="color:var(--text-secondary); margin-bottom: 1rem;">Tích hợp bản đồ Vector Tiles offline và đánh dấu các vị trí quán ăn nổi bật trên trục đường Vĩnh Khánh.</p>
+
+    <div class="map-runtime-info">
+      <span id="mapStatus" class="map-status">Dang khoi tao ban do...</span>
+    </div>
+
+    <div id="vinhKhanhMap" class="map-host" style="min-height:520px;"></div>
+
+    <div class="highlight info">
+      <strong>Ghi chu:</strong> De hien nen Vector Tiles offline day du, can co file /assets/vector-tiles/vinh-khanh/style.json (va cac pbf lien quan). Neu chua co, he thong tu dong dung nen OSM fallback va van hien danh dau cac quan noi bat.
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="/i18n.js"></script>
+  <script src="/nav.js"></script>
+  <script src="/location-i18n.js"></script>
+  <script src="/map.js"></script>
+</body>
+</html>

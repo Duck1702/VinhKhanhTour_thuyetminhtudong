@@ -12,6 +12,7 @@ Website giới thiệu phố ẩm thực Vĩnh Khánh kết hợp API thuyết m
 - Mỗi món có nút tạo thuyết minh riêng để bấm là chạy ngay.
 - Giao diện dùng ảnh thực tế của phố Vĩnh Khánh tải về cục bộ trong `wwwroot/assets`.
 - Có section lộ trình cho khách đi từ quận 1 sang phố ẩm thực Vĩnh Khánh.
+- Có trang admin `/admin.html` để CRUD nội dung, duyệt thuyết minh, quản lý voice/template và xem thống kê vận hành.
 
 ## Chạy dự án
 
@@ -36,10 +37,36 @@ Cập nhật `appsettings.json`:
 }
 ```
 
+## Cấu hình Admin
+
+Thêm cấu hình trong `appsettings.Development.json` hoặc `appsettings.json`:
+
+```json
+"Admin": {
+  "ApiKey": "dev-admin-123",
+  "TranslationCostPerMillionChars": 10.0,
+  "TtsCostPerMillionChars": 16.0
+}
+```
+
+- Truy cập trang quản trị: `/admin.html`
+- Mọi API admin yêu cầu header `X-Admin-Key`.
+
 ## API chính
 
 - `GET /api/locations`: lấy danh sách nội dung mẫu.
 - `POST /api/narrations`: tạo bản dịch và audio thuyết minh.
+- `GET /api/narration-templates`: lấy danh sách thuyết minh có sẵn đã public.
+
+## API Admin chính
+
+- `GET /api/admin/dashboard`: tổng quan vận hành, cost, truy cập.
+- `GET/POST/PUT/DELETE /api/admin/locations`: quản lý điểm đến/món ăn.
+- `POST /api/admin/locations/{id}/approve`: duyệt nội dung thuyết minh để public.
+- `GET/POST/DELETE /api/admin/voice-profiles`: quản lý voice theo ngôn ngữ/kịch bản.
+- `GET/POST/DELETE /api/admin/narration-templates`: quản lý thuyết minh có sẵn.
+- `GET /api/admin/logs/ai`: log tạo audio + ước tính chi phí AI.
+- `GET /api/admin/logs/visits`: log lượt truy cập.
 
 Body mẫu:
 
@@ -77,6 +104,12 @@ Trang chi tiết `/about.html` có:
 - Mô tả tổng quan về phố ẩm thực Vĩnh Khánh.
 - Gợi ý lộ trình trải nghiệm.
 - Hai khối ảnh thực tế để dùng trong thuyết trình hoặc demo.
+
+Trang bản đồ `/ban-do.html` có:
+
+- Tích hợp MapLibre.
+- Cấu hình nguồn Offline Vector Tiles tại `/assets/vector-tiles/vinh-khanh/{z}/{x}/{y}.pbf`.
+- Tự động đánh dấu các quán nổi bật theo toạ độ từ API `/api/locations`.
 
 ## Mở rộng tiếp theo
 

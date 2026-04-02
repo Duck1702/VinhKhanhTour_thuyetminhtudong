@@ -11,4 +11,7 @@ public sealed class StreetLocation
     public required string BestTime { get; init; }
     public required string Highlight { get; init; }
     public required string DescriptionVi { get; init; }
+    public string? DishSamples { get; init; }
+    public double? Latitude { get; init; }
+    public double? Longitude { get; init; }
 }
