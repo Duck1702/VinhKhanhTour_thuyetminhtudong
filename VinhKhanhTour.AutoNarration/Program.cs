@@ -17,6 +17,7 @@ builder.Services.AddScoped<ITranslationService, AzureTranslationService>();
 builder.Services.AddScoped<ISpeechSynthesisService, AzureSpeechSynthesisService>();
 builder.Services.AddScoped<NarrationOrchestrator>();
 builder.Services.AddScoped<IRoutePlanningService, RoutePlanningService>();
+builder.Services.AddScoped<ITourAssistantService, TourAssistantService>();
 
 builder.Services.AddCors(options =>
 {
@@ -126,6 +127,36 @@ app.MapPost("/api/narrations", async (
 })
 .WithName("GenerateNarration");
 
+app.MapPost("/api/narrations/instant", async (
+    GenerateNarrationRequest request,
+    NarrationOrchestrator narrationOrchestrator,
+    HttpContext httpContext,
+    CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(request.LocationId))
+    {
+        return Results.BadRequest(new { message = "Bạn cần truyền LocationId để nghe thuyết minh nhanh." });
+    }
+
+    var language = string.IsNullOrWhiteSpace(request.TargetLanguage) ? "vi" : request.TargetLanguage;
+
+    try
+    {
+        var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+        var response = await narrationOrchestrator.GetOrCreateInstantAsync(request.LocationId, language, baseUrl, cancellationToken);
+        return Results.Ok(response);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { message = ex.Message });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+    }
+})
+.WithName("GenerateInstantNarration");
+
 app.MapPost("/api/routes/plan", async (
     RoutePlanRequest request,
     IRoutePlanningService routePlanningService,
@@ -142,6 +173,27 @@ app.MapPost("/api/routes/plan", async (
     }
 })
 .WithName("PlanRoute");
+
+app.MapPost("/api/assistant/ask", async (
+    AssistantAskRequest request,
+    ITourAssistantService tourAssistantService,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var response = await tourAssistantService.AskAsync(request, cancellationToken);
+        return Results.Ok(response);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { message = ex.Message });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+    }
+})
+.WithName("AskAssistant");
 
 app.MapGet("/api/admin/dashboard", (
     HttpContext httpContext,

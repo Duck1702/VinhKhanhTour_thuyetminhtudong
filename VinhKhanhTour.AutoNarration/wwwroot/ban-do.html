@@ -41,20 +41,21 @@
     <p style="color:var(--text-secondary); margin-bottom: 1rem;">Tích hợp bản đồ Vector Tiles offline và đánh dấu các vị trí quán ăn nổi bật trên trục đường Vĩnh Khánh.</p>
 
     <div class="map-runtime-info">
-      <span id="mapStatus" class="map-status">Dang khoi tao ban do...</span>
+      <span id="mapStatus" class="map-status">Đang khởi tạo bản đồ...</span>
     </div>
 
     <div id="vinhKhanhMap" class="map-host" style="min-height:520px;"></div>
 
     <div class="highlight info">
-      <strong>Ghi chu:</strong> De hien nen Vector Tiles offline day du, can co file /assets/vector-tiles/vinh-khanh/style.json (va cac pbf lien quan). Neu chua co, he thong tu dong dung nen OSM fallback va van hien danh dau cac quan noi bat.
+      <strong>Ghi chú:</strong> Để hiển thị nền Vector Tiles offline đầy đủ, cần có file /assets/vector-tiles/vinh-khanh/style.json (và các pbf liên quan). Nếu chưa có, hệ thống tự động dùng nền OSM fallback và vẫn hiển thị đánh dấu các quán nổi bật.
     </div>
   </section>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script src="/i18n.js"></script>
+  <script src="/i18n.js?v=20260407-2"></script>
   <script src="/nav.js"></script>
   <script src="/location-i18n.js"></script>
   <script src="/map.js"></script>
 </body>
 </html>
+

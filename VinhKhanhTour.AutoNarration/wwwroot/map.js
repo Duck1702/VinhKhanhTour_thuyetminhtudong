@@ -57,7 +57,7 @@ function renderFallbackCanvas(locations) {
     .filter((item) => Number.isFinite(item.latitude) && Number.isFinite(item.longitude));
 
   if (!points.length) {
-    host.innerHTML = '<div style="padding:1rem;color:#616161">Khong co du lieu toa do de hien thi fallback.</div>';
+    host.innerHTML = '<div style="padding:1rem;color:#616161">Không có dữ liệu tọa độ để hiển thị fallback.</div>';
     return;
   }
 
@@ -152,7 +152,7 @@ function buildRouteFeature(locations) {
       coordinates: points
     },
     properties: {
-      name: 'Truc duong Vinh Khanh'
+      name: 'Trục đường Vĩnh Khánh'
     }
   };
 }

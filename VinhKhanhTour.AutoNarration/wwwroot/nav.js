@@ -22,7 +22,7 @@
     select.setAttribute('aria-label', 'Site language');
 
     const options = [
-      { value: 'vi', label: 'Tieng Viet' },
+      { value: 'vi', label: 'Tiếng Việt' },
       { value: 'en', label: 'English' },
       { value: 'fr', label: 'Francais' },
       { value: 'ja', label: '日本語' },

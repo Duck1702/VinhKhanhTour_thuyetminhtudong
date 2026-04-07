@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Demo đọc thuyết minh miễn phí bằng Web Speech API." />
+  <title>Demo TTS Miễn Phí - Vĩnh Khánh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <nav>
+    <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
+    <ul class="nav-links">
+      <li><a href="/">Tổng quan</a></li>
+      <li><a href="/mon-ngon.html">Món ngon</a></li>
+      <li><a href="/audio-tts.html">Audio TTS</a></li>
+      <li><a href="/demo-tts.html" class="active">Demo TTS Free</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <h1>Demo TTS Miễn Phí</h1>
+    <p class="subtitle">Bản demo dùng Web Speech API ngay trên trình duyệt. Không gọi dịch vụ cloud để đọc giọng.</p>
+    <div class="hero-actions" style="flex-wrap: wrap; gap: 0.75rem;">
+      <label style="display:flex; align-items:center; gap:.45rem; color:var(--text); font-weight:600;">
+        Ngôn ngữ
+        <select id="demoLanguage" style="width:auto; min-width:140px;">
+          <option value="vi">Tiếng Việt</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+        </select>
+      </label>
+      <button id="stopDemoSpeech" class="button button-secondary" type="button">Dừng đọc</button>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-header">
+      <div class="icon">🧪</div>
+      <div>
+        <div class="section-num">Demo</div>
+        <h2>Nghe thử theo địa điểm</h2>
+      </div>
+    </div>
+
+    <div class="highlight info">
+      <strong>Gợi ý kiểm tra:</strong> Bấm một địa điểm bất kỳ để nghe đọc. Đổi ngôn ngữ rồi bấm lại để so sánh chất lượng giọng.
+    </div>
+
+    <div id="demoStatus" class="map-status" style="margin-bottom:1rem;">Đang tải dữ liệu địa điểm...</div>
+    <audio id="demoAudioPlayer" controls class="hidden" style="margin-bottom:1rem;"></audio>
+    <div id="demoLocationsGrid" class="card-grid"></div>
+  </section>
+
+  <script src="/location-i18n.js"></script>
+  <script src="/demo-tts.js"></script>
+</body>
+</html>

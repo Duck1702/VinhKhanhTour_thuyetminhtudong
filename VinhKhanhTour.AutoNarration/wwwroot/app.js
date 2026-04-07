@@ -29,6 +29,7 @@ const routeStops = document.getElementById('routeStops');
 let currentLocations = [];
 let currentTemplates = [];
 let narrationBusy = false;
+let quickPlayerHost;
 const SITE_LANGUAGE_KEY = 'siteLanguage';
 
 function tr(key) {
@@ -151,6 +152,74 @@ function buildNarrationText(location) {
   return `${location.name}. ${location.category}. ${location.shortIntro} ${location.highlight}. ${location.descriptionVi}`;
 }
 
+function ensureQuickPlayer() {
+  if (quickPlayerHost) {
+    return quickPlayerHost;
+  }
+
+  const host = document.createElement('div');
+  host.className = 'quick-player hidden';
+  host.innerHTML = `
+    <div class="quick-player-head">
+      <strong id="quickPlayerTitle">Audio</strong>
+      <button type="button" id="quickPlayerClose" class="button button-secondary">Đóng</button>
+    </div>
+    <audio id="quickPlayerAudio" controls></audio>
+  `;
+
+  document.body.appendChild(host);
+
+  const closeBtn = host.querySelector('#quickPlayerClose');
+  closeBtn?.addEventListener('click', () => {
+    const audio = host.querySelector('#quickPlayerAudio');
+    if (audio) {
+      audio.pause();
+    }
+    host.classList.add('hidden');
+  });
+
+  quickPlayerHost = host;
+  return host;
+}
+
+async function playNarrationInstant(location) {
+  const selectedLanguage = languageSelect?.value || getPreferredLanguage();
+
+  const response = await fetch('/api/narrations/instant', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      locationId: location.id,
+      targetLanguage: selectedLanguage
+    })
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.detail || result.message || tr('narration_failed'));
+  }
+
+  const host = ensureQuickPlayer();
+  const title = host.querySelector('#quickPlayerTitle');
+  const audio = host.querySelector('#quickPlayerAudio');
+  if (!audio) {
+    return;
+  }
+
+  if (title) {
+    title.textContent = `${location.name} (${selectedLanguage})`;
+  }
+
+  host.classList.remove('hidden');
+  audio.src = result.audioUrl;
+
+  try {
+    await audio.play();
+  } catch {
+    // Autoplay may be blocked by browser policies.
+  }
+}
+
 async function generateNarration() {
   if (!locationSelect || !customText || !languageSelect || !voiceName || !speakingRate) {
     return;
@@ -195,8 +264,7 @@ async function generateNarration() {
 
 async function createNarrationForLocation(location) {
   if (!narrationForm) {
-    const selectedLang = languageSelect?.value || localStorage.getItem(SITE_LANGUAGE_KEY) || 'vi';
-    window.location.href = `/audio-tts.html?locationId=${encodeURIComponent(location.id)}&lang=${encodeURIComponent(selectedLang)}`;
+    await playNarrationInstant(location);
     return;
   }
 

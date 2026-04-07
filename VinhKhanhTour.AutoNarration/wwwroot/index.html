@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body>
+<body class="home-landing">
 
   <div id="languageModal" class="language-modal hidden" role="dialog" aria-modal="true" aria-labelledby="languageModalTitle">
     <div class="language-modal-card">
@@ -28,7 +28,7 @@
 
   <!-- OFFLINE BANNER -->
   <div id="pwaBanner" class="offline-banner">
-    <span>🌐 Hỗ trợ chế độ Offline (PWA) — Bạn có thể truy cập nội dung khi mất kết nối mạng!</span>
+    <span data-i18n="home_offline_banner">🌐 Hỗ trợ chế độ Offline (PWA) — Bạn có thể truy cập nội dung khi mất kết nối mạng!</span>
   </div>
 
   <!-- NAV -->
@@ -60,7 +60,7 @@
     </div>
 
     <div class="hero-actions">
-      <a id="heroPrimaryAction" class="button button-primary" href="/audio-tts.html">Tạo thuyết minh Audio</a>
+      <a id="heroPrimaryAction" class="button button-primary" href="/audio-tts.html">Nghe thuyết minh Audio</a>
       <a id="heroSecondaryAction" class="button button-secondary" href="/mon-ngon.html">Xem món nổi bật</a>
     </div>
   </div>
@@ -70,11 +70,11 @@
     <div class="stats-row">
       <div class="stat-card">
         <div class="value">5+</div>
-        <div class="label">Điểm / Món Mẫu</div>
+        <div class="label" data-i18n="home_stats_spots">Điểm / Món Mẫu</div>
       </div>
       <div class="stat-card">
         <div class="value">4</div>
-        <div class="label">Ngôn Ngữ Hỗ Trợ</div>
+        <div class="label" data-i18n="home_stats_languages">Ngôn Ngữ Hỗ Trợ</div>
       </div>
       <div class="stat-card">
         <div class="value">100%</div>
@@ -93,85 +93,59 @@
       <div class="icon">🏗️</div>
       <div>
         <div class="section-num">Chapter 01</div>
-        <h2>Tổng quan dự án</h2>
+        <h2 data-i18n="home_overview_title">Tổng quan dự án</h2>
       </div>
     </div>
     
     <div class="info-grid card-grid">
       <article class="card">
-        <h3>1. Trải nghiệm phố đêm</h3>
-        <p>Vĩnh Khánh nổi tiếng với hoạt động ăn uống về đêm, nhiều quán mở muộn và không khí rất đặc trưng của Sài Gòn. Nơi hội tụ của hải sản nướng và bia lạnh.</p>
+        <h3 data-i18n="home_overview_card1_title">1. Trải nghiệm phố đêm</h3>
+        <p data-i18n="home_overview_card1_desc">Vĩnh Khánh nổi tiếng với hoạt động ăn uống về đêm, nhiều quán mở muộn và không khí rất đặc trưng của Sài Gòn. Nơi hội tụ của hải sản nướng và bia lạnh.</p>
       </article>
       <article class="card">
-        <h3>2. Ẩm thực đa dạng</h3>
-        <p>Từ cơm tấm, ốc nướng, chè cho đến đồ uống sáng tạo, khu phố này đủ chất liệu để tạo nội dung giới thiệu vô cùng hấp dẫn và phong phú.</p>
+        <h3 data-i18n="home_overview_card2_title">2. Ẩm thực đa dạng</h3>
+        <p data-i18n="home_overview_card2_desc">Từ cơm tấm, ốc nướng, chè cho đến đồ uống sáng tạo, khu phố này đủ chất liệu để tạo nội dung giới thiệu vô cùng hấp dẫn và phong phú.</p>
       </article>
       <article class="card">
-        <h3>3. Du lịch thông minh</h3>
-        <p>Website được thiết kế để gắn QR tại các địa điểm. Khách du lịch quét mã, nghe thuyết minh bằng mọi ngôn ngữ và tiếp cận thông tin offline dễ dàng.</p>
+        <h3 data-i18n="home_overview_card3_title">3. Du lịch thông minh</h3>
+        <p data-i18n="home_overview_card3_desc">Website được thiết kế để gắn QR tại các địa điểm. Khách du lịch quét mã, nghe thuyết minh bằng mọi ngôn ngữ và tiếp cận thông tin offline dễ dàng.</p>
       </article>
     </div>
   </section>
 
-  <section id="featured-foods">
+  <section id="assistant">
     <div class="section-header">
-      <div class="icon">🍤</div>
+      <div class="icon">💬</div>
       <div>
-        <div class="section-num" id="featuredSectionNum">Chapter 1B</div>
-        <h2 id="featuredSectionTitle">Món/quán nổi bật để tạo thuyết minh nhanh</h2>
-      </div>
-    </div>
-    <div id="homeLocationsGrid" class="card-grid">
-      <article class="card card-skeleton">Đang tải danh sách quán...</article>
-    </div>
-  </section>
-
-  <section id="modules">
-    <div class="section-header">
-      <div class="icon">🧩</div>
-      <div>
-        <div class="section-num">Chapter 02</div>
-        <h2 data-i18n="home_modules_title">Đi tới các phân hệ</h2>
+        <div class="section-num">AI Assistant</div>
+        <h2 data-i18n="assistant_section_title">Trợ lý hỏi đáp du lịch</h2>
       </div>
     </div>
 
-    <div class="card-grid">
-      <article class="card">
-        <h3>Món ngon</h3>
-        <p>Xem toàn bộ danh sách điểm đến, món ăn nổi bật và thông tin địa chỉ.</p>
-        <a class="button button-primary" href="/mon-ngon.html">Mở trang Món ngon</a>
-      </article>
-      <article class="card">
-        <h3>Bản đồ</h3>
-        <p>Xem phần mô phỏng map và cách phân bố điểm ăn trên trục Vĩnh Khánh.</p>
-        <a class="button button-primary" href="/ban-do.html">Mở trang Bản đồ</a>
-      </article>
-      <article class="card">
-        <h3>AI Routing</h3>
-        <p>Tạo lộ trình ăn uống gợi ý theo đối tượng khách và ngân sách.</p>
-        <a class="button button-primary" href="/ai-routing.html">Mở AI Routing</a>
-      </article>
-      <article class="card">
-        <h3>Audio TTS</h3>
-        <p>Tạo thuyết minh tự động nhiều ngôn ngữ và phát ngay trên trình duyệt.</p>
-        <a class="button button-primary" href="/audio-tts.html">Mở Audio TTS</a>
-      </article>
-      <article class="card">
-        <h3>Chi tiết</h3>
-        <p>Trang mô tả trải nghiệm đầy đủ, timeline và hình ảnh nổi bật của khu phố.</p>
-        <a class="button button-primary" href="/about.html">Mở Chi tiết</a>
-      </article>
+    <form id="assistantForm" class="form-layout">
+      <label class="form-row-wide">
+        <span data-i18n="assistant_question_placeholder">Hỏi về món ngon, quán phù hợp, giờ mở cửa, gợi ý lịch trình...</span>
+        <input id="assistantQuestion" type="text" data-i18n-placeholder="assistant_question_placeholder" placeholder="Hỏi về món ngon, quán phù hợp, giờ mở cửa, gợi ý lịch trình..." />
+      </label>
+      <div class="form-row-wide">
+        <button type="submit" class="button button-primary" data-i18n="assistant_ask_btn">Hỏi trợ lý</button>
+      </div>
+    </form>
+
+    <div id="assistantResult" class="result-box hidden">
+      <p><strong data-i18n="assistant_answer_label">Trả lời:</strong> <span id="assistantAnswer"></span></p>
+      <p><strong data-i18n="assistant_suggested_label">Gợi ý địa điểm:</strong> <span id="assistantSuggested"></span></p>
     </div>
   </section>
 
   <!-- PATTERNS / FOOTER -->
   <section id="footer">
     <div class="highlight info">
-      <strong>VinhKhanhTour Auto Narration:</strong> Được xây dựng cho việc tự động hóa dịch ngôn ngữ và giọng đọc. Kết hợp API và giao diện UI tĩnh phục vụ PWA.
+      <strong>VinhKhanhTour Auto Narration:</strong> <span data-i18n="home_footer_desc">Được xây dựng cho việc tự động hóa dịch ngôn ngữ và giọng đọc. Kết hợp API và giao diện UI tĩnh phục vụ PWA.</span>
     </div>
   </section>
 
-  <script src="/i18n.js"></script>
+  <script src="/i18n.js?v=20260407-2"></script>
   <script src="/nav.js"></script>
   <script src="/location-i18n.js"></script>
   <script src="/home.js"></script>

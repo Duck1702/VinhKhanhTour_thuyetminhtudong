@@ -2,11 +2,14 @@ using VinhKhanhTour.AutoNarration.Models;
 using VinhKhanhTour.AutoNarration.Options;
 using Microsoft.Extensions.Options;
 using System.Text;
+using System.Collections.Concurrent;
 
 namespace VinhKhanhTour.AutoNarration.Services;
 
 public sealed class NarrationOrchestrator
 {
+    private static readonly ConcurrentDictionary<string, GenerateNarrationResponse> InstantNarrationCache = new(StringComparer.OrdinalIgnoreCase);
+
     private readonly ILocationContentService _locationContentService;
     private readonly ITranslationService _translationService;
     private readonly ISpeechSynthesisService _speechSynthesisService;
@@ -149,6 +152,90 @@ public sealed class NarrationOrchestrator
             AudioUrl = audioUrl,
             GeneratedAt = DateTimeOffset.UtcNow
         };
+    }
+
+    public async Task<GenerateNarrationResponse> GetOrCreateInstantAsync(
+        string locationId,
+        string targetLanguage,
+        string baseUrl,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(locationId))
+        {
+            throw new ArgumentException("LocationId không được để trống.");
+        }
+
+        if (string.IsNullOrWhiteSpace(targetLanguage))
+        {
+            targetLanguage = "vi";
+        }
+
+        var normalizedLocationId = locationId.Trim();
+        var normalizedLanguage = targetLanguage.Trim();
+        var key = $"{normalizedLocationId}|{normalizedLanguage}";
+
+        var publishedTemplate = _adminManagementService
+            .GetNarrationTemplates(publishedOnly: true)
+            .FirstOrDefault(t =>
+                !string.IsNullOrWhiteSpace(t.LocationId)
+                && t.LocationId.Equals(normalizedLocationId, StringComparison.OrdinalIgnoreCase)
+                && t.TargetLanguage.Equals(normalizedLanguage, StringComparison.OrdinalIgnoreCase)
+                && !string.IsNullOrWhiteSpace(t.AudioUrl));
+
+        if (publishedTemplate is not null)
+        {
+            var location = _locationContentService.GetById(normalizedLocationId)
+                ?? throw new ArgumentException($"Không tìm thấy địa điểm với id '{normalizedLocationId}'.");
+
+            var templateAudioUrl = RewriteAudioUrlForCurrentHost(publishedTemplate.AudioUrl!, baseUrl);
+
+            return new GenerateNarrationResponse
+            {
+                LocationId = normalizedLocationId,
+                LocationName = location.Name,
+                SourceTextVi = publishedTemplate.SourceTextVi,
+                TranslatedText = publishedTemplate.SourceTextVi,
+                TargetLanguage = normalizedLanguage,
+                VoiceName = publishedTemplate.VoiceName ?? "template-voice",
+                AudioUrl = templateAudioUrl,
+                GeneratedAt = DateTimeOffset.UtcNow
+            };
+        }
+
+        if (InstantNarrationCache.TryGetValue(key, out var cached))
+        {
+            return new GenerateNarrationResponse
+            {
+                LocationId = cached.LocationId,
+                LocationName = cached.LocationName,
+                SourceTextVi = cached.SourceTextVi,
+                TranslatedText = cached.TranslatedText,
+                TargetLanguage = cached.TargetLanguage,
+                VoiceName = cached.VoiceName,
+                AudioUrl = RewriteAudioUrlForCurrentHost(cached.AudioUrl, baseUrl),
+                GeneratedAt = cached.GeneratedAt
+            };
+        }
+
+        var created = await GenerateAsync(new GenerateNarrationRequest
+        {
+            LocationId = normalizedLocationId,
+            TargetLanguage = normalizedLanguage,
+            SpeakingRate = 1.0
+        }, baseUrl, cancellationToken);
+
+        InstantNarrationCache[key] = created;
+        return created;
+    }
+
+    private static string RewriteAudioUrlForCurrentHost(string audioUrl, string baseUrl)
+    {
+        if (!Uri.TryCreate(audioUrl, UriKind.Absolute, out var absoluteUri))
+        {
+            return audioUrl;
+        }
+
+        return $"{baseUrl.TrimEnd('/')}{absoluteUri.AbsolutePath}";
     }
 
     private static string BuildFallbackTranslation(string sourceTextVi, string targetLanguage)

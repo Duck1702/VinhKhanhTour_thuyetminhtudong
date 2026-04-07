@@ -39,17 +39,17 @@
 
     <form id="narrationForm" class="form-layout">
       <label class="form-row-wide">
-        Chọn nội dung (POI)
+        <span data-i18n="audio_label_location">Chọn nội dung (POI)</span>
         <select id="locationSelect"></select>
       </label>
       <label class="form-row-wide">
-        Hoặc chọn thuyết minh có sẵn
+        <span data-i18n="audio_label_template">Hoặc chọn thuyết minh có sẵn</span>
         <select id="templateSelect">
-          <option value="">Không dùng template</option>
+          <option value="" data-i18n="template_none">Không dùng template</option>
         </select>
       </label>
       <label>
-        Ngôn ngữ đích
+        <span data-i18n="audio_label_target_language">Ngôn ngữ đích</span>
         <select id="languageSelect">
           <option value="en">English</option>
           <option value="vi">Tiếng Việt</option>
@@ -59,33 +59,34 @@
         </select>
       </label>
       <label>
-        Tốc độ đọc
+        <span data-i18n="audio_label_speaking_rate">Tốc độ đọc</span>
         <input id="speakingRate" type="number" min="0.5" max="2" step="0.05" value="1" />
       </label>
       <label class="form-row-wide">
-        Nội dung tùy chỉnh (Ghi đè kịch bản)
-        <textarea id="customText" rows="4" placeholder="Để trống nếu muốn dùng nội dung mặc định của POI..."></textarea>
+        <span data-i18n="audio_label_custom_text">Nội dung tùy chỉnh (Ghi đè kịch bản)</span>
+        <textarea id="customText" rows="4" data-i18n-placeholder="audio_placeholder_custom_text" placeholder="Để trống nếu muốn dùng nội dung mặc định của POI..."></textarea>
       </label>
       <label class="form-row-wide hidden">
         <input id="voiceName" type="text" />
       </label>
       <div class="form-row-wide">
-        <button type="submit" class="button button-primary" style="width: auto;">🎙️ Tạo Audio TTS</button>
+        <button type="submit" class="button button-primary" style="width: auto;" data-i18n="btn_audio_tts">🎙️ Tạo Audio TTS</button>
       </div>
     </form>
 
     <div id="narrationResult" class="result-box hidden">
-      <h3>Kết quả Audio</h3>
-      <p><strong>Nội dung dịch:</strong> <span id="translatedText"></span></p>
-      <p><strong>Giọng đọc (Voice):</strong> <span id="usedVoice" class="code-badge"></span></p>
+      <h3 data-i18n="audio_result_title">Kết quả Audio</h3>
+      <p><strong data-i18n="audio_result_translated_label">Nội dung dịch:</strong> <span id="translatedText"></span></p>
+      <p><strong data-i18n="audio_result_voice_label">Giọng đọc (Voice):</strong> <span id="usedVoice" class="code-badge"></span></p>
       <audio id="audioPlayer" controls></audio>
-      <a id="audioLink" class="button button-secondary" href="#" target="_blank" rel="noreferrer" style="font-size:0.85rem; margin-top:0.5rem; display:inline-block">Tải xuống / Mở Tab Mới</a>
+      <a id="audioLink" class="button button-secondary" href="#" target="_blank" rel="noreferrer" style="font-size:0.85rem; margin-top:0.5rem; display:inline-block" data-i18n="audio_result_download_cta">Tải xuống / Mở tab mới</a>
     </div>
   </section>
 
-  <script src="/i18n.js"></script>
+  <script src="/i18n.js?v=20260407-2"></script>
   <script src="/nav.js"></script>
   <script src="/location-i18n.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
+

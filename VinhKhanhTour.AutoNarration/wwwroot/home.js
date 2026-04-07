@@ -1,5 +1,10 @@
 const homeLocationsGrid = document.getElementById('homeLocationsGrid');
 const languageModal = document.getElementById('languageModal');
+const assistantForm = document.getElementById('assistantForm');
+const assistantQuestion = document.getElementById('assistantQuestion');
+const assistantResult = document.getElementById('assistantResult');
+const assistantAnswer = document.getElementById('assistantAnswer');
+const assistantSuggested = document.getElementById('assistantSuggested');
 
 const SITE_LANGUAGE_KEY = 'siteLanguage';
 
@@ -9,22 +14,22 @@ const i18n = {
     modalHint: 'Nội dung trang chủ và thao tác tạo thuyết minh sẽ theo ngôn ngữ bạn chọn.',
     heroTitle: 'Hệ Thống Phố Ẩm Thực Vĩnh Khánh',
     heroSubtitle: 'Trải nghiệm du lịch ẩm thực hoàn toàn mới với thuyết minh tự động, gợi ý lộ trình AI và kết nối GPS thông minh — Khám phá điểm đến nhộn nhịp nhất về đêm.',
-    heroPrimary: 'Tạo thuyết minh Audio',
+    heroPrimary: 'Nghe thuyết minh Audio',
     heroSecondary: 'Xem món nổi bật',
     featuredTitle: 'Món/quán nổi bật để tạo thuyết minh nhanh',
-    featuredButton: 'Tạo thuyết minh',
-    featuredHint: 'Nhấn để mở trang Audio TTS cho quán này'
+    featuredButton: 'Nghe ngay',
+    featuredHint: 'Nhấn để nghe thuyết minh ngay theo ngôn ngữ đã chọn'
   },
   en: {
     modalTitle: 'Choose your language before starting',
     modalHint: 'Homepage content and narration flow will follow your selected language.',
     heroTitle: 'Vinh Khanh Night Culinary System',
     heroSubtitle: 'Discover night food tours with instant narration, AI route suggestions, and smart GPS guidance.',
-    heroPrimary: 'Create Audio Narration',
+    heroPrimary: 'Listen to Audio Narration',
     heroSecondary: 'Explore Featured Foods',
     featuredTitle: 'Featured places for instant narration',
-    featuredButton: 'Narrate this place',
-    featuredHint: 'Open Audio TTS with this location pre-selected'
+    featuredButton: 'Listen now',
+    featuredHint: 'Tap to listen immediately in your selected language'
   },
   fr: {
     modalTitle: 'Choisissez votre langue avant de commencer',
@@ -34,8 +39,8 @@ const i18n = {
     heroPrimary: 'Creer une narration audio',
     heroSecondary: 'Voir les plats populaires',
     featuredTitle: 'Lieux recommandes pour narration rapide',
-    featuredButton: 'Narrer ce lieu',
-    featuredHint: 'Ouvrir Audio TTS avec ce lieu'
+    featuredButton: 'Ecouter',
+    featuredHint: 'Appuyez pour ecouter immediatement dans la langue choisie'
   },
   ja: {
     modalTitle: '開始前に言語を選択してください',
@@ -45,8 +50,8 @@ const i18n = {
     heroPrimary: '音声ナレーションを作成',
     heroSecondary: '人気スポットを見る',
     featuredTitle: 'すぐにナレーションできる注目スポット',
-    featuredButton: 'この場所をナレーション',
-    featuredHint: 'この場所を選択した状態でAudio TTSを開く'
+    featuredButton: '今すぐ再生',
+    featuredHint: '選択した言語でそのまま再生します'
   },
   ko: {
     modalTitle: '시작 전에 언어를 선택하세요',
@@ -56,10 +61,12 @@ const i18n = {
     heroPrimary: '오디오 내레이션 만들기',
     heroSecondary: '추천 맛집 보기',
     featuredTitle: '빠른 내레이션 추천 맛집',
-    featuredButton: '이 장소 내레이션',
-    featuredHint: '이 장소를 선택한 상태로 Audio TTS 열기'
+    featuredButton: '바로 듣기',
+    featuredHint: '선택한 언어로 바로 재생됩니다'
   }
 };
+
+let quickPlayer;
 
 function escapeHtml(value) {
   return String(value)
@@ -80,6 +87,69 @@ function setLang(lang) {
   localStorage.setItem(SITE_LANGUAGE_KEY, normalized);
   if (window.siteI18n?.setSiteLanguage) {
     window.siteI18n.setSiteLanguage(normalized);
+  }
+}
+
+function ensureQuickPlayer() {
+  if (quickPlayer) {
+    return quickPlayer;
+  }
+
+  const host = document.createElement('div');
+  host.className = 'quick-player hidden';
+  host.innerHTML = `
+    <div class="quick-player-head">
+      <strong id="quickPlayerTitle">Audio</strong>
+      <button type="button" id="quickPlayerClose" class="button button-secondary">Đóng</button>
+    </div>
+    <audio id="quickPlayerAudio" controls></audio>
+  `;
+
+  document.body.appendChild(host);
+
+  const closeBtn = host.querySelector('#quickPlayerClose');
+  closeBtn?.addEventListener('click', () => {
+    const audio = host.querySelector('#quickPlayerAudio');
+    if (audio) {
+      audio.pause();
+    }
+    host.classList.add('hidden');
+  });
+
+  quickPlayer = host;
+  return host;
+}
+
+async function playInstantNarration(locationId, locationName, lang) {
+  const response = await fetch('/api/narrations/instant', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ locationId, targetLanguage: lang })
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result?.detail || result?.message || i18n.vi.narration_failed || 'Play failed.');
+  }
+
+  const host = ensureQuickPlayer();
+  const title = host.querySelector('#quickPlayerTitle');
+  const audio = host.querySelector('#quickPlayerAudio');
+  if (!audio) {
+    return;
+  }
+
+  if (title) {
+    title.textContent = `Đang phát: ${locationName}`;
+  }
+
+  host.classList.remove('hidden');
+  audio.src = result.audioUrl;
+
+  try {
+    await audio.play();
+  } catch {
+    // Browser autoplay policy may block play without direct gesture.
   }
 }
 
@@ -128,7 +198,7 @@ async function renderFeaturedLocations(lang) {
   try {
     const response = await fetch('/api/locations');
     if (!response.ok) {
-      throw new Error('Khong tai duoc danh sach dia diem.');
+      throw new Error('Không tải được danh sách địa điểm.');
     }
 
     const data = await response.json();
@@ -146,12 +216,84 @@ async function renderFeaturedLocations(lang) {
         <h3>${escapeHtml(location.name)}</h3>
         <p>${escapeHtml(location.shortIntro)}</p>
         <p style="margin-top:.4rem; font-size:.84rem; color:var(--text-secondary);">${escapeHtml(t.featuredHint)}</p>
-        <a class="button button-primary" href="/audio-tts.html?locationId=${encodeURIComponent(location.id)}&lang=${encodeURIComponent(lang)}">${escapeHtml(t.featuredButton)}</a>
+        <button type="button" class="button button-primary" data-listen-id="${escapeHtml(location.id)}" data-listen-name="${escapeHtml(location.name)}">${escapeHtml(t.featuredButton)}</button>
       </article>
     `).join('');
+
+    homeLocationsGrid.querySelectorAll('[data-listen-id]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const listenId = button.getAttribute('data-listen-id');
+        const listenName = button.getAttribute('data-listen-name') || 'Audio';
+        if (!listenId) {
+          return;
+        }
+
+        button.setAttribute('disabled', 'disabled');
+        const previous = button.textContent;
+        button.textContent = '...';
+
+        try {
+          await playInstantNarration(listenId, listenName, lang);
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          button.removeAttribute('disabled');
+          button.textContent = previous;
+        }
+      });
+    });
   } catch (error) {
     homeLocationsGrid.innerHTML = `<article class="card card-skeleton">${escapeHtml(error.message)}</article>`;
   }
+}
+
+function initAssistant() {
+  if (!assistantForm || !assistantQuestion || !assistantResult || !assistantAnswer || !assistantSuggested) {
+    return;
+  }
+
+  assistantForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const lang = getLang();
+    const question = assistantQuestion.value.trim();
+    if (!question) {
+      return;
+    }
+
+    const button = assistantForm.querySelector('button');
+    if (button) {
+      button.setAttribute('disabled', 'disabled');
+      button.textContent = window.siteI18n?.translate?.('assistant_thinking', lang) || 'Thinking...';
+    }
+
+    assistantResult.classList.remove('hidden');
+    assistantAnswer.textContent = window.siteI18n?.translate?.('assistant_thinking', lang) || 'Thinking...';
+    assistantSuggested.textContent = '';
+
+    try {
+      const response = await fetch('/api/assistant/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, language: lang })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.detail || result?.message || window.siteI18n?.translate?.('assistant_error', lang) || 'Error');
+      }
+
+      assistantAnswer.textContent = result.answer;
+      assistantSuggested.textContent = (result.suggestedLocations || []).join(' | ');
+    } catch (error) {
+      assistantAnswer.textContent = error.message;
+    } finally {
+      if (button) {
+        button.removeAttribute('disabled');
+        button.textContent = window.siteI18n?.translate?.('assistant_ask_btn', lang) || 'Ask';
+      }
+    }
+  });
 }
 
 function initLanguageModal() {
@@ -179,5 +321,6 @@ function initLanguageModal() {
   const lang = getLang();
   applyI18n(lang);
   initLanguageModal();
+  initAssistant();
   await renderFeaturedLocations(lang);
 })();
