@@ -17,6 +17,20 @@ const templateForm = document.getElementById('templateForm');
 const deleteTemplateBtn = document.getElementById('deleteTemplate');
 const templatesTable = document.getElementById('templatesTable');
 
+const adminNarrationForm = document.getElementById('adminNarrationForm');
+const adminNarrationLocation = document.getElementById('adminNarrationLocation');
+const adminNarrationTemplate = document.getElementById('adminNarrationTemplate');
+const adminNarrationLanguage = document.getElementById('adminNarrationLanguage');
+const adminNarrationRate = document.getElementById('adminNarrationRate');
+const adminNarrationVoice = document.getElementById('adminNarrationVoice');
+const adminNarrationText = document.getElementById('adminNarrationText');
+const adminNarrationSubmit = document.getElementById('adminNarrationSubmit');
+const adminNarrationResult = document.getElementById('adminNarrationResult');
+const adminTranslatedText = document.getElementById('adminTranslatedText');
+const adminUsedVoice = document.getElementById('adminUsedVoice');
+const adminAudioPlayer = document.getElementById('adminAudioPlayer');
+const adminAudioLink = document.getElementById('adminAudioLink');
+
 const aiLogsTable = document.getElementById('aiLogsTable');
 const visitLogsTable = document.getElementById('visitLogsTable');
 
@@ -55,6 +69,9 @@ const templateFields = {
   audioUrl: document.getElementById('templateAudioUrl'),
   isPublished: document.getElementById('templatePublished')
 };
+
+let adminNarrationLocations = [];
+let adminNarrationTemplates = [];
 
 adminKeyInput.value = localStorage.getItem('adminKey') ?? '';
 
@@ -117,6 +134,110 @@ function fillForm(fields, data) {
       fields[key].value = data[key] ?? '';
     }
   });
+}
+
+function buildNarrationTextFromLocation(location) {
+  return `${location.name}. ${location.category}. ${location.shortIntro} ${location.highlight}. ${location.descriptionVi}`;
+}
+
+function fillAdminNarrationLocations(locations) {
+  if (!adminNarrationLocation) {
+    return;
+  }
+
+  if (!locations.length) {
+    adminNarrationLocation.innerHTML = '<option value="">Chưa có địa điểm</option>';
+    return;
+  }
+
+  adminNarrationLocation.innerHTML = locations
+    .map((location) => `<option value="${safe(location.id)}">${safe(location.name)} - ${safe(location.category)}</option>`)
+    .join('');
+}
+
+function fillAdminNarrationTemplates(templates) {
+  if (!adminNarrationTemplate) {
+    return;
+  }
+
+  adminNarrationTemplate.innerHTML = `
+    <option value="">Không dùng template</option>
+    ${templates
+      .map((template) => `<option value="${safe(template.id)}">${safe(template.title)} (${safe(template.targetLanguage)})</option>`)
+      .join('')}
+  `;
+}
+
+async function loadAdminNarrationSources() {
+  if (!adminNarrationLocation || !adminNarrationTemplate) {
+    return;
+  }
+
+  const [locationsResponse, templatesResponse] = await Promise.all([
+    fetch('/api/locations'),
+    fetch('/api/narration-templates')
+  ]);
+
+  if (!locationsResponse.ok) {
+    throw new Error('Không tải được danh sách địa điểm cho TTS.');
+  }
+
+  adminNarrationLocations = await locationsResponse.json();
+  fillAdminNarrationLocations(adminNarrationLocations);
+
+  if (templatesResponse.ok) {
+    adminNarrationTemplates = await templatesResponse.json();
+  } else {
+    adminNarrationTemplates = [];
+  }
+
+  fillAdminNarrationTemplates(adminNarrationTemplates);
+
+  if (adminNarrationLocations.length && adminNarrationText && !adminNarrationText.value.trim()) {
+    adminNarrationText.value = buildNarrationTextFromLocation(adminNarrationLocations[0]);
+  }
+}
+
+async function generateAdminNarration() {
+  if (!adminNarrationLocation || !adminNarrationLanguage || !adminNarrationRate || !adminNarrationVoice || !adminNarrationText) {
+    return;
+  }
+
+  const payload = {
+    locationId: adminNarrationLocation.value,
+    customTextVi: adminNarrationText.value.trim() || null,
+    targetLanguage: adminNarrationLanguage.value,
+    voiceName: adminNarrationVoice.value.trim() || null,
+    speakingRate: Number.parseFloat(adminNarrationRate.value) || 1
+  };
+
+  const response = await fetch('/api/narrations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.detail || result.message || 'Tạo audio thất bại.');
+  }
+
+  if (adminNarrationResult) {
+    adminNarrationResult.classList.remove('hidden');
+  }
+  if (adminTranslatedText) {
+    adminTranslatedText.textContent = result.translatedText;
+  }
+  if (adminUsedVoice) {
+    adminUsedVoice.textContent = result.voiceName;
+  }
+  if (adminAudioPlayer) {
+    adminAudioPlayer.src = result.audioUrl;
+  }
+  if (adminAudioLink) {
+    adminAudioLink.href = result.audioUrl;
+    adminAudioLink.textContent = `Mở file audio: ${result.audioUrl}`;
+  }
 }
 
 async function loadDashboard() {
@@ -290,6 +411,8 @@ async function refreshAll() {
     loadTemplates(),
     loadLogs()
   ]);
+
+  await loadAdminNarrationSources();
 }
 
 locationForm.addEventListener('submit', async (event) => {
@@ -399,6 +522,55 @@ deleteTemplateBtn.addEventListener('click', async () => {
   await refreshAll();
 });
 
+if (adminNarrationLocation) {
+  adminNarrationLocation.addEventListener('change', () => {
+    const selected = adminNarrationLocations.find((item) => item.id === adminNarrationLocation.value);
+    if (!selected || !adminNarrationText) {
+      return;
+    }
+
+    adminNarrationText.value = buildNarrationTextFromLocation(selected);
+  });
+}
+
+if (adminNarrationTemplate) {
+  adminNarrationTemplate.addEventListener('change', () => {
+    const selected = adminNarrationTemplates.find((item) => item.id === adminNarrationTemplate.value);
+    if (!selected || !adminNarrationText || !adminNarrationLanguage || !adminNarrationVoice || !adminNarrationLocation) {
+      return;
+    }
+
+    adminNarrationText.value = selected.sourceTextVi ?? adminNarrationText.value;
+    adminNarrationLanguage.value = selected.targetLanguage ?? adminNarrationLanguage.value;
+    adminNarrationVoice.value = selected.voiceName ?? '';
+    if (selected.locationId) {
+      adminNarrationLocation.value = selected.locationId;
+    }
+  });
+}
+
+if (adminNarrationForm) {
+  adminNarrationForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (adminNarrationSubmit) {
+      adminNarrationSubmit.disabled = true;
+      adminNarrationSubmit.textContent = 'Đang tạo...';
+    }
+
+    try {
+      await generateAdminNarration();
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      if (adminNarrationSubmit) {
+        adminNarrationSubmit.disabled = false;
+        adminNarrationSubmit.textContent = 'Tạo Audio TTS';
+      }
+    }
+  });
+}
+
 saveAdminKeyBtn.addEventListener('click', async () => {
   localStorage.setItem('adminKey', getAdminKey());
   try {
@@ -418,6 +590,12 @@ refreshAllBtn.addEventListener('click', async () => {
 });
 
 (async () => {
+  try {
+    await loadAdminNarrationSources();
+  } catch (error) {
+    console.error(error);
+  }
+
   if (getAdminKey()) {
     try {
       await refreshAll();

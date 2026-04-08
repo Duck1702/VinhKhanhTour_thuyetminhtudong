@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body class="home-landing">
+<body class="public-page home-landing">
 
   <div id="languageModal" class="language-modal hidden" role="dialog" aria-modal="true" aria-labelledby="languageModalTitle">
     <div class="language-modal-card">
@@ -35,13 +35,10 @@
   <nav>
     <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
     <ul class="nav-links">
-      <li><a href="/">Tổng quan</a></li>
+      <li><a href="#gioi-thieu">Tổng quan</a></li>
       <li><a href="/mon-ngon.html">Món ngon</a></li>
       <li><a href="/ban-do.html">Bản đồ</a></li>
       <li><a href="/ai-routing.html">AI Routing</a></li>
-      <li><a href="/audio-tts.html">Audio TTS</a></li>
-      <li><a href="/about.html">Chi tiết</a></li>
-      <li><a href="/admin.html">Admin</a></li>
     </ul>
   </nav>
 
@@ -60,7 +57,7 @@
     </div>
 
     <div class="hero-actions">
-      <a id="heroPrimaryAction" class="button button-primary" href="/audio-tts.html">Nghe thuyết minh Audio</a>
+      <a id="heroPrimaryAction" class="button button-primary" href="/mon-ngon.html">Khám phá món nổi bật</a>
       <a id="heroSecondaryAction" class="button button-secondary" href="/mon-ngon.html">Xem món nổi bật</a>
     </div>
   </div>
@@ -110,6 +107,59 @@
         <h3 data-i18n="home_overview_card3_title">3. Du lịch thông minh</h3>
         <p data-i18n="home_overview_card3_desc">Website được thiết kế để gắn QR tại các địa điểm. Khách du lịch quét mã, nghe thuyết minh bằng mọi ngôn ngữ và tiếp cận thông tin offline dễ dàng.</p>
       </article>
+    </div>
+  </section>
+
+  <section id="trai-nghiem-day-du">
+    <div class="section-header">
+      <div class="icon">🧭</div>
+      <div>
+        <div class="section-num">Chapter 02</div>
+        <h2 data-i18n="detail_timeline_title">Gợi ý trải nghiệm (Timeline)</h2>
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <h4 data-i18n="detail_stop1_title">1. Từ Quận 1 di chuyển qua (18:00)</h4>
+        <p data-i18n="detail_stop1_desc">Hướng đi dọc ngã Đồng Khởi → Tôn Đức Thắng → Cầu Khánh Hội → Đoàn Như Hài → Hoàng Diệu → Vĩnh Khánh.</p>
+      </div>
+      <div class="timeline-item">
+        <h4 data-i18n="detail_stop2_title">2. Điểm mạnh chính (19:00 - 21:00)</h4>
+        <p data-i18n="detail_stop2_desc">Ghé các trụ cột như Ốc Oanh, Ốc Vũ, Thảo Ốc. Nơi đây là điểm nóng nhất, rất nhộn nhịp.</p>
+      </div>
+      <div class="timeline-item">
+        <h4 data-i18n="detail_stop3_title">3. Trạm nghỉ cuối (22:00)</h4>
+        <p data-i18n="detail_stop3_desc">Cảm nhận nhịp chậm hơn tại những quán Bê Ốc hoặc nhâm nhi đồ ngọt trước khi kết thúc lịch trình.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="hinh-anh-noi-bat">
+    <div class="section-header">
+      <div class="icon">📸</div>
+      <div>
+        <div class="section-num">Chapter 03</div>
+        <h2 data-i18n="detail_gallery_title">Hình ảnh nổi bật</h2>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <article class="card">
+        <img class="card-visual" src="/assets/vinh-khanh-street.jpg" alt="Phố ẩm thực Vĩnh Khánh" />
+        <h3 data-i18n="detail_gallery_card1_title">Khung cảnh ban ngày / ban đầu</h3>
+        <p data-i18n="detail_gallery_card1_desc">Khung cảnh khu phố chưa lên đèn hoặc các quán bắt đầu đón khách từ buổi chiều.</p>
+      </article>
+      <article class="card">
+        <img class="card-visual" src="/assets/vinh-khanh-banner.jpg" alt="Vĩnh Khánh ban đêm" />
+        <h3 data-i18n="detail_gallery_card2_title">Hoạt động sôi nổi về đêm</h3>
+        <p data-i18n="detail_gallery_card2_desc">Góc không gian ban đêm, biển bảng đèn neon và hàng dài xe chờ khách đông đúc.</p>
+      </article>
+    </div>
+
+    <div class="highlight info">
+      <strong data-i18n="detail_note_label">Lưu ý:</strong>
+      <span data-i18n="detail_note_desc">Cấu trúc trang này cũng được tối ưu hóa cho PWA để giảm thiểu dung lượng tải lại trang (cache asset) trên thiết bị di động.</span>
     </div>
   </section>
 

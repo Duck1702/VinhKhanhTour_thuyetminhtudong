@@ -474,8 +474,6 @@
       '/mon-ngon.html': 'nav_food',
       '/ban-do.html': 'nav_map',
       '/ai-routing.html': 'nav_routing',
-      '/audio-tts.html': 'nav_audio',
-      '/about.html': 'nav_detail',
       '/admin.html': 'nav_admin'
     };
 

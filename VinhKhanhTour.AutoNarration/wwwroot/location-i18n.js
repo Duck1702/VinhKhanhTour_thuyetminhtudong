@@ -1,4 +1,229 @@
 (function () {
+  const englishFallback = {
+    'oc-oanh': {
+      name: 'Oc Oanh', category: 'Snails & Seafood', shortIntro: 'The most famous snail restaurant on Vinh Khanh street.', bestTime: 'After 18:00',
+      highlight: 'Salt chili fragrant snails, grilled octopus, grilled chicken feet',
+      descriptionVi: 'Always crowded at night thanks to fresh seafood and bold flavors.'
+    },
+    'oc-thao': {
+      name: 'Oc Thao', category: 'Snails & Seafood', shortIntro: 'Long-running seafood stop with a spacious dining area.', bestTime: '19:00 - 23:00',
+      highlight: 'Coconut stir-fried snails, Thai steamed clams, razor-snail fried noodles',
+      descriptionVi: 'Known for a diverse menu and stable taste over many years.'
+    },
+    'oc-dao-2': {
+      name: 'Oc Dao 2', category: 'Snails & Seafood', shortIntro: 'A branch of a well-known Saigon snail brand.', bestTime: '18:00 - 21:00',
+      highlight: 'Butter-fried squid teeth, razor clams with morning glory',
+      descriptionVi: 'Popular for buttery garlic-style stir-fried seafood dishes.'
+    },
+    'oc-vu': {
+      name: 'Oc Vu', category: 'Snails & Seafood', shortIntro: 'A famous district icon for tamarind and salted egg sauces.', bestTime: '19:00 - 23:30',
+      highlight: 'Tamarind snails, salted egg snails',
+      descriptionVi: 'Well known for signature dipping sauce and rich flavors.'
+    },
+    'oc-sau-no': {
+      name: 'Oc Sau No', category: 'Snails & Seafood', shortIntro: 'Spacious and fast service, suitable for groups.', bestTime: '18:30 - 22:30',
+      highlight: 'Stir-fried snails with morning glory, grilled blood cockles',
+      descriptionVi: 'A familiar local gathering place with hearty dishes.'
+    },
+    'be-oc': {
+      name: 'Be Oc', category: 'Snails & Seafood', shortIntro: 'A budget-friendly alley spot with steady quality.', bestTime: '18:00 - 22:00',
+      highlight: 'Coconut snails, garlic-burnt blood cockles',
+      descriptionVi: 'Great value option for a casual seafood night.'
+    },
+    'alo-quan-seafood-beer': {
+      name: 'Alo Quan - Seafood & Beer', category: 'Snails & Seafood', shortIntro: 'A youthful seafood-and-beer concept.', bestTime: '20:00 - 01:00',
+      highlight: 'Crawfish, chili-salt grilled seafood',
+      descriptionVi: 'Lively late-night atmosphere, ideal for friend groups.'
+    },
+    'chilli-bbq-hotpot': {
+      name: 'Chilli BBQ Hotpot', category: 'Hotpot & Grill', shortIntro: 'Late-night hotpot and grill venue with energetic vibe.', bestTime: '20:00 - 01:00',
+      highlight: '24-flavor oysters, salted-egg grilled beef block',
+      descriptionVi: 'Good for long evening sessions and group dining.'
+    },
+    'the-gioi-bo': {
+      name: 'Beef World', category: 'Hotpot & Grill', shortIntro: 'Higher-end beef-focused restaurant on Vinh Khanh.', bestTime: '18:00 - 22:00',
+      highlight: 'Wagyu A5, gold-leaf beef, Mongolian hotpot',
+      descriptionVi: 'Suitable for premium beef tasting experiences.'
+    },
+    'a-fat-hot-pot': {
+      name: 'A Fat Hot Pot', category: 'Hotpot & Grill', shortIntro: 'Hong Kong-style hotpot venue with neon decor.', bestTime: '19:00 - 00:00',
+      highlight: 'Dual-pot Hong Kong hotpot, assorted hotpot balls',
+      descriptionVi: 'A good check-in place with rich hotpot options.'
+    },
+    'ot-xiem-quan': {
+      name: 'Ot Xiem Quan', category: 'Hotpot & Grill', shortIntro: 'Spacious place with spicy signature seasoning.', bestTime: '19:00 - 23:30',
+      highlight: 'Shaking beef, tamarind crab, chili grilled squid',
+      descriptionVi: 'Great for spicy food lovers and social dinners.'
+    },
+    'lang-quan': {
+      name: 'Lang Quan', category: 'Hotpot & Grill', shortIntro: 'Popular casual drinking-food venue with bold dishes.', bestTime: '19:00 - 23:00',
+      highlight: 'Crispy fried pork leg, offal stew, duck tongue claypot',
+      descriptionVi: 'A familiar stop for local-style evening gatherings.'
+    },
+    'quan-hoa': {
+      name: 'Quan Hoa', category: 'Hotpot & Grill', shortIntro: 'Table-side grilled dishes with cozy charcoal setup.', bestTime: '19:00 - 23:00',
+      highlight: 'Tile grill, chili-salt grilled udder',
+      descriptionVi: 'Warm, close-up grilling style for groups and families.'
+    },
+    'sushi-ko': {
+      name: 'Sushi Ko', category: 'Specialties & Single Dishes', shortIntro: 'Affordable street-style sushi with stable quality.', bestTime: '11:30 - 20:30',
+      highlight: 'Salmon sashimi, grilled shrimp maki, seaweed salad',
+      descriptionVi: 'A refreshing non-seafood-grill option in the area.'
+    },
+    'bun-ca-di-tu': {
+      name: 'Bun Ca Chau Doc Di Tu', category: 'Specialties & Single Dishes', shortIntro: 'A light soup stop with Mekong-style flavor.', bestTime: 'Morning - Afternoon',
+      highlight: 'Fish noodle soup, fermented fish noodle soup',
+      descriptionVi: 'Good break option between heavier grilled dishes.'
+    },
+    'bun-thit-nuong-co-nga': {
+      name: 'Bun Thit Nuong Co Nga', category: 'Specialties & Single Dishes', shortIntro: 'Well-known breakfast/lunch spot with fragrant grilled meat.', bestTime: '07:00 - 11:00',
+      highlight: 'Grilled pork noodle bowl, grilled spring rolls',
+      descriptionVi: 'Fast, tasty and filling choice for daytime meals.'
+    },
+    'an-an-quan': {
+      name: 'An An Quan', category: 'Specialties & Single Dishes', shortIntro: 'Vietnamese menu with friendly service.', bestTime: '18:00 - 22:30',
+      highlight: 'Seafood fried rice, salted fried chicken cartilage',
+      descriptionVi: 'A versatile place for family and friend groups.'
+    },
+    'nem-nuong-que-nha': {
+      name: 'Nem Nuong Que Nha', category: 'Specialties & Single Dishes', shortIntro: 'Specialized grilled fermented pork rolls.', bestTime: '16:30 - 20:30',
+      highlight: 'Nha Trang-style grilled pork rolls',
+      descriptionVi: 'Loved for peanut dipping sauce and fresh herbs.'
+    },
+    'bun-bo-hue-14b': {
+      name: 'Bun Bo Hue 14B', category: 'Specialties & Single Dishes', shortIntro: 'Reliable spicy beef noodle soup with rich broth.', bestTime: 'Morning - Afternoon',
+      highlight: 'Beef noodle soup with tendon and brisket',
+      descriptionVi: 'A trusted local noodle soup stop on this street.'
+    },
+    'lau-met-nuong-79k': {
+      name: 'Lau Met Nuong 79k', category: 'Specialties & Single Dishes', shortIntro: 'Student-friendly hotpot and grill combo pricing.', bestTime: '18:00 - 22:00',
+      highlight: 'Mixed hotpot trays, fixed-price grilled items',
+      descriptionVi: 'Budget-friendly and suitable for larger groups.'
+    }
+  };
+
+  const localizedCategoryByLang = {
+    fr: {
+      'snails & seafood': 'Escargots et fruits de mer',
+      'hotpot & grill': 'Fondue et grillades',
+      'specialties & single dishes': 'Specialites et plats individuels'
+    },
+    ja: {
+      'snails & seafood': '貝料理・海鮮',
+      'hotpot & grill': '鍋・焼き物',
+      'specialties & single dishes': '名物・一品料理'
+    },
+    ko: {
+      'snails & seafood': '달팽이·해산물',
+      'hotpot & grill': '전골·구이',
+      'specialties & single dishes': '대표·단품 요리'
+    }
+  };
+
+  const localizedHighlightByLang = {
+    fr: {
+      'snails & seafood': 'Fruits de mer frais, plats signatures et sauces maison.',
+      'hotpot & grill': 'Fondue chaude, grillades et assaisonnements riches.',
+      'specialties & single dishes': 'Plats locaux recommandes, portions genereuses et gout equilibre.'
+    },
+    ja: {
+      'snails & seafood': '新鮮な海鮮、看板メニュー、特製ソース。',
+      'hotpot & grill': '鍋料理、焼き物、香り高い味付け。',
+      'specialties & single dishes': '地元のおすすめ一品、満足感のある量、バランスの良い味。'
+    },
+    ko: {
+      'snails & seafood': '신선한 해산물, 대표 메뉴, 특제 소스.',
+      'hotpot & grill': '따뜻한 전골, 구이 메뉴, 풍부한 양념.',
+      'specialties & single dishes': '현지 추천 단품, 든든한 양, 균형 잡힌 맛.'
+    }
+  };
+
+  function normalizeCategoryKey(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function localizeBestTime(bestTime, lang) {
+    const value = String(bestTime || '').trim();
+    if (!value) {
+      return value;
+    }
+
+    if (lang === 'fr') {
+      return value
+        .replaceAll('Morning - Afternoon', 'Matin - Apres-midi')
+        .replaceAll('Late evening', 'Soiree tardive')
+        .replaceAll('After ', 'Apres ')
+        .replaceAll(' onward', ' et plus tard');
+    }
+
+    if (lang === 'ja') {
+      return value
+        .replaceAll('Morning - Afternoon', '午前〜午後')
+        .replaceAll('Late evening', '夜遅く')
+        .replaceAll('After ', '')
+        .replaceAll(' onward', '以降')
+        .replaceAll('After', '以降');
+    }
+
+    if (lang === 'ko') {
+      return value
+        .replaceAll('Morning - Afternoon', '오전 - 오후')
+        .replaceAll('Late evening', '늦은 저녁')
+        .replaceAll('After ', '')
+        .replaceAll(' onward', ' 이후')
+        .replaceAll('After', '이후');
+    }
+
+    return value;
+  }
+
+  function buildLocalizedFallback(lang) {
+    const categoryMap = localizedCategoryByLang[lang] || {};
+    const highlightMap = localizedHighlightByLang[lang] || {};
+    const result = {};
+
+    Object.entries(englishFallback).forEach(([id, item]) => {
+      const categoryKey = normalizeCategoryKey(item.category);
+      const category = categoryMap[categoryKey] || item.category;
+      const highlight = highlightMap[categoryKey] || item.highlight;
+
+      let shortIntro = item.shortIntro;
+      let description = item.descriptionVi;
+
+      if (lang === 'fr') {
+        shortIntro = `${item.name} est une adresse tres appreciee de Vinh Khanh pour decouvrir ${category.toLowerCase()}.`;
+        description = `Ce lieu est recommande pour une experience culinaire locale avec une ambiance animee en soiree.`;
+      }
+
+      if (lang === 'ja') {
+        shortIntro = `${item.name}は、ビンカイン通りで${category}を楽しめる人気スポットです。`;
+        description = `夜の活気ある雰囲気の中で、ローカルグルメを体験できるおすすめの店舗です。`;
+      }
+
+      if (lang === 'ko') {
+        shortIntro = `${item.name}은(는) 빈칸 거리에서 ${category}을(를) 즐기기 좋은 인기 매장입니다.`;
+        description = `활기찬 저녁 분위기 속에서 현지 미식을 경험하기 좋은 추천 장소입니다.`;
+      }
+
+      result[id] = {
+        ...item,
+        category,
+        shortIntro,
+        bestTime: localizeBestTime(item.bestTime, lang),
+        highlight,
+        descriptionVi: description
+      };
+    });
+
+    return result;
+  }
+
+  const localizedFallbackByLang = {
+    fr: buildLocalizedFallback('fr'),
+    ja: buildLocalizedFallback('ja'),
+    ko: buildLocalizedFallback('ko')
+  };
+
   const locationTranslations = {
     en: {
       'oc-oanh': {
@@ -271,7 +496,10 @@
       return location;
     }
 
-    const translated = locationTranslations[lang]?.[location.id];
+    const translated = locationTranslations[lang]?.[location.id]
+      || localizedFallbackByLang[lang]?.[location.id]
+      || (lang === 'en' ? englishFallback[location.id] : null)
+      || null;
     if (!translated) {
       return location;
     }

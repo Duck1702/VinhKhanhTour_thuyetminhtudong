@@ -80,6 +80,8 @@ function renderLocations(locations) {
       <div class="card-meta">
         <span><strong>${escapeHtml(tr('card_address'))}:</strong> ${escapeHtml(location.address)}</span>
         <span><strong>${escapeHtml(tr('card_hours'))}:</strong> ${escapeHtml(location.openingHours)}</span>
+        <span><strong>SĐT:</strong> ${escapeHtml(location.contactPhone || 'Đang cập nhật')}</span>
+        <span><strong>Giá tham khảo:</strong> ${escapeHtml(location.priceRange || 'Đang cập nhật')}</span>
         <span><strong>${escapeHtml(tr('card_highlight'))}:</strong> ${escapeHtml(location.highlight)}</span>
       </div>
       <button type="button" class="button button-secondary" data-location-id="${escapeHtml(location.id)}">${escapeHtml(tr('btn_narrate_private'))}</button>
