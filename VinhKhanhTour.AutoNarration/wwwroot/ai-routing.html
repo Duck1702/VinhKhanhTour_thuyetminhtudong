@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body class="public-page">
@@ -77,11 +78,72 @@
       <p><strong data-i18n="route_source_label">Nguồn gợi ý:</strong> <span id="routeGeneratedBy" class="code-badge"></span></p>
       <div id="routeStops" class="timeline"></div>
     </div>
+
+    <div id="routeOptionsPanel" class="hidden" style="margin-top:1.2rem;">
+      <div class="section-header" style="margin-bottom:0.9rem;">
+        <div class="icon">🧩</div>
+        <div>
+          <div class="section-num">Options</div>
+          <h2>Các phương án lộ trình</h2>
+        </div>
+      </div>
+      <div class="route-options-toolbar">
+        <label for="routeOptionSort">Ưu tiên:</label>
+        <select id="routeOptionSort">
+          <option value="recommended">Khuyến nghị cho yêu cầu hiện tại</option>
+          <option value="duration">Nhanh nhất</option>
+          <option value="budget">Tiết kiệm ngân sách</option>
+          <option value="walking">Ít đi bộ nhất</option>
+        </select>
+      </div>
+      <div id="routeOptionsGrid" class="card-grid"></div>
+    </div>
+
+    <div id="journeyPanel" class="hidden" style="margin-top:1.3rem;">
+      <div class="section-header" style="margin-bottom:0.9rem;">
+        <div class="icon">🧭</div>
+        <div>
+          <div class="section-num">Journey</div>
+          <h2 id="journeyTitle">Hành trình đã chọn</h2>
+        </div>
+      </div>
+
+      <div class="highlight info" style="margin-top:0;">
+        <strong>Định vị của bạn:</strong>
+        <span id="journeyGeoStatus">Chưa lấy vị trí hiện tại.</span>
+        <button id="journeyLocateBtn" type="button" class="button button-secondary" style="margin-left:.8rem;">Dùng vị trí của tôi</button>
+      </div>
+
+      <div class="route-options-toolbar" style="margin-top:.7rem; margin-bottom:.2rem;">
+        <button id="journeyRerouteBtn" type="button" class="button button-secondary">Tính lại lộ trình từ vị trí hiện tại</button>
+        <button id="journeyBackToNearestBtn" type="button" class="button button-secondary">Quay về điểm gần nhất</button>
+        <label style="display:flex; align-items:center; gap:.45rem;">
+          <input id="journeyAutoNarration" type="checkbox" checked />
+          Tự phát thuyết minh khi đến gần điểm dừng
+        </label>
+      </div>
+
+      <div id="journeyOffRouteAlert" class="highlight warning hidden" style="margin-top:.65rem; margin-bottom:.75rem;">
+        <strong>Bạn đang lệch hướng.</strong>
+        <span id="journeyOffRouteText">Hệ thống phát hiện bạn đang đi xa khỏi các điểm trong lộ trình.</span>
+      </div>
+
+      <div class="highlight success" style="margin-top:.7rem; margin-bottom:.9rem;">
+        <strong>Tiến độ hành trình:</strong>
+        <span id="journeyProgressStatus">Chưa bắt đầu hành trình.</span>
+        <span style="margin-left:.7rem;"><strong>ETA điểm tiếp theo:</strong> <span id="journeyEtaStatus">Chưa xác định</span></span>
+      </div>
+
+      <div id="journeyMiniMap" class="map-host journey-mini-map" aria-label="Journey mini map"></div>
+
+      <div id="journeyStops" class="timeline"></div>
+    </div>
   </section>
 
-  <script src="/i18n.js?v=20260407-2"></script>
-  <script src="/nav.js"></script>
-  <script src="/app.js"></script>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="/i18n.js?v=20260409-4"></script>
+  <script src="/nav.js?v=20260409-4"></script>
+  <script src="/app.js?v=20260409-8"></script>
 </body>
 </html>
 

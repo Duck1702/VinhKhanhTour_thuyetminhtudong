@@ -36,7 +36,8 @@ public sealed class NarrationOrchestrator
     public async Task<GenerateNarrationResponse> GenerateAsync(
         GenerateNarrationRequest request,
         string baseUrl,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? userEmail = null)
     {
         var hasLocation = !string.IsNullOrWhiteSpace(request.LocationId);
         var hasCustomText = !string.IsNullOrWhiteSpace(request.CustomTextVi);
@@ -133,6 +134,7 @@ public sealed class NarrationOrchestrator
         {
             Id = Guid.NewGuid().ToString("N"),
             LocationId = request.LocationId,
+            UserEmail = userEmail,
             TargetLanguage = targetLanguage,
             VoiceName = resolvedVoiceName,
             SourceChars = sourceChars,
@@ -158,7 +160,8 @@ public sealed class NarrationOrchestrator
         string locationId,
         string targetLanguage,
         string baseUrl,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        string? userEmail = null)
     {
         if (string.IsNullOrWhiteSpace(locationId))
         {
@@ -222,7 +225,7 @@ public sealed class NarrationOrchestrator
             LocationId = normalizedLocationId,
             TargetLanguage = normalizedLanguage,
             SpeakingRate = 1.0
-        }, baseUrl, cancellationToken);
+        }, baseUrl, cancellationToken, userEmail);
 
         InstantNarrationCache[key] = created;
         return created;

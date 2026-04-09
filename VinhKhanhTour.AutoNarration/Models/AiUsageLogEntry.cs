@@ -4,6 +4,7 @@ public sealed class AiUsageLogEntry
 {
     public required string Id { get; set; }
     public string? LocationId { get; set; }
+    public string? UserEmail { get; set; }
     public required string TargetLanguage { get; set; }
     public required string VoiceName { get; set; }
     public int SourceChars { get; set; }

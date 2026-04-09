@@ -36,11 +36,43 @@ public sealed class RoutePlanningService : IRoutePlanningService
             var aiResponse = await TryBuildWithAiAsync(request, locations, cancellationToken);
             if (aiResponse is not null)
             {
-                return aiResponse;
+                return EnrichStops(aiResponse, locations);
             }
         }
 
-        return BuildFallbackPlan(request, locations);
+        return EnrichStops(BuildFallbackPlan(request, locations), locations);
+    }
+
+    public async Task<RoutePlanOptionsResponse> BuildOptionsAsync(RoutePlanRequest request, CancellationToken cancellationToken)
+    {
+        var basePlan = await BuildAsync(request, cancellationToken);
+        var stops = basePlan.Stops?.ToList() ?? [];
+
+        if (stops.Count == 0)
+        {
+            return new RoutePlanOptionsResponse
+            {
+                RequestLabel = BuildRequestLabel(request),
+                Options = []
+            };
+        }
+
+        var quickStops = stops.Take(Math.Min(3, stops.Count)).ToList();
+        var balanceStops = stops.Take(Math.Min(4, stops.Count)).ToList();
+        var exploreStops = stops.Take(Math.Min(6, stops.Count)).ToList();
+
+        var options = new List<RoutePlanOption>
+        {
+            BuildOption("quick", request, basePlan, quickStops, OptionKind.Quick),
+            BuildOption("balanced", request, basePlan, balanceStops, OptionKind.Balanced),
+            BuildOption("night", request, basePlan, exploreStops, OptionKind.NightExplore)
+        };
+
+        return new RoutePlanOptionsResponse
+        {
+            RequestLabel = BuildRequestLabel(request),
+            Options = options
+        };
     }
 
     private bool CanUseAi() =>
@@ -151,11 +183,14 @@ public sealed class RoutePlanningService : IRoutePlanningService
 
         var stops = ordered.Select(location => new RouteStop
         {
+            LocationId = location.Id,
             Name = location.Name,
             Address = location.Address,
             Why = location.ShortIntro,
             RecommendedDish = location.DishSamples ?? location.Highlight,
-            BestTime = location.BestTime
+            BestTime = location.BestTime,
+            Latitude = location.Latitude,
+            Longitude = location.Longitude
         }).ToList();
 
         var title = wantsSeafood ? "Lộ trình ốc và hải sản Vĩnh Khánh" : "Lộ trình khám phá Vĩnh Khánh theo sở thích khách";
@@ -183,5 +218,128 @@ public sealed class RoutePlanningService : IRoutePlanningService
         if (budget.Contains("rẻ") || budget.Contains("thấp")) score += location.OpeningHours.Contains("02:30") ? 1 : 2;
         if (budget.Contains("cao")) score += 1;
         return score;
+    }
+
+    private enum OptionKind
+    {
+        Quick,
+        Balanced,
+        NightExplore
+    }
+
+    private static RoutePlanOption BuildOption(string id, RoutePlanRequest request, RoutePlanResponse basePlan, List<RouteStop> stops, OptionKind kind)
+    {
+        var stopCount = stops.Count;
+        var duration = kind switch
+        {
+            OptionKind.Quick => 65 + stopCount * 18,
+            OptionKind.Balanced => 95 + stopCount * 22,
+            _ => 125 + stopCount * 26
+        };
+
+        var budgetBase = request.BudgetLevel?.Trim().ToLowerInvariant() switch
+        {
+            "thấp" => 120_000,
+            "cao" => 290_000,
+            _ => 190_000
+        };
+
+        var budget = budgetBase + stopCount * 28_000;
+        var walking = 280 + Math.Max(0, stopCount - 1) * 430;
+        var language = (request.Language ?? "vi").Trim().ToLowerInvariant();
+
+        var title = kind switch
+        {
+            OptionKind.Quick => language.StartsWith("en") ? "Quick Route" : "Lộ trình nhanh gọn",
+            OptionKind.Balanced => language.StartsWith("en") ? "Balanced Route" : "Lộ trình cân bằng",
+            _ => language.StartsWith("en") ? "Night Explorer Route" : "Lộ trình trải nghiệm đêm"
+        };
+
+        var summary = kind switch
+        {
+            OptionKind.Quick => language.StartsWith("en")
+                ? "Suitable when you have limited time but still want signature dishes."
+                : "Phù hợp khi bạn ít thời gian nhưng vẫn muốn thử món đặc trưng.",
+            OptionKind.Balanced => language.StartsWith("en")
+                ? "Balanced between travel, food variety, and budget."
+                : "Cân bằng giữa di chuyển, độ đa dạng món và ngân sách.",
+            _ => language.StartsWith("en")
+                ? "Deeper night-food experience with more stops and richer narration."
+                : "Trải nghiệm sâu hơn về đêm với nhiều điểm dừng và thuyết minh chi tiết hơn."
+        };
+
+        var strategy = kind switch
+        {
+            OptionKind.Quick => language.StartsWith("en") ? "Fast pace, low walking, high highlights." : "Đi nhanh, ít đi bộ, tập trung điểm nổi bật.",
+            OptionKind.Balanced => language.StartsWith("en") ? "Moderate pace for most visitor groups." : "Nhịp vừa phải, phù hợp đa số nhóm khách.",
+            _ => language.StartsWith("en") ? "Slow pace, richer tasting and atmosphere-oriented stops." : "Nhịp chậm hơn, ưu tiên trải nghiệm không khí và đa dạng món."
+        };
+
+        var narrationSummary = language.StartsWith("en")
+            ? $"Narration ready for {stopCount} stops. Tap a stop to listen while moving."
+            : $"Đã sẵn sàng thuyết minh cho {stopCount} điểm dừng. Bạn có thể nghe từng điểm khi di chuyển.";
+
+        return new RoutePlanOption
+        {
+            Id = id,
+            Title = title,
+            Summary = summary,
+            Strategy = strategy,
+            GeneratedBy = basePlan.GeneratedBy,
+            EstimatedDurationMinutes = duration,
+            EstimatedBudgetPerPersonVnd = budget,
+            EstimatedWalkingMeters = walking,
+            NarrationSummary = narrationSummary,
+            Stops = stops
+        };
+    }
+
+    private static string BuildRequestLabel(RoutePlanRequest request)
+    {
+        var visitor = string.IsNullOrWhiteSpace(request.VisitorType) ? "khách chung" : request.VisitorType.Trim();
+        var budget = string.IsNullOrWhiteSpace(request.BudgetLevel) ? "ngân sách bất kỳ" : request.BudgetLevel.Trim();
+        var pref = string.IsNullOrWhiteSpace(request.Preferences) ? "không yêu cầu đặc biệt" : request.Preferences.Trim();
+        return $"{visitor} - {budget} - {pref}";
+    }
+
+    private static RoutePlanResponse EnrichStops(RoutePlanResponse response, List<StreetLocation> locations)
+    {
+        var locationMapByName = locations
+            .GroupBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        var enrichedStops = response.Stops.Select(stop =>
+        {
+            if (stop.LocationId is not null && stop.Latitude.HasValue && stop.Longitude.HasValue)
+            {
+                return stop;
+            }
+
+            if (!locationMapByName.TryGetValue(stop.Name, out var loc))
+            {
+                return stop;
+            }
+
+            return new RouteStop
+            {
+                LocationId = stop.LocationId ?? loc.Id,
+                Name = stop.Name,
+                Address = stop.Address,
+                Why = stop.Why,
+                RecommendedDish = stop.RecommendedDish,
+                BestTime = stop.BestTime,
+                Latitude = stop.Latitude ?? loc.Latitude,
+                Longitude = stop.Longitude ?? loc.Longitude
+            };
+        }).ToList();
+
+        return new RoutePlanResponse
+        {
+            Title = response.Title,
+            Summary = response.Summary,
+            Strategy = response.Strategy,
+            Stops = enrichedStops,
+            GeneratedBy = response.GeneratedBy
+        };
     }
 }

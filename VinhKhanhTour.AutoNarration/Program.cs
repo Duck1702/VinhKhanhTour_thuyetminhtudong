@@ -1,6 +1,9 @@
 using VinhKhanhTour.AutoNarration.Models;
 using VinhKhanhTour.AutoNarration.Options;
 using VinhKhanhTour.AutoNarration.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,10 +12,35 @@ builder.Services.AddOpenApi();
 builder.Services.Configure<AzureAiOptions>(builder.Configuration.GetSection("AzureAi"));
 builder.Services.Configure<AdminOptions>(builder.Configuration.GetSection("Admin"));
 builder.Services.AddHttpClient();
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "vktour.auth";
+        options.LoginPath = "/login.html";
+        options.AccessDeniedPath = "/login.html";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(12);
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    return Task.CompletedTask;
+                }
+
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            }
+        };
+    });
+builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<InMemoryLocationContentService>();
 builder.Services.AddSingleton<ILocationContentService>(sp => sp.GetRequiredService<InMemoryLocationContentService>());
 builder.Services.AddSingleton<IAdminManagementService>(sp => sp.GetRequiredService<InMemoryLocationContentService>());
+builder.Services.AddSingleton<IUserAuthService, InMemoryUserAuthService>();
 builder.Services.AddScoped<ITranslationService, AzureTranslationService>();
 builder.Services.AddScoped<ISpeechSynthesisService, AzureSpeechSynthesisService>();
 builder.Services.AddScoped<NarrationOrchestrator>();
@@ -37,6 +65,40 @@ if (app.Environment.IsDevelopment())
 app.UseDefaultFiles();
 app.UseHttpsRedirection();
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    var path = context.Request.Path.Value ?? string.Empty;
+    var isHtmlPageRequest = HttpMethods.IsGet(context.Request.Method)
+        && (path.Equals("/", StringComparison.OrdinalIgnoreCase)
+            || path.EndsWith(".html", StringComparison.OrdinalIgnoreCase));
+    var isPublicAuthPage = path.Equals("/login.html", StringComparison.OrdinalIgnoreCase)
+        || path.Equals("/register.html", StringComparison.OrdinalIgnoreCase);
+
+    if (isHtmlPageRequest && !isPublicAuthPage && context.User.Identity?.IsAuthenticated != true)
+    {
+        var returnUrl = Uri.EscapeDataString($"{context.Request.Path}{context.Request.QueryString}");
+        context.Response.Redirect($"/login.html?returnUrl={returnUrl}");
+        return;
+    }
+
+    var isProtectedApi = path.StartsWith("/api", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/api/auth", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/api/admin", StringComparison.OrdinalIgnoreCase);
+
+    if (isProtectedApi
+        && !HttpMethods.IsOptions(context.Request.Method)
+        && context.User.Identity?.IsAuthenticated != true)
+    {
+        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+        await context.Response.WriteAsJsonAsync(new { message = "Bạn cần đăng nhập để sử dụng chức năng này." });
+        return;
+    }
+
+    await next();
+});
 
 app.Use(async (context, next) =>
 {
@@ -55,7 +117,8 @@ app.Use(async (context, next) =>
 
     var admin = context.RequestServices.GetRequiredService<IAdminManagementService>();
     var userAgent = context.Request.Headers.UserAgent.ToString();
-    admin.TrackVisit(path, context.Request.Method, userAgent);
+    var userEmail = context.User.FindFirstValue(ClaimTypes.Email);
+    admin.TrackVisit(path, context.Request.Method, userAgent, userEmail);
 });
 
 app.UseStaticFiles();
@@ -70,6 +133,80 @@ static bool IsAdmin(HttpRequest request, IOptions<AdminOptions> options)
 }
 
 static IResult UnauthorizedAdmin() => Results.Unauthorized();
+
+static ClaimsPrincipal CreateUserPrincipal(AuthUserResponse user)
+{
+    var claims = new List<Claim>
+    {
+        new(ClaimTypes.NameIdentifier, user.Id),
+        new(ClaimTypes.Name, user.FullName),
+        new(ClaimTypes.Email, user.Email)
+    };
+
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    return new ClaimsPrincipal(identity);
+}
+
+app.MapPost("/api/auth/register", async (
+    RegisterRequest request,
+    IUserAuthService userAuthService,
+    HttpContext httpContext) =>
+{
+    var result = userAuthService.Register(request.FullName, request.Email, request.Password);
+    if (!result.Success || result.User is null)
+    {
+        return Results.BadRequest(new { message = result.Error ?? "Không thể đăng ký tài khoản." });
+    }
+
+    await httpContext.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        CreateUserPrincipal(result.User));
+
+    return Results.Ok(new { user = result.User });
+});
+
+app.MapPost("/api/auth/login", async (
+    LoginRequest request,
+    IUserAuthService userAuthService,
+    HttpContext httpContext) =>
+{
+    var result = userAuthService.Login(request.Email, request.Password);
+    if (!result.Success || result.User is null)
+    {
+        return Results.Json(
+            new { message = result.Error ?? "Đăng nhập thất bại." },
+            statusCode: StatusCodes.Status401Unauthorized);
+    }
+
+    await httpContext.SignInAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme,
+        CreateUserPrincipal(result.User));
+
+    return Results.Ok(new { user = result.User });
+});
+
+app.MapPost("/api/auth/logout", async (HttpContext httpContext) =>
+{
+    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Ok(new { message = "Đã đăng xuất." });
+});
+
+app.MapGet("/api/auth/me", (HttpContext httpContext) =>
+{
+    if (httpContext.User.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    var user = new AuthUserResponse
+    {
+        Id = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty,
+        FullName = httpContext.User.FindFirstValue(ClaimTypes.Name) ?? string.Empty,
+        Email = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty
+    };
+
+    return Results.Ok(user);
+});
 
 app.MapGet("/api/locations", (ILocationContentService locationContentService) =>
 {
@@ -109,7 +246,8 @@ app.MapPost("/api/narrations", async (
     try
     {
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-        var response = await narrationOrchestrator.GenerateAsync(request, baseUrl, cancellationToken);
+        var userEmail = httpContext.User.FindFirstValue(ClaimTypes.Email);
+        var response = await narrationOrchestrator.GenerateAsync(request, baseUrl, cancellationToken, userEmail);
         return Results.Ok(response);
     }
     catch (ArgumentException ex)
@@ -143,7 +281,8 @@ app.MapPost("/api/narrations/instant", async (
     try
     {
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-        var response = await narrationOrchestrator.GetOrCreateInstantAsync(request.LocationId, language, baseUrl, cancellationToken);
+        var userEmail = httpContext.User.FindFirstValue(ClaimTypes.Email);
+        var response = await narrationOrchestrator.GetOrCreateInstantAsync(request.LocationId, language, baseUrl, cancellationToken, userEmail);
         return Results.Ok(response);
     }
     catch (ArgumentException ex)
@@ -160,11 +299,31 @@ app.MapPost("/api/narrations/instant", async (
 app.MapPost("/api/routes/plan", async (
     RoutePlanRequest request,
     IRoutePlanningService routePlanningService,
+    IAdminManagementService adminManagementService,
+    HttpContext httpContext,
     CancellationToken cancellationToken) =>
 {
     try
     {
         var response = await routePlanningService.BuildAsync(request, cancellationToken);
+
+        var stopSummary = string.Join(" | ", response.Stops.Select(x => x.Name).Take(5));
+        adminManagementService.TrackRoutePlan(new RoutePlanLogEntry
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserEmail = httpContext.User.FindFirstValue(ClaimTypes.Email),
+            VisitorType = request.VisitorType,
+            BudgetLevel = request.BudgetLevel,
+            StartHour = request.StartHour,
+            GuestCount = request.GuestCount,
+            Preferences = request.Preferences,
+            MustTry = request.MustTry,
+            PlanTitle = response.Title,
+            GeneratedBy = response.GeneratedBy,
+            StopSummary = stopSummary,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
         return Results.Ok(response);
     }
     catch (InvalidOperationException ex)
@@ -173,6 +332,46 @@ app.MapPost("/api/routes/plan", async (
     }
 })
 .WithName("PlanRoute");
+
+app.MapPost("/api/routes/options", async (
+    RoutePlanRequest request,
+    IRoutePlanningService routePlanningService,
+    IAdminManagementService adminManagementService,
+    HttpContext httpContext,
+    CancellationToken cancellationToken) =>
+{
+    try
+    {
+        var response = await routePlanningService.BuildOptionsAsync(request, cancellationToken);
+        var firstOption = response.Options.FirstOrDefault();
+        var stopSummary = firstOption is null
+            ? string.Empty
+            : string.Join(" | ", firstOption.Stops.Select(x => x.Name).Take(5));
+
+        adminManagementService.TrackRoutePlan(new RoutePlanLogEntry
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            UserEmail = httpContext.User.FindFirstValue(ClaimTypes.Email),
+            VisitorType = request.VisitorType,
+            BudgetLevel = request.BudgetLevel,
+            StartHour = request.StartHour,
+            GuestCount = request.GuestCount,
+            Preferences = request.Preferences,
+            MustTry = request.MustTry,
+            PlanTitle = firstOption?.Title ?? "Không có phương án",
+            GeneratedBy = firstOption?.GeneratedBy ?? "none",
+            StopSummary = stopSummary,
+            CreatedAt = DateTimeOffset.UtcNow
+        });
+
+        return Results.Ok(response);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+    }
+})
+.WithName("PlanRouteOptions");
 
 app.MapPost("/api/assistant/ask", async (
     AssistantAskRequest request,
@@ -194,6 +393,82 @@ app.MapPost("/api/assistant/ask", async (
     }
 })
 .WithName("AskAssistant");
+
+app.MapGet("/api/account/dashboard", (
+    HttpContext httpContext,
+    IAdminManagementService adminManagementService,
+    ILocationContentService locationContentService) =>
+{
+    if (httpContext.User.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    var userEmail = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+    var fullName = httpContext.User.FindFirstValue(ClaimTypes.Name) ?? userEmail;
+    var locations = locationContentService.GetAll().ToDictionary(x => x.Id, StringComparer.OrdinalIgnoreCase);
+
+    var visitHistory = adminManagementService
+        .GetVisitLogs(300)
+        .Where(x => string.Equals(x.UserEmail, userEmail, StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(x => x.VisitedAt)
+        .Take(12)
+        .Select(x => new
+        {
+            x.Path,
+            x.VisitedAt
+        });
+
+    var narrationHistory = adminManagementService
+        .GetAiUsageLogs(300)
+        .Where(x => string.Equals(x.UserEmail, userEmail, StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(x => x.GeneratedAt)
+        .Take(12)
+        .Select(x => new
+        {
+            x.LocationId,
+            locationName = x.LocationId is not null && locations.TryGetValue(x.LocationId, out var location)
+                ? location.Name
+                : "Nội dung tùy chỉnh",
+            x.TargetLanguage,
+            x.VoiceName,
+            x.GeneratedAt
+        });
+
+    var routeHistory = adminManagementService
+        .GetRoutePlanLogs(300)
+        .Where(x => string.Equals(x.UserEmail, userEmail, StringComparison.OrdinalIgnoreCase))
+        .OrderByDescending(x => x.CreatedAt)
+        .Take(12)
+        .Select(x => new
+        {
+            x.PlanTitle,
+            x.GeneratedBy,
+            x.VisitorType,
+            x.BudgetLevel,
+            x.Preferences,
+            x.StopSummary,
+            x.CreatedAt
+        });
+
+    return Results.Ok(new
+    {
+        user = new
+        {
+            fullName,
+            email = userEmail
+        },
+        metrics = new
+        {
+            totalVisits = visitHistory.Count(),
+            totalNarrations = narrationHistory.Count(),
+            totalRoutes = routeHistory.Count()
+        },
+        visitHistory,
+        narrationHistory,
+        routeHistory
+    });
+});
 
 app.MapGet("/api/admin/dashboard", (
     HttpContext httpContext,

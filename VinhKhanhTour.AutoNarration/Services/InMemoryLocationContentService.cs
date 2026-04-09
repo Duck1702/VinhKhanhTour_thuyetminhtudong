@@ -10,6 +10,7 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
     private readonly Dictionary<string, NarrationTemplate> _templates;
     private readonly List<VisitLogEntry> _visitLogs = [];
     private readonly List<AiUsageLogEntry> _aiUsageLogs = [];
+    private readonly List<RoutePlanLogEntry> _routePlanLogs = [];
 
     public InMemoryLocationContentService()
     {
@@ -623,7 +624,7 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
         }
     }
 
-    public void TrackVisit(string path, string method, string userAgent)
+    public void TrackVisit(string path, string method, string userAgent, string? userEmail = null)
     {
         lock (_syncLock)
         {
@@ -633,6 +634,7 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
                 Path = path,
                 Method = method,
                 UserAgent = userAgent,
+                UserEmail = userEmail,
                 VisitedAt = DateTimeOffset.UtcNow
             });
 
@@ -656,6 +658,7 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
                     Path = x.Path,
                     Method = x.Method,
                     UserAgent = x.UserAgent,
+                    UserEmail = x.UserEmail,
                     VisitedAt = x.VisitedAt
                 })
                 .ToArray();
@@ -670,6 +673,7 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             {
                 Id = string.IsNullOrWhiteSpace(usage.Id) ? Guid.NewGuid().ToString("N") : usage.Id,
                 LocationId = usage.LocationId,
+                UserEmail = usage.UserEmail,
                 TargetLanguage = usage.TargetLanguage,
                 VoiceName = usage.VoiceName,
                 SourceChars = usage.SourceChars,
@@ -696,12 +700,66 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
                 {
                     Id = x.Id,
                     LocationId = x.LocationId,
+                    UserEmail = x.UserEmail,
                     TargetLanguage = x.TargetLanguage,
                     VoiceName = x.VoiceName,
                     SourceChars = x.SourceChars,
                     OutputChars = x.OutputChars,
                     EstimatedCostUsd = x.EstimatedCostUsd,
                     GeneratedAt = x.GeneratedAt
+                })
+                .ToArray();
+        }
+    }
+
+    public void TrackRoutePlan(RoutePlanLogEntry routePlanLog)
+    {
+        lock (_syncLock)
+        {
+            _routePlanLogs.Add(new RoutePlanLogEntry
+            {
+                Id = string.IsNullOrWhiteSpace(routePlanLog.Id) ? Guid.NewGuid().ToString("N") : routePlanLog.Id,
+                UserEmail = routePlanLog.UserEmail,
+                VisitorType = routePlanLog.VisitorType,
+                BudgetLevel = routePlanLog.BudgetLevel,
+                StartHour = routePlanLog.StartHour,
+                GuestCount = routePlanLog.GuestCount,
+                Preferences = routePlanLog.Preferences,
+                MustTry = routePlanLog.MustTry,
+                PlanTitle = routePlanLog.PlanTitle,
+                GeneratedBy = routePlanLog.GeneratedBy,
+                StopSummary = routePlanLog.StopSummary,
+                CreatedAt = routePlanLog.CreatedAt == default ? DateTimeOffset.UtcNow : routePlanLog.CreatedAt
+            });
+
+            if (_routePlanLogs.Count > 3000)
+            {
+                _routePlanLogs.RemoveRange(0, _routePlanLogs.Count - 3000);
+            }
+        }
+    }
+
+    public IReadOnlyCollection<RoutePlanLogEntry> GetRoutePlanLogs(int take)
+    {
+        lock (_syncLock)
+        {
+            return _routePlanLogs
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(Math.Clamp(take, 1, 500))
+                .Select(x => new RoutePlanLogEntry
+                {
+                    Id = x.Id,
+                    UserEmail = x.UserEmail,
+                    VisitorType = x.VisitorType,
+                    BudgetLevel = x.BudgetLevel,
+                    StartHour = x.StartHour,
+                    GuestCount = x.GuestCount,
+                    Preferences = x.Preferences,
+                    MustTry = x.MustTry,
+                    PlanTitle = x.PlanTitle,
+                    GeneratedBy = x.GeneratedBy,
+                    StopSummary = x.StopSummary,
+                    CreatedAt = x.CreatedAt
                 })
                 .ToArray();
         }

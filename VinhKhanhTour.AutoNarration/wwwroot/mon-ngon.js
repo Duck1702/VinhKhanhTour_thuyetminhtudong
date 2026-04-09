@@ -667,9 +667,14 @@ function renderFoodGroups(locations) {
     return;
   }
 
+  const rawCategoryById = new Map(
+    (Array.isArray(rawLocations) ? rawLocations : []).map((item) => [item.id, item.category])
+  );
+
   const groups = new Map();
   locations.forEach((location) => {
-    const key = groupKeyFromCategory(location.category);
+    const stableCategory = rawCategoryById.get(location.id) || location.category;
+    const key = groupKeyFromCategory(stableCategory);
     if (!groups.has(key)) {
       groups.set(key, []);
     }

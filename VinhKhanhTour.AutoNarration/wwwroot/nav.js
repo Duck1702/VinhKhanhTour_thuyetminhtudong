@@ -4,6 +4,37 @@
     return;
   }
 
+  const authMessages = {
+    vi: { account: 'Tài khoản cá nhân', login: 'Đăng nhập', register: 'Đăng ký', logout: 'Đăng xuất' },
+    en: { account: 'My Account', login: 'Login', register: 'Register', logout: 'Logout' },
+    fr: { account: 'Mon compte', login: 'Connexion', register: 'Inscription', logout: 'Deconnexion' },
+    ja: { account: 'マイアカウント', login: 'ログイン', register: '登録', logout: 'ログアウト' },
+    ko: { account: '내 계정', login: '로그인', register: '회원가입', logout: '로그아웃' }
+  };
+
+  function getLang() {
+    const queryLang = new URLSearchParams(window.location.search).get('lang');
+    const current = queryLang || window.siteI18n?.getSiteLanguage?.() || localStorage.getItem('siteLanguage') || 'vi';
+    return authMessages[current] ? current : 'vi';
+  }
+
+  function t(key) {
+    const lang = getLang();
+    return authMessages[lang][key] || authMessages.vi[key] || key;
+  }
+
+  function getNavTools() {
+    let tools = nav.querySelector('.nav-tools');
+    if (tools) {
+      return tools;
+    }
+
+    tools = document.createElement('div');
+    tools.className = 'nav-tools';
+    nav.appendChild(tools);
+    return tools;
+  }
+
   function createLanguageSelector() {
     if (nav.querySelector('.language-switcher')) {
       return;
@@ -51,12 +82,88 @@
 
     wrapper.appendChild(label);
     wrapper.appendChild(select);
-    nav.appendChild(wrapper);
+    getNavTools().appendChild(wrapper);
+  }
+
+  async function fetchCurrentUser() {
+    try {
+      const response = await fetch('/api/auth/me');
+      if (!response.ok) {
+        return null;
+      }
+
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  function getReturnUrl() {
+    const path = `${window.location.pathname || '/'}${window.location.search || ''}`;
+    return encodeURIComponent(path || '/');
+  }
+
+  function withLang(path) {
+    const lang = getLang();
+    const url = new URL(path, window.location.origin);
+    url.searchParams.set('lang', lang);
+    return `${url.pathname}${url.search}`;
+  }
+
+  function createAuthActions(user) {
+    if (nav.querySelector('.auth-actions')) {
+      return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'auth-actions';
+
+    if (user?.email) {
+      const accountLink = document.createElement('a');
+      accountLink.className = 'button button-primary auth-link';
+      accountLink.href = withLang('/account.html');
+      accountLink.textContent = t('account');
+      wrapper.appendChild(accountLink);
+
+      const userChip = document.createElement('span');
+      userChip.className = 'auth-user-chip';
+      userChip.textContent = user.fullName || user.email;
+      wrapper.appendChild(userChip);
+
+      const logoutButton = document.createElement('button');
+      logoutButton.type = 'button';
+      logoutButton.className = 'button button-secondary auth-logout-btn';
+      logoutButton.textContent = t('logout');
+      logoutButton.addEventListener('click', async () => {
+        try {
+          await fetch('/api/auth/logout', { method: 'POST' });
+        } finally {
+          window.location.href = withLang('/login.html');
+        }
+      });
+      wrapper.appendChild(logoutButton);
+    } else {
+      const loginLink = document.createElement('a');
+      loginLink.className = 'button button-secondary auth-link';
+      loginLink.href = `${withLang('/login.html')}&returnUrl=${getReturnUrl()}`;
+      loginLink.textContent = t('login');
+
+      const registerLink = document.createElement('a');
+      registerLink.className = 'button button-primary auth-link';
+      registerLink.href = `${withLang('/register.html')}&returnUrl=${getReturnUrl()}`;
+      registerLink.textContent = t('register');
+
+      wrapper.appendChild(loginLink);
+      wrapper.appendChild(registerLink);
+    }
+
+    getNavTools().appendChild(wrapper);
   }
 
   createLanguageSelector();
+  void fetchCurrentUser().then(createAuthActions);
 
-  const selectedLang = window.siteI18n?.getSiteLanguage?.() || 'vi';
+  const selectedLang = getLang();
   nav.querySelectorAll('.nav-links a').forEach((link) => {
     const href = link.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('http')) {

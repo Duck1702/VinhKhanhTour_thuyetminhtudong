@@ -18,9 +18,12 @@ public interface IAdminManagementService
     NarrationTemplate UpsertNarrationTemplate(NarrationTemplate template);
     bool DeleteNarrationTemplate(string id);
 
-    void TrackVisit(string path, string method, string userAgent);
+    void TrackVisit(string path, string method, string userAgent, string? userEmail = null);
     IReadOnlyCollection<VisitLogEntry> GetVisitLogs(int take);
 
     void TrackAiUsage(AiUsageLogEntry usage);
     IReadOnlyCollection<AiUsageLogEntry> GetAiUsageLogs(int take);
+
+    void TrackRoutePlan(RoutePlanLogEntry routePlanLog);
+    IReadOnlyCollection<RoutePlanLogEntry> GetRoutePlanLogs(int take);
 }

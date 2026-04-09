@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRD - Thuyết minh tự động cho Khu Ẩm thực Vĩnh Khánh</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --card:#121933;
+      --soft:#1b2447;
+      --text:#e9eefc;
+      --muted:#aeb9d9;
+      --accent:#62d0ff;
+      --accent2:#77f2c5;
+      --warn:#ffd166;
+      --danger:#ff7b7b;
+      --border:rgba(255,255,255,.1);
+      --shadow:0 18px 40px rgba(0,0,0,.24);
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:linear-gradient(180deg,#0a0f1d 0%, #111831 100%);
+      line-height:1.6;
+    }
+    .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+    .hero{
+      background:radial-gradient(circle at top right, rgba(98,208,255,.18), transparent 30%),
+                 radial-gradient(circle at top left, rgba(119,242,197,.12), transparent 25%),
+                 linear-gradient(135deg,#111933,#0b1020);
+      border:1px solid var(--border);
+      border-radius:28px;
+      padding:40px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .badge{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(98,208,255,.12);border:1px solid rgba(98,208,255,.35);color:var(--accent);font-weight:700;font-size:13px;letter-spacing:.4px;text-transform:uppercase}
+    h1,h2,h3{line-height:1.2;margin:0 0 12px}
+    h1{font-size:40px;max-width:900px;margin-top:16px}
+    h2{font-size:28px;margin-top:8px}
+    h3{font-size:20px}
+    p{margin:0 0 12px;color:var(--muted)}
+    .lead{font-size:18px;max-width:980px}
+    .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:28px}
+    .metric{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:20px;padding:18px}
+    .metric strong{display:block;font-size:28px;color:#fff}
+    .section{margin-top:28px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:26px;box-shadow:var(--shadow)}
+    .grid{display:grid;gap:18px}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    ul{margin:10px 0 0 18px;padding:0}
+    li{margin:8px 0;color:var(--muted)}
+    .toc a{display:block;color:var(--text);text-decoration:none;padding:10px 12px;border-radius:12px;border:1px solid transparent}
+    .toc a:hover{background:rgba(255,255,255,.05);border-color:var(--border)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#1c2446;color:#cfe5ff;border:1px solid var(--border);font-size:13px;margin:4px 6px 0 0}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border:1px solid var(--border);padding:12px 14px;text-align:left;vertical-align:top}
+    th{background:#1a2348;color:#fff}
+    td{color:var(--muted)}
+    .note{padding:16px 18px;border-left:4px solid var(--warn);background:rgba(255,209,102,.09);border-radius:14px;color:#f6e5ad}
+    .ok{border-left-color:var(--accent2);background:rgba(119,242,197,.08);color:#b9f7e4}
+    .danger{border-left-color:var(--danger);background:rgba(255,123,123,.08);color:#ffc8c8}
+    .mermaid{background:#fff;border-radius:18px;padding:16px;color:#111;overflow:auto}
+    .footer{margin-top:24px;color:#93a2cf;font-size:14px;text-align:center}
+    .small{font-size:14px}
+    .subtle{color:#8ea0d2}
+    .split{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+    .sticky{position:sticky;top:20px}
+    @media (max-width: 900px){
+      .meta,.grid-2,.grid-3,.grid-4,.split{grid-template-columns:1fr}
+      h1{font-size:32px}
+      .hero{padding:28px}
+      .sticky{position:static}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">Product Requirements Document</span>
+      <h1>Thuyết minh tự động cho Khu Ẩm thực Vĩnh Khánh</h1>
+      <p class="lead">
+        Tài liệu PRD này tổng hợp định hướng sản phẩm, yêu cầu chức năng, kiến trúc nghiệp vụ,
+        API, dữ liệu, rủi ro và các sequence diagram cho hệ thống hướng dẫn tham quan ẩm thực bằng
+        QR, GPS, bản đồ số, AI assistant và phát thuyết minh đa ngôn ngữ.
+      </p>
+      <div class="meta">
+        <div class="metric"><strong>PWA</strong><span class="subtle">Offline-first cho mobile</span></div>
+        <div class="metric"><strong>QR + GPS</strong><span class="subtle">Kích hoạt nội dung theo điểm đến</span></div>
+        <div class="metric"><strong>AI Audio</strong><span class="subtle">Dịch và phát giọng đọc đa ngôn ngữ</span></div>
+        <div class="metric"><strong>Admin</strong><span class="subtle">CRUD nội dung, duyệt thuyết minh, theo dõi log</span></div>
+      </div>
+    </section>
+
+    <div class="section split">
+      <aside class="sticky card toc">
+        <h3>Mục lục</h3>
+        <a href="#tong-quan">1. Tổng quan sản phẩm</a>
+        <a href="#van-de">2. Bài toán & cơ hội</a>
+        <a href="#muc-tieu">3. Mục tiêu & KPI</a>
+        <a href="#pham-vi">4. Phạm vi sản phẩm</a>
+        <a href="#persona">5. Người dùng mục tiêu</a>
+        <a href="#feature">6. Tính năng chính</a>
+        <a href="#flow">7. User flow</a>
+        <a href="#yeu-cau">8. Functional requirements</a>
+        <a href="#phi-chuc-nang">9. Non-functional requirements</a>
+        <a href="#du-lieu">10. Dữ liệu & mô hình miền</a>
+        <a href="#api">11. API & tích hợp</a>
+        <a href="#sequence">12. Sequence diagrams</a>
+        <a href="#launch">13. Kế hoạch triển khai</a>
+        <a href="#rui-ro">14. Rủi ro & câu hỏi mở</a>
+      </aside>
+
+      <main class="grid">
+        <section id="tong-quan" class="card">
+          <h2>1. Tổng quan sản phẩm</h2>
+          <p>
+            Sản phẩm là một web app/PWA phục vụ khách tham quan khu ẩm thực Vĩnh Khánh. Người dùng quét QR tại quán hoặc điểm giới thiệu,
+            mở nội dung trên điện thoại, nghe thuyết minh đa ngôn ngữ, xem bản đồ, hỏi trợ lý AI và nhận gợi ý lộ trình tham quan.
+          </p>
+          <div>
+            <span class="pill">ASP.NET Core</span>
+            <span class="pill">Vanilla JS + PWA</span>
+            <span class="pill">MapLibre / GPS</span>
+            <span class="pill">Azure Translator / Speech</span>
+            <span class="pill">Admin dashboard</span>
+            <span class="pill">AI routing</span>
+          </div>
+          <div class="note ok" style="margin-top:16px">
+            Định vị sản phẩm: “Du lịch ẩm thực thông minh” cho khách nội địa và quốc tế, giảm phụ thuộc vào hướng dẫn viên,
+            tăng trải nghiệm tự khám phá, đồng thời giúp ban quản lý/chủ quán quảng bá nội dung theo chuẩn thống nhất.
+          </div>
+        </section>
+
+        <section id="van-de" class="card grid grid-2">
+          <div>
+            <h2>2. Bài toán & cơ hội</h2>
+            <ul>
+              <li>Khách lần đầu đến Vĩnh Khánh khó biết nên ăn ở đâu, món nào đặc trưng và lộ trình trải nghiệm hợp lý.</li>
+              <li>Khách quốc tế thiếu nội dung giới thiệu đa ngôn ngữ, khó tự tìm hiểu về món ăn, văn hóa khu phố và lịch sử địa điểm.</li>
+              <li>Thông tin hiện tại phân tán, mỗi quán truyền đạt khác nhau, chưa có cách trải nghiệm thống nhất qua QR và bản đồ.</li>
+              <li>Ban quản lý/chủ quán khó cập nhật nội dung nhanh, khó đo lường lượt truy cập và chi phí tạo thuyết minh AI.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Cơ hội</h3>
+            <ul>
+              <li>Biến khu phố thành điểm đến có “tour tự dẫn” ngay trên điện thoại.</li>
+              <li>Kết hợp QR + GPS + audio để giảm thao tác, tăng mức độ nhập vai.</li>
+              <li>Tạo lớp dữ liệu số cho từng quán/món: mô tả, ảnh, tọa độ, ngôn ngữ, voice profile.</li>
+              <li>Mở đường cho gợi ý lộ trình thông minh, thống kê hành vi truy cập và mở rộng sang các tuyến phố khác.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="muc-tieu" class="card grid grid-2">
+          <div>
+            <h2>3. Mục tiêu & KPI</h2>
+            <h3>Mục tiêu sản phẩm</h3>
+            <ul>
+              <li>Cho phép người dùng quét QR để truy cập nhanh nội dung điểm đến.</li>
+              <li>Tự động phát hoặc tạo thuyết minh cho món ăn/địa điểm theo ngôn ngữ người dùng.</li>
+              <li>Hỗ trợ bản đồ số và gợi ý lộ trình giữa các quán nổi bật.</li>
+              <li>Cung cấp trợ lý hỏi đáp về món ngon, quán phù hợp, giờ mở cửa, lịch trình.</li>
+              <li>Cung cấp dashboard quản trị để CRUD dữ liệu, duyệt nội dung public và theo dõi vận hành.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>KPI đề xuất cho pilot</h3>
+            <table>
+              <tr><th>Nhóm KPI</th><th>Mục tiêu</th></tr>
+              <tr><td>Tỷ lệ mở QR thành công</td><td>&ge; 95% trên thiết bị di động phổ biến</td></tr>
+              <tr><td>Thời gian tải nội dung đầu</td><td>&lt; 3 giây ở mạng 4G ổn định</td></tr>
+              <tr><td>Tỷ lệ tạo audio thành công</td><td>&ge; 98%</td></tr>
+              <tr><td>Tỷ lệ hoàn tất 1 phiên nghe</td><td>&ge; 60% đối với audio ngắn</td></tr>
+              <tr><td>Tỷ lệ người dùng dùng ít nhất 1 tính năng AI</td><td>&ge; 30%</td></tr>
+            </table>
+          </div>
+        </section>
+
+        <section id="pham-vi" class="card grid grid-2">
+          <div>
+            <h2>4. Phạm vi sản phẩm</h2>
+            <h3>In scope</h3>
+            <ul>
+              <li>Mobile web/PWA cho khách tham quan.</li>
+              <li>Trang chủ, trang chi tiết, bản đồ, danh sách món/quán, AI assistant.</li>
+              <li>QR dẫn đến trang chính hoặc trang/điểm đến cụ thể.</li>
+              <li>Tạo thuyết minh đa ngôn ngữ, phát audio trên trình duyệt.</li>
+              <li>Admin dashboard: CRUD quán/món, duyệt nội dung, quản lý voice/template, xem log.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Out of scope (giai đoạn hiện tại)</h3>
+            <ul>
+              <li>Thanh toán trực tuyến trong app.</li>
+              <li>Đặt bàn/đặt món trực tiếp với nhà hàng.</li>
+              <li>Đăng nhập người dùng cuối bắt buộc.</li>
+              <li>Recommendation engine cá nhân hóa sâu theo lịch sử tài khoản.</li>
+              <li>CMS đa vai trò phức tạp, workflow nhiều cấp duyệt.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="persona" class="card grid grid-3">
+          <div>
+            <h2>5. Người dùng mục tiêu</h2>
+            <h3>Khách du lịch</h3>
+            <ul>
+              <li>Cần thông tin ngắn gọn, dễ hiểu, hỗ trợ đa ngôn ngữ.</li>
+              <li>Ưu tiên trải nghiệm nhanh bằng QR và audio.</li>
+              <li>Muốn biết nên đi đâu tiếp theo trong khu phố.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Khách nội địa / nhóm bạn trẻ</h3>
+            <ul>
+              <li>Muốn xem bản đồ, điểm hot, món nổi bật, lịch trình đêm.</li>
+              <li>Thích trải nghiệm trực quan, nhanh, ít thao tác.</li>
+              <li>Ưu tiên gợi ý lộ trình và khám phá quán mới.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Admin / Ban quản lý</h3>
+            <ul>
+              <li>Quản lý danh sách quán, món, nội dung public.</li>
+              <li>Muốn xem log truy cập và chi phí AI ước tính.</li>
+              <li>Kiểm soát voice profile, template thuyết minh, trạng thái publish.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="feature" class="card">
+          <h2>6. Tính năng chính</h2>
+          <div class="grid grid-3">
+            <div class="metric"><strong>QR Onboarding</strong><span class="subtle">Scan mã tại quán/biển giới thiệu để mở nội dung tương ứng.</span></div>
+            <div class="metric"><strong>Auto Narration</strong><span class="subtle">Tạo audio thuyết minh đa ngôn ngữ theo location hoặc custom text.</span></div>
+            <div class="metric"><strong>Instant Narration</strong><span class="subtle">Nghe nhanh bản thuyết minh có sẵn theo locationId + language.</span></div>
+            <div class="metric"><strong>Map & GPS</strong><span class="subtle">Hiển thị quán nổi bật, hỗ trợ xác định vị trí tương đối và gợi ý di chuyển.</span></div>
+            <div class="metric"><strong>AI Routing</strong><span class="subtle">Tạo lộ trình khám phá theo sở thích, thời gian hoặc điểm bắt đầu.</span></div>
+            <div class="metric"><strong>AI Assistant</strong><span class="subtle">Hỏi đáp về món ăn, quán phù hợp, thời gian và hành trình gợi ý.</span></div>
+            <div class="metric"><strong>Content Admin</strong><span class="subtle">CRUD location, duyệt public narration, quản lý template.</span></div>
+            <div class="metric"><strong>Voice Admin</strong><span class="subtle">Quản lý giọng đọc theo ngôn ngữ và kịch bản.</span></div>
+            <div class="metric"><strong>Monitoring</strong><span class="subtle">Theo dõi visit log, AI usage log, top page và cost ước tính.</span></div>
+          </div>
+        </section>
+
+        <section id="flow" class="card">
+          <h2>7. User flow</h2>
+          <div class="grid grid-2">
+            <div>
+              <h3>Flow chính cho khách</h3>
+              <ol>
+                <li>Khách quét QR tại quán/điểm giới thiệu.</li>
+                <li>Ứng dụng mở landing hoặc location-specific page.</li>
+                <li>Người dùng chọn ngôn ngữ hoặc hệ thống dùng mặc định.</li>
+                <li>Hiển thị mô tả, ảnh, thông tin món/quán, nút nghe thuyết minh.</li>
+                <li>Người dùng nghe audio, xem bản đồ, nhận gợi ý điểm tiếp theo.</li>
+                <li>Nếu cần, khách hỏi AI assistant hoặc tạo lộ trình AI.</li>
+              </ol>
+            </div>
+            <div>
+              <h3>Flow quản trị</h3>
+              <ol>
+                <li>Admin truy cập trang quản trị và cung cấp X-Admin-Key.</li>
+                <li>CRUD location hoặc template thuyết minh.</li>
+                <li>Duyệt bản narration public.</li>
+                <li>Quản lý voice profile theo ngôn ngữ.</li>
+                <li>Theo dõi dashboard, log AI và log truy cập.</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section id="yeu-cau" class="card">
+          <h2>8. Functional requirements</h2>
+          <div class="table-wrap">
+            <table>
+              <tr>
+                <th>ID</th><th>Yêu cầu</th><th>Mô tả</th><th>Ưu tiên</th><th>Tiêu chí nghiệm thu</th>
+              </tr>
+              <tr>
+                <td>FR-01</td><td>Quét QR mở đúng nội dung</td><td>QR điều hướng đến landing hoặc quán/món cụ thể.</td><td>Must</td><td>Mở đúng URL và hiển thị dữ liệu location tương ứng.</td>
+              </tr>
+              <tr>
+                <td>FR-02</td><td>Chọn ngôn ngữ</td><td>Người dùng chọn ngôn ngữ trước khi nghe hoặc xem nội dung.</td><td>Must</td><td>Nội dung giao diện và audio áp dụng theo ngôn ngữ đã chọn.</td>
+              </tr>
+              <tr>
+                <td>FR-03</td><td>Lấy danh sách location</td><td>Frontend lấy dữ liệu món/quán từ API.</td><td>Must</td><td>API trả danh sách location công khai và render được trên giao diện.</td>
+              </tr>
+              <tr>
+                <td>FR-04</td><td>Tạo narration mới</td><td>POST yêu cầu tạo bản dịch và audio thuyết minh.</td><td>Must</td><td>Trả về nội dung dịch, thông tin audio, xử lý lỗi rõ ràng.</td>
+              </tr>
+              <tr>
+                <td>FR-05</td><td>Nghe nhanh narration có sẵn</td><td>Instant narration cho locationId theo language.</td><td>Must</td><td>Nếu đã có cache hoặc template hợp lệ thì phát nhanh.</td>
+              </tr>
+              <tr>
+                <td>FR-06</td><td>AI assistant</td><td>Người dùng hỏi đáp tự nhiên về quán, món, lịch trình.</td><td>Should</td><td>Hệ thống trả câu trả lời và có thể gợi ý location liên quan.</td>
+              </tr>
+              <tr>
+                <td>FR-07</td><td>AI route planning</td><td>Tạo lộ trình gợi ý theo nhu cầu người dùng.</td><td>Should</td><td>Trả danh sách điểm dừng, thứ tự, thời lượng và logic di chuyển.</td>
+              </tr>
+              <tr>
+                <td>FR-08</td><td>Bản đồ và marker</td><td>Hiển thị marker quán nổi bật trên MapLibre.</td><td>Should</td><td>Dữ liệu tọa độ được map đúng lên bản đồ.</td>
+              </tr>
+              <tr>
+                <td>FR-09</td><td>Admin CRUD</td><td>Quản trị location, template, voice profile.</td><td>Must</td><td>Tất cả API admin yêu cầu header X-Admin-Key hợp lệ.</td>
+              </tr>
+              <tr>
+                <td>FR-10</td><td>Dashboard và log</td><td>Thống kê lượng location, narration, visits, cost.</td><td>Should</td><td>Dashboard hiển thị được số liệu tổng quan và top page.</td>
+              </tr>
+            </table>
+          </div>
+        </section>
+
+        <section id="phi-chuc-nang" class="card grid grid-2">
+          <div>
+            <h2>9. Non-functional requirements</h2>
+            <ul>
+              <li><strong>Hiệu năng:</strong> tải landing ban đầu nhanh, audio phát được trên mobile browser phổ biến.</li>
+              <li><strong>Khả dụng:</strong> hỗ trợ PWA/offline cho asset và nội dung đã cache.</li>
+              <li><strong>Bảo mật:</strong> API admin chỉ dùng với X-Admin-Key; không lộ key trên client public.</li>
+              <li><strong>Khả mở rộng:</strong> dữ liệu quán/món và voice profile có thể thêm mới mà không cần sửa front-end cấu trúc lớn.</li>
+              <li><strong>Khả quan sát:</strong> có visit log, AI usage log, cost ước tính.</li>
+              <li><strong>Khả bảo trì:</strong> code tách theo service, options, models; chuẩn hóa endpoint.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Chất lượng UX</h3>
+            <ul>
+              <li>Thiết kế mobile-first, thao tác một tay dễ dàng.</li>
+              <li>Nút nghe nhanh, chọn ngôn ngữ, hỏi AI phải nổi bật.</li>
+              <li>Phải có nội dung fallback khi AI/audio lỗi.</li>
+              <li>Tính năng QR cần hoạt động mượt khi mở từ camera/ứng dụng scan phổ biến.</li>
+            </ul>
+            <div class="note" style="margin-top:14px">
+              Khuyến nghị bổ sung cho bản tiếp theo: cache audio theo <code>locationId + language</code>, cơ chế fallback voice,
+              giới hạn tần suất gọi AI theo IP/phiên để kiểm soát chi phí.
+            </div>
+          </div>
+        </section>
+
+        <section id="du-lieu" class="card grid grid-2">
+          <div>
+            <h2>10. Dữ liệu & mô hình miền</h2>
+            <h3>Thực thể cốt lõi</h3>
+            <ul>
+              <li><strong>Location:</strong> id, tên quán/món, mô tả, tọa độ, ảnh, trạng thái publish.</li>
+              <li><strong>NarrationTemplate:</strong> id, nội dung gốc, ngôn ngữ, trạng thái public.</li>
+              <li><strong>VoiceProfile:</strong> id, language, scenario, voiceName, isActive.</li>
+              <li><strong>AiUsageLog:</strong> endpoint, input, language, cost ước tính, timestamp.</li>
+              <li><strong>VisitLog:</strong> path, method, userAgent, timestamp.</li>
+              <li><strong>RoutePlan:</strong> yêu cầu đầu vào, danh sách điểm dừng, thời lượng, ghi chú.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Quy tắc nghiệp vụ</h3>
+            <ul>
+              <li>Một location có thể có nhiều bản narration theo nhiều ngôn ngữ.</li>
+              <li>Voice profile được chọn theo language + scenario và chỉ các profile active mới public cho client.</li>
+              <li>Nội dung public cần được duyệt qua admin trước khi hiển thị rộng rãi.</li>
+              <li>Visit log chỉ ghi cho request GET không thuộc /api để đo hành vi xem trang.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="api" class="card">
+          <h2>11. API & tích hợp</h2>
+          <div class="grid grid-2">
+            <div>
+              <h3>API public</h3>
+              <table>
+                <tr><th>Method</th><th>Endpoint</th><th>Mục đích</th></tr>
+                <tr><td>GET</td><td>/api/locations</td><td>Lấy danh sách quán/món/điểm đến mẫu</td></tr>
+                <tr><td>GET</td><td>/api/voice-profiles</td><td>Lấy voice profile đang active cho client</td></tr>
+                <tr><td>GET</td><td>/api/narration-templates</td><td>Lấy template narration đã public</td></tr>
+                <tr><td>POST</td><td>/api/narrations</td><td>Tạo narration mới từ location hoặc custom text</td></tr>
+                <tr><td>POST</td><td>/api/narrations/instant</td><td>Nghe nhanh narration theo locationId + language</td></tr>
+                <tr><td>POST</td><td>/api/routes/plan</td><td>Tạo lộ trình AI</td></tr>
+                <tr><td>POST</td><td>/api/assistant/ask</td><td>Hỏi trợ lý du lịch</td></tr>
+              </table>
+            </div>
+            <div>
+              <h3>API admin</h3>
+              <table>
+                <tr><th>Method</th><th>Endpoint</th><th>Ghi chú</th></tr>
+                <tr><td>GET</td><td>/api/admin/dashboard</td><td>Tổng quan vận hành</td></tr>
+                <tr><td>GET/POST/PUT/DELETE</td><td>/api/admin/locations</td><td>Quản lý điểm đến/món ăn</td></tr>
+                <tr><td>POST</td><td>/api/admin/locations/{id}/approve</td><td>Duyệt narration public</td></tr>
+                <tr><td>GET/POST/DELETE</td><td>/api/admin/voice-profiles</td><td>Quản lý voice</td></tr>
+                <tr><td>GET/POST/DELETE</td><td>/api/admin/narration-templates</td><td>Quản lý template</td></tr>
+                <tr><td>GET</td><td>/api/admin/logs/ai</td><td>Log tạo audio và cost</td></tr>
+                <tr><td>GET</td><td>/api/admin/logs/visits</td><td>Log lượt truy cập</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="note ok" style="margin-top:16px">
+            Tích hợp ngoài hệ thống: Azure Translator, Azure Speech/TTS, MapLibre, nguồn vector tiles offline, trình duyệt mobile hỗ trợ PWA.
+          </div>
+        </section>
+
+        <section id="sequence" class="card">
+          <h2>12. Sequence diagrams</h2>
+          <p class="small">Các sơ đồ dưới đây mô tả các luồng quan trọng nhất của hệ thống.</p>
+
+          <h3>12.1 Quét QR và nghe thuyết minh nhanh</h3>
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as Người dùng
+    participant Q as QR tại quán
+    participant FE as PWA Frontend
+    participant API as ASP.NET Core API
+    participant LOC as Location Service
+    participant NAR as Narration Orchestrator
+    participant AZ as Azure Speech/Translator
+
+    U->>Q: Quét mã QR
+    Q-->>FE: Mở URL theo quán hoặc landing
+    FE->>API: GET /api/locations
+    API->>LOC: Lấy dữ liệu location
+    LOC-->>API: Danh sách quán/món
+    API-->>FE: JSON location
+    U->>FE: Chọn ngôn ngữ + bấm nghe nhanh
+    FE->>API: POST /api/narrations/instant
+    API->>NAR: GetOrCreateInstant(locationId, language)
+    NAR->>AZ: Tạo/đọc audio narration
+    AZ-->>NAR: URL hoặc dữ liệu audio
+    NAR-->>API: Kết quả narration
+    API-->>FE: Nội dung + audioUrl
+    FE-->>U: Hiển thị thông tin và phát audio
+          </div>
+
+          <h3>12.2 Tạo thuyết minh tùy chỉnh</h3>
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as Người dùng
+    participant FE as Frontend
+    participant API as API
+    participant NAR as Narration Orchestrator
+    participant TR as Azure Translator
+    participant TTS as Azure Speech
+
+    U->>FE: Nhập customTextVi / chọn voice / chọn language
+    FE->>API: POST /api/narrations
+    API->>NAR: GenerateAsync(request)
+    NAR->>TR: Dịch nội dung sang ngôn ngữ đích
+    TR-->>NAR: Bản dịch
+    NAR->>TTS: Tổng hợp giọng đọc MP3
+    TTS-->>NAR: Audio file / stream
+    NAR-->>API: Nội dung + audio + metadata
+    API-->>FE: Response narration
+    FE-->>U: Hiển thị transcript và nút phát audio
+          </div>
+
+          <h3>12.3 Hỏi trợ lý AI du lịch</h3>
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as Người dùng
+    participant FE as Frontend
+    participant API as API
+    participant AS as Tour Assistant Service
+    participant KB as Dữ liệu quán/món/template
+
+    U->>FE: Hỏi "ăn gì ngon gần đây?"
+    FE->>API: POST /api/assistant/ask
+    API->>AS: AskAsync(request)
+    AS->>KB: Truy xuất dữ liệu liên quan
+    KB-->>AS: Thông tin location / template / route hint
+    AS-->>API: Câu trả lời + gợi ý địa điểm
+    API-->>FE: Assistant response
+    FE-->>U: Hiển thị trả lời và địa điểm gợi ý
+          </div>
+
+          <h3>12.4 Tạo lộ trình AI</h3>
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant U as Người dùng
+    participant FE as Frontend
+    participant API as API
+    participant RS as Route Planning Service
+    participant LOC as Location Data
+
+    U->>FE: Chọn thời gian / sở thích / điểm bắt đầu
+    FE->>API: POST /api/routes/plan
+    API->>RS: BuildAsync(request)
+    RS->>LOC: Đọc danh sách điểm đến và tọa độ
+    LOC-->>RS: Dữ liệu location
+    RS-->>API: Route plan tối ưu
+    API-->>FE: Danh sách điểm dừng + thứ tự
+    FE-->>U: Hiển thị timeline tham quan
+          </div>
+
+          <h3>12.5 Duyệt nội dung từ admin</h3>
+          <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant A as Admin
+    participant ADM as Admin UI
+    participant API as API
+    participant MGT as Admin Management Service
+
+    A->>ADM: Mở admin dashboard
+    ADM->>API: GET /api/admin/dashboard + X-Admin-Key
+    API->>MGT: Xác thực và lấy số liệu
+    MGT-->>API: Dashboard data
+    API-->>ADM: Tổng quan vận hành
+    A->>ADM: Duyệt narration cho location
+    ADM->>API: POST /api/admin/locations/{id}/approve
+    API->>MGT: ApproveLocation(id)
+    MGT-->>API: Bản public đã duyệt
+    API-->>ADM: Kết quả duyệt thành công
+          </div>
+        </section>
+
+        <section id="launch" class="card grid grid-2">
+          <div>
+            <h2>13. Kế hoạch triển khai</h2>
+            <table>
+              <tr><th>Giai đoạn</th><th>Nội dung</th><th>Kết quả</th></tr>
+              <tr><td>Phase 1</td><td>Ổn định dữ liệu mẫu, QR, audio, UI mobile</td><td>Bản demo nội bộ</td></tr>
+              <tr><td>Phase 2</td><td>Map, AI assistant, route planning, admin</td><td>Pilot tại khu phố</td></tr>
+              <tr><td>Phase 3</td><td>Tối ưu cache, log, cost control, thêm dữ liệu thật</td><td>Bản trình diễn hoàn chỉnh</td></tr>
+            </table>
+          </div>
+          <div>
+            <h3>Tiêu chí sẵn sàng pilot</h3>
+            <ul>
+              <li>Tối thiểu 5-10 location có nội dung public.</li>
+              <li>QR in thử nghiệm dẫn đúng vào nội dung.</li>
+              <li>Có ít nhất 3-4 ngôn ngữ hoạt động ổn định.</li>
+              <li>Audio phát tốt trên Android và iPhone.</li>
+              <li>Admin xem được dashboard, logs và duyệt nội dung.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section id="rui-ro" class="card grid grid-2">
+          <div>
+            <h2>14. Rủi ro & câu hỏi mở</h2>
+            <div class="note danger">
+              Rủi ro chính: chi phí AI tăng khi người dùng tạo narration liên tục; độ chính xác nội dung quán/món; chất lượng GPS tại khu phố đông;
+              phụ thuộc mạng khi chưa có cache đủ tốt.
+            </div>
+            <h3 style="margin-top:18px">Câu hỏi mở</h3>
+            <ul>
+              <li>QR nên dẫn vào trang chung hay từng quán cụ thể theo từng biển?</li>
+              <li>Dữ liệu thật sẽ được lưu in-memory, file JSON hay SQL Server trong giai đoạn sau?</li>
+              <li>Có cần workflow duyệt nhiều cấp cho nội dung public không?</li>
+              <li>Người dùng có cần lưu lịch sử hoặc yêu thích để cá nhân hóa không?</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Đề xuất nâng cấp tiếp theo</h3>
+            <ul>
+              <li>Kết nối SQL Server thay dữ liệu in-memory.</li>
+              <li>Cache audio theo locationId + targetLanguage.</li>
+              <li>Thêm analytics dashboard trực quan hơn.</li>
+              <li>Tạo QR generator cho từng location ngay trong admin.</li>
+              <li>Mở rộng sang mini-CMS cho nhiều tuyến phố ẩm thực.</li>
+            </ul>
+            <div class="note ok" style="margin-top:14px">
+              Khuyến nghị cho bài thuyết trình: dùng thêm hình kiến trúc container, use case diagram và deployment diagram để làm rõ phần kỹ thuật.
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Phụ lục: Gợi ý cấu trúc trình bày khi nộp báo cáo</h2>
+          <ul>
+            <li>Chương 1: Giới thiệu đề tài và bài toán thực tiễn tại khu ẩm thực Vĩnh Khánh.</li>
+            <li>Chương 2: Phân tích yêu cầu và PRD.</li>
+            <li>Chương 3: Thiết kế hệ thống, API, dữ liệu, sequence diagram.</li>
+            <li>Chương 4: Cài đặt hệ thống và mô tả giao diện.</li>
+            <li>Chương 5: Đánh giá, rủi ro, hướng phát triển.</li>
+          </ul>
+        </section>
+      </main>
+    </div>
+
+    <div class="footer">
+      File HTML được tạo để bạn mở trực tiếp trên trình duyệt. Nếu máy có mạng, Mermaid sẽ render sơ đồ sequence tự động.
+    </div>
+  </div>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+  </script>
+</body>
+</html>

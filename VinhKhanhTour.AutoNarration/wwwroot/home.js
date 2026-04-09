@@ -5,6 +5,15 @@ const assistantQuestion = document.getElementById('assistantQuestion');
 const assistantResult = document.getElementById('assistantResult');
 const assistantAnswer = document.getElementById('assistantAnswer');
 const assistantSuggested = document.getElementById('assistantSuggested');
+const accountFullName = document.getElementById('accountFullName');
+const accountEmail = document.getElementById('accountEmail');
+const accountLogoutBtn = document.getElementById('accountLogoutBtn');
+const metricVisits = document.getElementById('metricVisits');
+const metricNarrations = document.getElementById('metricNarrations');
+const metricRoutes = document.getElementById('metricRoutes');
+const visitHistoryList = document.getElementById('visitHistoryList');
+const routeHistoryList = document.getElementById('routeHistoryList');
+const narrationHistoryList = document.getElementById('narrationHistoryList');
 
 const SITE_LANGUAGE_KEY = 'siteLanguage';
 
@@ -317,10 +326,103 @@ function initLanguageModal() {
   });
 }
 
+function formatDateTime(value) {
+  if (!value) {
+    return '';
+  }
+
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) {
+    return '';
+  }
+
+  return dt.toLocaleString('vi-VN');
+}
+
+function renderHistoryList(container, items) {
+  if (!container) {
+    return;
+  }
+
+  if (!items || items.length === 0) {
+    container.innerHTML = '<li>Chưa có dữ liệu.</li>';
+    return;
+  }
+
+  container.innerHTML = items.map((item) => `<li>${item}</li>`).join('');
+}
+
+async function loadAccountDashboard() {
+  if (!accountFullName || !accountEmail) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/account/dashboard');
+    if (!response.ok) {
+      throw new Error('Không tải được dữ liệu tài khoản.');
+    }
+
+    const data = await response.json();
+    const user = data.user || {};
+    const metrics = data.metrics || {};
+    const visits = Array.isArray(data.visitHistory) ? data.visitHistory : [];
+    const routes = Array.isArray(data.routeHistory) ? data.routeHistory : [];
+    const narrations = Array.isArray(data.narrationHistory) ? data.narrationHistory : [];
+
+    accountFullName.textContent = user.fullName || 'Tài khoản cá nhân';
+    accountEmail.textContent = user.email || '';
+
+    if (metricVisits) {
+      metricVisits.textContent = String(metrics.totalVisits ?? visits.length ?? 0);
+    }
+
+    if (metricNarrations) {
+      metricNarrations.textContent = String(metrics.totalNarrations ?? narrations.length ?? 0);
+    }
+
+    if (metricRoutes) {
+      metricRoutes.textContent = String(metrics.totalRoutes ?? routes.length ?? 0);
+    }
+
+    renderHistoryList(visitHistoryList, visits.map((x) => `${escapeHtml(x.path || '/')} - ${formatDateTime(x.visitedAt)}`));
+    renderHistoryList(routeHistoryList, routes.map((x) => {
+      const pref = x.preferences ? ` | sở thích: ${escapeHtml(x.preferences)}` : '';
+      const stops = x.stopSummary ? ` | điểm: ${escapeHtml(x.stopSummary)}` : '';
+      return `${escapeHtml(x.planTitle || 'Lộ trình')} (${escapeHtml(x.generatedBy || 'AI')})${pref}${stops} - ${formatDateTime(x.createdAt)}`;
+    }));
+    renderHistoryList(narrationHistoryList, narrations.map((x) => {
+      const locationName = x.locationName || 'Nội dung tùy chỉnh';
+      return `${escapeHtml(locationName)} | ${escapeHtml(x.targetLanguage || '')} | ${escapeHtml(x.voiceName || '')} - ${formatDateTime(x.generatedAt)}`;
+    }));
+  } catch (error) {
+    accountFullName.textContent = 'Không tải được dashboard';
+    accountEmail.textContent = error.message || 'Vui lòng thử lại.';
+  }
+}
+
+function initAccountLogout() {
+  if (!accountLogoutBtn) {
+    return;
+  }
+
+  accountLogoutBtn.addEventListener('click', async () => {
+    accountLogoutBtn.setAttribute('disabled', 'disabled');
+
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      window.location.href = '/login.html';
+    }
+  });
+}
+
 (async function initHomePage() {
   const lang = getLang();
   applyI18n(lang);
   initLanguageModal();
   initAssistant();
+  initAccountLogout();
+  await loadAccountDashboard();
   await renderFeaturedLocations(lang);
 })();

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Trang cá nhân người dùng Vinh Khanh Tour." />
+  <title>Tài khoản cá nhân - Vinh Khanh Tour</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20260409-4" />
+</head>
+<body class="public-page page-full">
+  <nav>
+    <a href="/" class="logo">🍜 VinhKhanh Culinary Tourism</a>
+    <ul class="nav-links">
+      <li><a href="/">Tổng quan</a></li>
+      <li><a href="/mon-ngon.html">Món ngon</a></li>
+      <li><a href="/ban-do.html">Bản đồ</a></li>
+      <li><a href="/ai-routing.html">AI Routing</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <h1 id="accountPageTitle">Tài khoản cá nhân</h1>
+    <p id="accountPageSubtitle" class="subtitle">Theo dõi lịch sử truy cập, lộ trình đã gợi ý và các lần tạo thuyết minh của bạn.</p>
+  </div>
+
+  <section id="accountDashboard" class="content-wide">
+    <div class="account-summary">
+      <div class="account-identity">
+        <h3 id="accountFullName">Đang tải thông tin...</h3>
+        <p id="accountEmail" class="account-email"></p>
+      </div>
+      <button id="accountLogoutBtn" type="button" class="button button-secondary">Đăng xuất</button>
+    </div>
+
+    <div class="stats-row account-metrics">
+      <div class="stat-card">
+        <div id="metricVisits" class="value">0</div>
+        <div id="metricVisitsLabel" class="label">Lượt truy cập gần đây</div>
+      </div>
+      <div class="stat-card">
+        <div id="metricNarrations" class="value">0</div>
+        <div id="metricNarrationsLabel" class="label">Lượt tạo thuyết minh</div>
+      </div>
+      <div class="stat-card">
+        <div id="metricRoutes" class="value">0</div>
+        <div id="metricRoutesLabel" class="label">Lịch trình đã gợi ý</div>
+      </div>
+    </div>
+
+    <div class="card-grid account-history-grid">
+      <article class="card">
+        <h3 id="visitHistoryTitle">Đã đi tới đâu</h3>
+        <ul id="visitHistoryList" class="account-history-list">
+          <li>Chưa có dữ liệu.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3 id="routeHistoryTitle">Gợi ý lịch trình đã tạo</h3>
+        <ul id="routeHistoryList" class="account-history-list">
+          <li>Chưa có dữ liệu.</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3 id="narrationHistoryTitle">Lịch sử thuyết minh</h3>
+        <ul id="narrationHistoryList" class="account-history-list">
+          <li>Chưa có dữ liệu.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <script src="/i18n.js?v=20260409-4"></script>
+  <script src="/nav.js?v=20260409-4"></script>
+  <script src="/account.js?v=20260409-4"></script>
+</body>
+</html>
