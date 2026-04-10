@@ -138,6 +138,8 @@ public sealed class RoutePlanningService : IRoutePlanningService
                 var lines = new List<string>
                 {
                         "Create a route plan for Vinh Khanh Food Street.",
+                    "All text fields in the JSON must be written in exactly one language: the requested language.",
+                    "Do not mix languages in title, summary, strategy, why, recommendedDish, bestTime, or other fields.",
                         "Return JSON matching this shape:",
                         "{",
                         "  \"title\": \"string\",",
@@ -169,6 +171,7 @@ public sealed class RoutePlanningService : IRoutePlanningService
 
     private static RoutePlanResponse BuildFallbackPlan(RoutePlanRequest request, List<StreetLocation> locations)
     {
+        var language = NormalizeLanguage(request.Language);
         var normalizedPreferences = (request.Preferences ?? string.Empty).ToLowerInvariant();
         var normalizedBudget = (request.BudgetLevel ?? string.Empty).ToLowerInvariant();
         var wantsLateNight = normalizedPreferences.Contains("khuya") || normalizedPreferences.Contains("late") || normalizedPreferences.Contains("đêm");
@@ -193,11 +196,42 @@ public sealed class RoutePlanningService : IRoutePlanningService
             Longitude = location.Longitude
         }).ToList();
 
-        var title = wantsSeafood ? "Lộ trình ốc và hải sản Vĩnh Khánh" : "Lộ trình khám phá Vĩnh Khánh theo sở thích khách";
-        var summary = $"Gợi ý dựa trên {request.VisitorType ?? "nhu cầu khách"}, ưu tiên {request.Preferences ?? "sự cân bằng giữa món ăn và thời gian"}.";
+        var title = wantsSeafood
+            ? Localize(language,
+                "Lộ trình ốc và hải sản Vĩnh Khánh",
+                "Vinh Khanh Seafood Route",
+                "Itineraire fruits de mer de Vinh Khanh",
+                "ビンカイン海鮮ルート",
+                "빈칸 해산물 루트")
+            : Localize(language,
+                "Lộ trình khám phá Vĩnh Khánh theo sở thích khách",
+                "Vinh Khanh Route by Visitor Preferences",
+                "Itineraire Vinh Khanh selon les preferences du visiteur",
+                "来訪者の好みに合わせたビンカインルート",
+                "방문자 취향 기반 빈칸 루트");
+
+        var visitorText = request.VisitorType ?? Localize(language, "nhu cầu khách", "visitor needs", "besoins du visiteur", "来訪者ニーズ", "방문자 요구");
+        var preferenceText = request.Preferences ?? Localize(language, "sự cân bằng giữa món ăn và thời gian", "a balance between food and time", "un equilibre entre cuisine et temps", "食事と時間のバランス", "음식과 시간의 균형");
+        var summary = Localize(language,
+            $"Gợi ý dựa trên {visitorText}, ưu tiên {preferenceText}.",
+            $"Suggested for {visitorText}, prioritizing {preferenceText}.",
+            $"Suggestion pour {visitorText}, avec priorite a {preferenceText}.",
+            $"{visitorText}向けに、{preferenceText}を重視した提案です。",
+            $"{visitorText} 기준으로 {preferenceText}을 우선한 추천입니다.");
+
         var strategy = wantsLateNight
-            ? "Ưu tiên các quán mở khuya và có không khí sôi động để khách đi từ tối đến khuya."
-            : "Ưu tiên các quán dễ ghé, món nổi bật và cân bằng giữa thời gian di chuyển với trải nghiệm ăn uống.";
+            ? Localize(language,
+                "Ưu tiên các quán mở khuya và có không khí sôi động để khách đi từ tối đến khuya.",
+                "Prioritize late-night spots with lively atmosphere from evening to midnight.",
+                "Priorite aux lieux ouverts tard avec une ambiance animee du soir a la nuit.",
+                "夜遅くまで営業し、活気のある店舗を優先します。",
+                "저녁부터 심야까지 활기 있는 심야 영업 매장을 우선합니다.")
+            : Localize(language,
+                "Ưu tiên các quán dễ ghé, món nổi bật và cân bằng giữa thời gian di chuyển với trải nghiệm ăn uống.",
+                "Prioritize easy-to-access places, signature dishes, and a balance between travel time and food experience.",
+                "Priorite aux lieux accessibles, plats signatures et bon equilibre entre trajet et degustation.",
+                "立ち寄りやすさ、看板料理、移動時間と食体験のバランスを優先します。",
+                "이동 편의성, 대표 메뉴, 이동 시간과 식도락 경험의 균형을 우선합니다.");
 
         return new RoutePlanResponse
         {
@@ -246,38 +280,65 @@ public sealed class RoutePlanningService : IRoutePlanningService
 
         var budget = budgetBase + stopCount * 28_000;
         var walking = 280 + Math.Max(0, stopCount - 1) * 430;
-        var language = (request.Language ?? "vi").Trim().ToLowerInvariant();
+        var language = NormalizeLanguage(request.Language);
 
         var title = kind switch
         {
-            OptionKind.Quick => language.StartsWith("en") ? "Quick Route" : "Lộ trình nhanh gọn",
-            OptionKind.Balanced => language.StartsWith("en") ? "Balanced Route" : "Lộ trình cân bằng",
-            _ => language.StartsWith("en") ? "Night Explorer Route" : "Lộ trình trải nghiệm đêm"
+            OptionKind.Quick => Localize(language, "Lộ trình nhanh gọn", "Quick Route", "Parcours rapide", "クイックルート", "빠른 경로"),
+            OptionKind.Balanced => Localize(language, "Lộ trình cân bằng", "Balanced Route", "Parcours equilibre", "バランスルート", "균형 경로"),
+            _ => Localize(language, "Lộ trình trải nghiệm đêm", "Night Explorer Route", "Parcours de nuit", "ナイト体験ルート", "야간 체험 경로")
         };
 
         var summary = kind switch
         {
-            OptionKind.Quick => language.StartsWith("en")
-                ? "Suitable when you have limited time but still want signature dishes."
-                : "Phù hợp khi bạn ít thời gian nhưng vẫn muốn thử món đặc trưng.",
-            OptionKind.Balanced => language.StartsWith("en")
-                ? "Balanced between travel, food variety, and budget."
-                : "Cân bằng giữa di chuyển, độ đa dạng món và ngân sách.",
-            _ => language.StartsWith("en")
-                ? "Deeper night-food experience with more stops and richer narration."
-                : "Trải nghiệm sâu hơn về đêm với nhiều điểm dừng và thuyết minh chi tiết hơn."
+            OptionKind.Quick => Localize(language,
+                "Phù hợp khi bạn ít thời gian nhưng vẫn muốn thử món đặc trưng.",
+                "Suitable when you have limited time but still want signature dishes.",
+                "Convient si vous avez peu de temps mais voulez des plats signatures.",
+                "時間が限られていても名物料理を楽しみたい方向けです。",
+                "시간이 부족해도 대표 메뉴를 즐기고 싶은 경우에 적합합니다."),
+            OptionKind.Balanced => Localize(language,
+                "Cân bằng giữa di chuyển, độ đa dạng món và ngân sách.",
+                "Balanced between travel, food variety, and budget.",
+                "Equilibre entre deplacement, diversite culinaire et budget.",
+                "移動、料理の多様性、予算のバランスを重視します。",
+                "이동, 음식 다양성, 예산의 균형을 맞춥니다."),
+            _ => Localize(language,
+                "Trải nghiệm sâu hơn về đêm với nhiều điểm dừng và thuyết minh chi tiết hơn.",
+                "Deeper night-food experience with more stops and richer narration.",
+                "Experience nocturne plus riche avec plus d arrets et de narration.",
+                "停留所を増やし、夜の食体験をより深く楽しめます。",
+                "정류장을 늘려 더 깊은 야간 미식 경험을 제공합니다.")
         };
 
         var strategy = kind switch
         {
-            OptionKind.Quick => language.StartsWith("en") ? "Fast pace, low walking, high highlights." : "Đi nhanh, ít đi bộ, tập trung điểm nổi bật.",
-            OptionKind.Balanced => language.StartsWith("en") ? "Moderate pace for most visitor groups." : "Nhịp vừa phải, phù hợp đa số nhóm khách.",
-            _ => language.StartsWith("en") ? "Slow pace, richer tasting and atmosphere-oriented stops." : "Nhịp chậm hơn, ưu tiên trải nghiệm không khí và đa dạng món."
+            OptionKind.Quick => Localize(language,
+                "Đi nhanh, ít đi bộ, tập trung điểm nổi bật.",
+                "Fast pace, low walking, high highlights.",
+                "Rythme rapide, peu de marche, points forts prioritaires.",
+                "短時間・少ない徒歩で見どころ重視の構成です。",
+                "빠른 이동, 적은 도보, 핵심 포인트 중심 구성입니다."),
+            OptionKind.Balanced => Localize(language,
+                "Nhịp vừa phải, phù hợp đa số nhóm khách.",
+                "Moderate pace for most visitor groups.",
+                "Rythme modere adapte a la plupart des groupes.",
+                "多くのグループに合う標準的なペースです。",
+                "대부분의 방문 그룹에 맞는 중간 속도입니다."),
+            _ => Localize(language,
+                "Nhịp chậm hơn, ưu tiên trải nghiệm không khí và đa dạng món.",
+                "Slow pace, richer tasting and atmosphere-oriented stops.",
+                "Rythme lent, degustation plus riche et ambiance privilegiee.",
+                "ゆっくり巡り、雰囲気と料理の多様性を重視します。",
+                "느린 속도로 분위기와 음식 다양성을 우선합니다.")
         };
 
-        var narrationSummary = language.StartsWith("en")
-            ? $"Narration ready for {stopCount} stops. Tap a stop to listen while moving."
-            : $"Đã sẵn sàng thuyết minh cho {stopCount} điểm dừng. Bạn có thể nghe từng điểm khi di chuyển.";
+        var narrationSummary = Localize(language,
+            $"Đã sẵn sàng thuyết minh cho {stopCount} điểm dừng. Bạn có thể nghe từng điểm khi di chuyển.",
+            $"Narration ready for {stopCount} stops. Tap a stop to listen while moving.",
+            $"Narration prete pour {stopCount} arrets. Touchez un arret pour ecouter en deplacement.",
+            $"{stopCount} か所分のナレーションを用意しました。移動中に各停留所で再生できます。",
+            $"{stopCount}개 정류장 내레이션이 준비되었습니다. 이동 중 각 정류장에서 재생할 수 있습니다.");
 
         return new RoutePlanOption
         {
@@ -296,11 +357,135 @@ public sealed class RoutePlanningService : IRoutePlanningService
 
     private static string BuildRequestLabel(RoutePlanRequest request)
     {
-        var visitor = string.IsNullOrWhiteSpace(request.VisitorType) ? "khách chung" : request.VisitorType.Trim();
-        var budget = string.IsNullOrWhiteSpace(request.BudgetLevel) ? "ngân sách bất kỳ" : request.BudgetLevel.Trim();
-        var pref = string.IsNullOrWhiteSpace(request.Preferences) ? "không yêu cầu đặc biệt" : request.Preferences.Trim();
+        var language = NormalizeLanguage(request.Language);
+        var visitor = MapVisitorLabel(language, request.VisitorType);
+        var budget = MapBudgetLabel(language, request.BudgetLevel);
+        var pref = MapPreferenceLabel(language, request.Preferences);
         return $"{visitor} - {budget} - {pref}";
     }
+
+    private static string MapVisitorLabel(string language, string? visitorType)
+    {
+        if (string.IsNullOrWhiteSpace(visitorType))
+        {
+            return Localize(language, "khách chung", "general visitor", "visiteur general", "一般来訪者", "일반 방문자");
+        }
+
+        var normalized = visitorType.Trim().ToLowerInvariant();
+        if (normalized.Contains("family") || normalized.Contains("gia đình") || normalized.Contains("gia dinh"))
+        {
+            return Localize(language, "gia đình", "family", "famille", "家族", "가족");
+        }
+
+        if (normalized.Contains("couple") || normalized.Contains("cap doi") || normalized.Contains("cặp đôi"))
+        {
+            return Localize(language, "cặp đôi", "couple", "couple", "カップル", "커플");
+        }
+
+        if (normalized.Contains("friend") || normalized.Contains("nhóm bạn") || normalized.Contains("nhom ban") || normalized.Contains("group"))
+        {
+            return Localize(language, "nhóm bạn", "friends group", "groupe d amis", "友人グループ", "친구 그룹");
+        }
+
+        if (normalized.Contains("solo") || normalized.Contains("một mình") || normalized.Contains("mot minh") || normalized.Contains("single"))
+        {
+            return Localize(language, "đi một mình", "solo traveler", "voyageur solo", "一人旅", "혼행 여행자");
+        }
+
+        return visitorType.Trim();
+    }
+
+    private static string MapBudgetLabel(string language, string? budgetLevel)
+    {
+        if (string.IsNullOrWhiteSpace(budgetLevel))
+        {
+            return Localize(language, "ngân sách bất kỳ", "any budget", "budget libre", "予算自由", "예산 무관");
+        }
+
+        var normalized = budgetLevel.Trim().ToLowerInvariant();
+        if (normalized is "thấp" or "thap" or "low")
+        {
+            return Localize(language, "thấp", "low", "faible", "低", "낮음");
+        }
+
+        if (normalized is "vừa" or "vua" or "medium" or "mid")
+        {
+            return Localize(language, "vừa", "medium", "moyen", "中", "중간");
+        }
+
+        if (normalized is "cao" or "high")
+        {
+            return Localize(language, "cao", "high", "eleve", "高", "높음");
+        }
+
+        return budgetLevel.Trim();
+    }
+
+    private static string MapPreferenceLabel(string language, string? preferences)
+    {
+        if (string.IsNullOrWhiteSpace(preferences))
+        {
+            return Localize(language, "không yêu cầu đặc biệt", "no special preferences", "aucune preference particuliere", "特別な希望なし", "특별 요청 없음");
+        }
+
+        var rawParts = preferences
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+
+        if (rawParts.Count == 0)
+        {
+            return preferences.Trim();
+        }
+
+        var mapped = rawParts.Select(part =>
+        {
+            var token = part.ToLowerInvariant();
+            if (token.Contains("seafood") || token.Contains("hải sản") || token.Contains("hai san") || token.Contains("ốc") || token.Contains("oc"))
+            {
+                return Localize(language, "hải sản", "seafood", "fruits de mer", "海鮮", "해산물");
+            }
+
+            if (token.Contains("late") || token.Contains("khuya") || token.Contains("đêm") || token.Contains("dem") || token.Contains("night"))
+            {
+                return Localize(language, "đi khuya", "late-night", "nuit tardive", "夜遅め", "야간 선호");
+            }
+
+            if (token.Contains("walk") || token.Contains("đi bộ") || token.Contains("di bo"))
+            {
+                return Localize(language, "ít đi bộ", "less walking", "moins de marche", "徒歩少なめ", "도보 최소");
+            }
+
+            if (token.Contains("budget") || token.Contains("tiết kiệm") || token.Contains("tiet kiem") || token.Contains("affordable"))
+            {
+                return Localize(language, "tiết kiệm", "budget-friendly", "economique", "予算重視", "가성비");
+            }
+
+            return part;
+        });
+
+        return string.Join(", ", mapped);
+    }
+
+    private static string NormalizeLanguage(string? language)
+    {
+        var normalized = (language ?? "vi").Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "en" or "fr" or "ja" or "ko" or "vi" => normalized,
+            _ => "vi"
+        };
+    }
+
+    private static string Localize(string language, string vi, string en, string fr, string ja, string ko) => language switch
+    {
+        "en" => en,
+        "fr" => fr,
+        "ja" => ja,
+        "ko" => ko,
+        _ => vi
+    };
 
     private static RoutePlanResponse EnrichStops(RoutePlanResponse response, List<StreetLocation> locations)
     {

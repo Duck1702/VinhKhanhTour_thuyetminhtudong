@@ -63,13 +63,349 @@ let journeyPathLineAdded = false;
 let nearestRemainingStop = null;
 const SITE_LANGUAGE_KEY = 'siteLanguage';
 
+const ROUTING_I18N = {
+  vi: {
+    fallbackRequestLabel: 'du-phong',
+    fallbackNarrationReady: (count) => `Đã sẵn sàng thuyết minh cho ${count} điểm dừng.`,
+    fallbackQuickTitle: 'Lộ trình nhanh gọn',
+    fallbackQuickSummary: 'Đi nhanh, chọn các điểm nổi bật nhất.',
+    fallbackQuickStrategy: 'Ưu tiên tiết kiệm thời gian.',
+    fallbackBalancedTitle: 'Lộ trình cân bằng',
+    fallbackBalancedSummary: 'Cân bằng trải nghiệm, thời gian và ngân sách.',
+    fallbackBalancedStrategy: 'Phù hợp đa số du khách.',
+    fallbackNightTitle: 'Lộ trình trải nghiệm đêm',
+    fallbackNightSummary: 'Nhiều điểm dừng, trải nghiệm sâu hơn về đêm.',
+    fallbackNightStrategy: 'Ưu tiên đa dạng món và không khí.',
+    progressStatus: (completed, total, skipped, remaining) => `Hoàn thành ${completed}/${total} điểm, bỏ qua ${skipped}, còn lại ${remaining}.`,
+    etaUnknown: 'Chưa xác định',
+    etaValue: (minutes, meters) => `${minutes} phút (${meters} m)`,
+    offRouteText: (name, meters) => `Bạn đang cách điểm gần nhất "${name}" khoảng ${meters} m. Nên quay lại hoặc bấm tính lại lộ trình.`,
+    yourLocation: 'Vị trí của bạn',
+    needOption: 'Bạn cần chọn một phương án lộ trình trước.',
+    needLocation: 'Hãy lấy vị trí hiện tại trước khi tính lại lộ trình.',
+    noNarrationData: 'Điểm dừng này chưa có dữ liệu thuyết minh tự động.',
+    noCoordinate: 'Điểm dừng này chưa có toạ độ để dẫn đường.',
+    noGuideStop: 'Không có điểm dừng phù hợp để dẫn đường.',
+    journeyPrefix: 'Hành trình:',
+    doneTitle: 'Bạn đã hoàn thành hoặc bỏ qua tất cả điểm dừng.',
+    doneDesc: 'Hãy tạo lại option mới để tiếp tục hành trình.',
+    distanceUnknown: 'Chưa xác định khoảng cách',
+    distanceValue: (meters) => `Cách bạn khoảng ${meters} m`,
+    nextStop: 'Điểm tiếp theo',
+    distanceLabel: 'Khoảng cách',
+    narrateStop: 'Nghe thuyết minh điểm này',
+    guideStop: 'Dẫn đường',
+    completeStop: 'Đã đến điểm này',
+    skipStop: 'Bỏ qua điểm này',
+    optionRecommended: 'Khuyến nghị',
+    optionStrategy: 'Chiến lược',
+    optionDuration: 'Thời lượng',
+    optionBudget: 'Ngân sách/người',
+    optionBudgetLocal: 'Quy đổi tiền tệ',
+    optionWalking: 'Đi bộ ước tính',
+    optionNarration: 'Thuyết minh',
+    optionChoose: 'Chọn option này',
+    optionPreview: 'Xem chi tiết',
+    durationUnit: 'phút',
+    geoUnsupported: 'Thiết bị không hỗ trợ định vị GPS trên trình duyệt.',
+    geoLoading: 'Đang lấy vị trí hiện tại...',
+    geoLocated: (lat, lng) => `Đã định vị: ${lat}, ${lng}`,
+    geoFailed: (message) => `Không lấy được vị trí: ${message}`,
+    panelOptionsNum: 'Options',
+    panelOptionsTitle: 'Các phương án lộ trình',
+    panelPriority: 'Ưu tiên:',
+    sortRecommended: 'Khuyến nghị cho yêu cầu hiện tại',
+    sortDuration: 'Nhanh nhất',
+    sortBudget: 'Tiết kiệm ngân sách',
+    sortWalking: 'Ít đi bộ nhất',
+    panelJourneyNum: 'Journey',
+    panelJourneyTitle: 'Hành trình đã chọn',
+    panelYourLocation: 'Định vị của bạn:',
+    panelLocateBtn: 'Dùng vị trí của tôi',
+    panelRerouteBtn: 'Tính lại lộ trình từ vị trí hiện tại',
+    panelBackNearestBtn: 'Quay về điểm gần nhất',
+    panelAutoNarration: 'Tự phát thuyết minh khi đến gần điểm dừng',
+    panelOffRouteStrong: 'Bạn đang lệch hướng.',
+    panelProgressStrong: 'Tiến độ hành trình:',
+    panelEtaStrong: 'ETA điểm tiếp theo:'
+  },
+  en: {
+    fallbackRequestLabel: 'fallback',
+    fallbackNarrationReady: (count) => `Narration is ready for ${count} stops.`,
+    fallbackQuickTitle: 'Quick Route',
+    fallbackQuickSummary: 'Move quickly and focus on top highlights.',
+    fallbackQuickStrategy: 'Prioritize time efficiency.',
+    fallbackBalancedTitle: 'Balanced Route',
+    fallbackBalancedSummary: 'Balance experience, time, and budget.',
+    fallbackBalancedStrategy: 'Suitable for most visitors.',
+    fallbackNightTitle: 'Night Experience Route',
+    fallbackNightSummary: 'More stops for deeper night exploration.',
+    fallbackNightStrategy: 'Prioritize food variety and atmosphere.',
+    progressStatus: (completed, total, skipped, remaining) => `Completed ${completed}/${total} stops, skipped ${skipped}, remaining ${remaining}.`,
+    etaUnknown: 'Unknown',
+    etaValue: (minutes, meters) => `${minutes} min (${meters} m)`,
+    offRouteText: (name, meters) => `You are about ${meters} m away from the nearest stop "${name}". Return or recalculate the route.`,
+    yourLocation: 'Your location',
+    needOption: 'Please select a route option first.',
+    needLocation: 'Please get your current location before recalculating.',
+    noNarrationData: 'This stop does not have auto narration data yet.',
+    noCoordinate: 'This stop has no coordinates for navigation.',
+    noGuideStop: 'No suitable stop available for navigation.',
+    journeyPrefix: 'Journey:',
+    doneTitle: 'You completed or skipped all stops.',
+    doneDesc: 'Create a new option to continue your journey.',
+    distanceUnknown: 'Distance unavailable',
+    distanceValue: (meters) => `About ${meters} m from your position`,
+    nextStop: 'Next stop',
+    distanceLabel: 'Distance',
+    narrateStop: 'Play narration for this stop',
+    guideStop: 'Navigate',
+    completeStop: 'Mark as arrived',
+    skipStop: 'Skip this stop',
+    optionRecommended: 'Recommended',
+    optionStrategy: 'Strategy',
+    optionDuration: 'Duration',
+    optionBudget: 'Budget/person',
+    optionBudgetLocal: 'Converted currency',
+    optionWalking: 'Estimated walking',
+    optionNarration: 'Narration',
+    optionChoose: 'Choose this option',
+    optionPreview: 'View details',
+    durationUnit: 'min',
+    geoUnsupported: 'This device does not support browser GPS.',
+    geoLoading: 'Getting current location...',
+    geoLocated: (lat, lng) => `Located: ${lat}, ${lng}`,
+    geoFailed: (message) => `Cannot get location: ${message}`,
+    panelOptionsNum: 'Options',
+    panelOptionsTitle: 'Route Options',
+    panelPriority: 'Priority:',
+    sortRecommended: 'Recommended for current request',
+    sortDuration: 'Fastest',
+    sortBudget: 'Budget saver',
+    sortWalking: 'Least walking',
+    panelJourneyNum: 'Journey',
+    panelJourneyTitle: 'Selected Journey',
+    panelYourLocation: 'Your location:',
+    panelLocateBtn: 'Use my location',
+    panelRerouteBtn: 'Recalculate from current location',
+    panelBackNearestBtn: 'Back to nearest stop',
+    panelAutoNarration: 'Auto-play narration when near a stop',
+    panelOffRouteStrong: 'You are off route.',
+    panelProgressStrong: 'Journey progress:',
+    panelEtaStrong: 'ETA to next stop:'
+  },
+  fr: {
+    fallbackRequestLabel: 'fallback',
+    fallbackNarrationReady: (count) => `La narration est prete pour ${count} arrets.`,
+    fallbackQuickTitle: 'Parcours rapide',
+    fallbackQuickSummary: 'Avancez vite en ciblant les points forts.',
+    fallbackQuickStrategy: 'Priorite au gain de temps.',
+    fallbackBalancedTitle: 'Parcours equilibre',
+    fallbackBalancedSummary: 'Equilibre entre experience, temps et budget.',
+    fallbackBalancedStrategy: 'Convient a la plupart des visiteurs.',
+    fallbackNightTitle: 'Parcours de nuit',
+    fallbackNightSummary: 'Plus d arrets pour une exploration nocturne plus riche.',
+    fallbackNightStrategy: 'Priorite a la diversite culinaire et a l ambiance.',
+    progressStatus: (completed, total, skipped, remaining) => `Termine ${completed}/${total}, ignore ${skipped}, restant ${remaining}.`,
+    etaUnknown: 'Inconnu',
+    etaValue: (minutes, meters) => `${minutes} min (${meters} m)`,
+    offRouteText: (name, meters) => `Vous etes a environ ${meters} m de l arret le plus proche "${name}". Revenez ou recalculez l itineraire.`,
+    yourLocation: 'Votre position',
+    needOption: 'Veuillez d abord choisir une option d itineraire.',
+    needLocation: 'Veuillez obtenir votre position avant de recalculer.',
+    noNarrationData: 'Cet arret n a pas encore de narration automatique.',
+    noCoordinate: 'Cet arret n a pas de coordonnees de navigation.',
+    noGuideStop: 'Aucun arret adapte pour la navigation.',
+    journeyPrefix: 'Parcours :',
+    doneTitle: 'Vous avez termine ou ignore tous les arrets.',
+    doneDesc: 'Creez une nouvelle option pour continuer.',
+    distanceUnknown: 'Distance indisponible',
+    distanceValue: (meters) => `A environ ${meters} m de votre position`,
+    nextStop: 'Prochain arret',
+    distanceLabel: 'Distance',
+    narrateStop: 'Lire la narration de cet arret',
+    guideStop: 'Guider',
+    completeStop: 'Marquer comme arrive',
+    skipStop: 'Ignorer cet arret',
+    optionRecommended: 'Recommande',
+    optionStrategy: 'Strategie',
+    optionDuration: 'Duree',
+    optionBudget: 'Budget/personne',
+    optionBudgetLocal: 'Conversion devise',
+    optionWalking: 'Marche estimee',
+    optionNarration: 'Narration',
+    optionChoose: 'Choisir cette option',
+    optionPreview: 'Voir details',
+    durationUnit: 'min',
+    geoUnsupported: 'Cet appareil ne prend pas en charge le GPS du navigateur.',
+    geoLoading: 'Recuperation de la position...',
+    geoLocated: (lat, lng) => `Position recue : ${lat}, ${lng}`,
+    geoFailed: (message) => `Impossible d obtenir la position : ${message}`,
+    panelOptionsNum: 'Options',
+    panelOptionsTitle: 'Options d itineraire',
+    panelPriority: 'Priorite :',
+    sortRecommended: 'Recommande pour la demande actuelle',
+    sortDuration: 'Le plus rapide',
+    sortBudget: 'Economiser le budget',
+    sortWalking: 'Moins de marche',
+    panelJourneyNum: 'Journey',
+    panelJourneyTitle: 'Parcours selectionne',
+    panelYourLocation: 'Votre position :',
+    panelLocateBtn: 'Utiliser ma position',
+    panelRerouteBtn: 'Recalculer depuis la position actuelle',
+    panelBackNearestBtn: 'Retour au point le plus proche',
+    panelAutoNarration: 'Lecture automatique pres d un arret',
+    panelOffRouteStrong: 'Vous etes hors itineraire.',
+    panelProgressStrong: 'Progression du parcours :',
+    panelEtaStrong: 'ETA prochain arret :'
+  },
+  ja: {
+    fallbackRequestLabel: 'fallback',
+    fallbackNarrationReady: (count) => `${count} か所分のナレーションを準備しました。`,
+    fallbackQuickTitle: 'クイックルート',
+    fallbackQuickSummary: '主要スポットを短時間で巡ります。',
+    fallbackQuickStrategy: '時間効率を優先します。',
+    fallbackBalancedTitle: 'バランスルート',
+    fallbackBalancedSummary: '体験、時間、予算のバランスを重視します。',
+    fallbackBalancedStrategy: '多くの旅行者に適しています。',
+    fallbackNightTitle: 'ナイト体験ルート',
+    fallbackNightSummary: '停留所を増やして夜を深く体験します。',
+    fallbackNightStrategy: '料理の多様性と雰囲気を優先します。',
+    progressStatus: (completed, total, skipped, remaining) => `完了 ${completed}/${total}、スキップ ${skipped}、残り ${remaining}。`,
+    etaUnknown: '未確定',
+    etaValue: (minutes, meters) => `${minutes} 分 (${meters} m)`,
+    offRouteText: (name, meters) => `最寄りの停留所「${name}」から約 ${meters} m 離れています。戻るか再計算してください。`,
+    yourLocation: '現在地',
+    needOption: '先にルートオプションを選択してください。',
+    needLocation: '再計算の前に現在地を取得してください。',
+    noNarrationData: 'この停留所には自動ナレーションデータがありません。',
+    noCoordinate: 'この停留所には案内用座標がありません。',
+    noGuideStop: '案内できる停留所がありません。',
+    journeyPrefix: '旅程:',
+    doneTitle: 'すべての停留所を完了またはスキップしました。',
+    doneDesc: '続行するには新しいオプションを作成してください。',
+    distanceUnknown: '距離を取得できません',
+    distanceValue: (meters) => `現在地から約 ${meters} m`,
+    nextStop: '次の停留所',
+    distanceLabel: '距離',
+    narrateStop: 'この停留所を再生',
+    guideStop: '案内する',
+    completeStop: '到着済みにする',
+    skipStop: 'この停留所をスキップ',
+    optionRecommended: 'おすすめ',
+    optionStrategy: '戦略',
+    optionDuration: '所要時間',
+    optionBudget: '1人あたり予算',
+    optionBudgetLocal: '現地通貨換算',
+    optionWalking: '推定徒歩',
+    optionNarration: 'ナレーション',
+    optionChoose: 'このオプションを選択',
+    optionPreview: '詳細を見る',
+    durationUnit: '分',
+    geoUnsupported: 'この端末はブラウザGPSに対応していません。',
+    geoLoading: '現在地を取得中...',
+    geoLocated: (lat, lng) => `位置取得: ${lat}, ${lng}`,
+    geoFailed: (message) => `位置を取得できません: ${message}`,
+    panelOptionsNum: 'Options',
+    panelOptionsTitle: 'ルートオプション',
+    panelPriority: '優先:',
+    sortRecommended: '現在の条件におすすめ',
+    sortDuration: '最短',
+    sortBudget: '予算重視',
+    sortWalking: '徒歩最小',
+    panelJourneyNum: 'Journey',
+    panelJourneyTitle: '選択した旅程',
+    panelYourLocation: '現在地:',
+    panelLocateBtn: '現在地を使う',
+    panelRerouteBtn: '現在地から再計算',
+    panelBackNearestBtn: '最寄り停留所へ戻る',
+    panelAutoNarration: '停留所付近で自動再生',
+    panelOffRouteStrong: 'ルートから外れています。',
+    panelProgressStrong: '進行状況:',
+    panelEtaStrong: '次の停留所ETA:'
+  },
+  ko: {
+    fallbackRequestLabel: 'fallback',
+    fallbackNarrationReady: (count) => `${count}개 정류장 내레이션이 준비되었습니다.`,
+    fallbackQuickTitle: '빠른 경로',
+    fallbackQuickSummary: '핵심 장소를 빠르게 방문합니다.',
+    fallbackQuickStrategy: '시간 효율을 우선합니다.',
+    fallbackBalancedTitle: '균형 경로',
+    fallbackBalancedSummary: '경험, 시간, 예산의 균형을 맞춥니다.',
+    fallbackBalancedStrategy: '대부분의 방문자에게 적합합니다.',
+    fallbackNightTitle: '야간 체험 경로',
+    fallbackNightSummary: '정류장을 늘려 더 깊은 야간 체험을 제공합니다.',
+    fallbackNightStrategy: '음식 다양성과 분위기를 우선합니다.',
+    progressStatus: (completed, total, skipped, remaining) => `완료 ${completed}/${total}, 건너뜀 ${skipped}, 남음 ${remaining}.`,
+    etaUnknown: '알 수 없음',
+    etaValue: (minutes, meters) => `${minutes}분 (${meters}m)`,
+    offRouteText: (name, meters) => `가장 가까운 정류장 "${name}"에서 약 ${meters}m 떨어져 있습니다. 돌아가거나 재계산하세요.`,
+    yourLocation: '내 위치',
+    needOption: '먼저 경로 옵션을 선택하세요.',
+    needLocation: '재계산 전에 현재 위치를 가져오세요.',
+    noNarrationData: '이 정류장에는 자동 내레이션 데이터가 없습니다.',
+    noCoordinate: '이 정류장에는 길안내 좌표가 없습니다.',
+    noGuideStop: '길안내 가능한 정류장이 없습니다.',
+    journeyPrefix: '여정:',
+    doneTitle: '모든 정류장을 완료하거나 건너뛰었습니다.',
+    doneDesc: '계속하려면 새 옵션을 생성하세요.',
+    distanceUnknown: '거리 정보 없음',
+    distanceValue: (meters) => `내 위치에서 약 ${meters}m`,
+    nextStop: '다음 정류장',
+    distanceLabel: '거리',
+    narrateStop: '이 정류장 내레이션 재생',
+    guideStop: '길안내',
+    completeStop: '도착 처리',
+    skipStop: '이 정류장 건너뛰기',
+    optionRecommended: '추천',
+    optionStrategy: '전략',
+    optionDuration: '소요시간',
+    optionBudget: '1인 예산',
+    optionBudgetLocal: '현지 통화 환산',
+    optionWalking: '예상 도보',
+    optionNarration: '내레이션',
+    optionChoose: '이 옵션 선택',
+    optionPreview: '상세 보기',
+    durationUnit: '분',
+    geoUnsupported: '이 기기는 브라우저 GPS를 지원하지 않습니다.',
+    geoLoading: '현재 위치를 가져오는 중...',
+    geoLocated: (lat, lng) => `위치 확인: ${lat}, ${lng}`,
+    geoFailed: (message) => `위치를 가져올 수 없습니다: ${message}`,
+    panelOptionsNum: 'Options',
+    panelOptionsTitle: '경로 옵션',
+    panelPriority: '우선순위:',
+    sortRecommended: '현재 요청 기준 추천',
+    sortDuration: '가장 빠름',
+    sortBudget: '예산 절약',
+    sortWalking: '도보 최소',
+    panelJourneyNum: 'Journey',
+    panelJourneyTitle: '선택한 여정',
+    panelYourLocation: '내 위치:',
+    panelLocateBtn: '내 위치 사용',
+    panelRerouteBtn: '현재 위치에서 재계산',
+    panelBackNearestBtn: '가장 가까운 정류장으로 이동',
+    panelAutoNarration: '정류장 근처에서 자동 재생',
+    panelOffRouteStrong: '경로에서 벗어났습니다.',
+    panelProgressStrong: '여정 진행:',
+    panelEtaStrong: '다음 정류장 ETA:'
+  }
+};
+
 function tr(key) {
   return window.siteI18n?.translate?.(key, getPreferredLanguage()) ?? key;
 }
 
 function getPreferredLanguage() {
   const queryLang = new URLSearchParams(window.location.search).get('lang');
-  return queryLang || localStorage.getItem(SITE_LANGUAGE_KEY) || 'vi';
+  const selected = queryLang || localStorage.getItem(SITE_LANGUAGE_KEY) || 'vi';
+  return ['vi', 'en', 'fr', 'ja', 'ko'].includes(selected) ? selected : 'vi';
+}
+
+function routeUi(key, ...args) {
+  const selected = getPreferredLanguage();
+  const lang = ROUTING_I18N[selected] ? selected : 'vi';
+  const value = ROUTING_I18N[lang][key] ?? ROUTING_I18N.vi[key] ?? key;
+  return typeof value === 'function' ? value(...args) : value;
 }
 
 function escapeHtml(value) {
@@ -215,6 +551,35 @@ function ensureQuickPlayer() {
   return host;
 }
 
+function mapLanguageToSpeechLocale(language) {
+  const normalized = String(language || 'vi').toLowerCase();
+  if (normalized.startsWith('en')) return 'en-US';
+  if (normalized.startsWith('fr')) return 'fr-FR';
+  if (normalized.startsWith('ja')) return 'ja-JP';
+  if (normalized.startsWith('ko')) return 'ko-KR';
+  return 'vi-VN';
+}
+
+function speakWithBrowserFallback(text, language) {
+  if (!('speechSynthesis' in window)) {
+    return false;
+  }
+
+  const content = String(text || '').trim();
+  if (!content) {
+    return false;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(content);
+  utterance.lang = mapLanguageToSpeechLocale(language);
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+  return true;
+}
+
 async function playNarrationInstant(location) {
   const selectedLanguage = languageSelect?.value || getPreferredLanguage();
 
@@ -230,6 +595,20 @@ async function playNarrationInstant(location) {
   const result = await response.json();
   if (!response.ok) {
     throw new Error(result.detail || result.message || tr('narration_failed'));
+  }
+
+  const isToneFallback = String(result.voiceName || '').toLowerCase() === 'demo-fallback-tone'
+    || String(result.audioUrl || '').toLowerCase().endsWith('.wav');
+
+  if (isToneFallback) {
+    const preferredLocation = window.localizeLocationData
+      ? window.localizeLocationData(location, selectedLanguage)
+      : location;
+    const fallbackText = buildNarrationText(preferredLocation);
+    const spoken = speakWithBrowserFallback(fallbackText, selectedLanguage);
+    if (spoken) {
+      return;
+    }
   }
 
   const host = ensureQuickPlayer();
@@ -331,12 +710,14 @@ function renderRoutePlan(plan) {
     return;
   }
 
+  const localizedStops = (plan.stops ?? []).map((stop) => localizeRouteStop(stop));
+
   routeResult.classList.remove('hidden');
   routeTitle.textContent = plan.title;
   routeSummary.textContent = plan.summary;
   routeStrategy.textContent = plan.strategy;
   routeGeneratedBy.textContent = plan.generatedBy;
-  routeStops.innerHTML = (plan.stops ?? []).map((stop, index) => `
+  routeStops.innerHTML = localizedStops.map((stop, index) => `
     <div class="timeline-item">
       <h4>${index + 1}. ${escapeHtml(stop.name)}</h4>
       <p><strong>${escapeHtml(tr('card_address'))}:</strong> ${escapeHtml(stop.address)}</p>
@@ -349,7 +730,30 @@ function renderRoutePlan(plan) {
 
 function formatCurrencyVnd(value) {
   const amount = Number(value || 0);
-  return `${new Intl.NumberFormat('vi-VN').format(amount)} VND`;
+  const locale = getPreferredLanguage() === 'vi' ? 'vi-VN' : 'en-US';
+  return `${new Intl.NumberFormat(locale).format(amount)} VND`;
+}
+
+function formatConvertedCurrencyFromVnd(value) {
+  const amountVnd = Number(value || 0);
+  const language = getPreferredLanguage();
+
+  const configs = {
+    vi: { currency: 'VND', locale: 'vi-VN', vndPerUnit: 1 },
+    en: { currency: 'USD', locale: 'en-US', vndPerUnit: 25500 },
+    fr: { currency: 'EUR', locale: 'fr-FR', vndPerUnit: 27800 },
+    ja: { currency: 'JPY', locale: 'ja-JP', vndPerUnit: 170 },
+    ko: { currency: 'KRW', locale: 'ko-KR', vndPerUnit: 19 }
+  };
+
+  const config = configs[language] || configs.vi;
+  const amount = amountVnd / config.vndPerUnit;
+
+  return new Intl.NumberFormat(config.locale, {
+    style: 'currency',
+    currency: config.currency,
+    maximumFractionDigits: config.currency === 'JPY' || config.currency === 'KRW' ? 0 : 2
+  }).format(amount);
 }
 
 function formatDistanceKm(meters) {
@@ -372,14 +776,14 @@ function buildClientOptionsFromPlan(plan) {
     estimatedDurationMinutes: duration,
     estimatedBudgetPerPersonVnd: budget,
     estimatedWalkingMeters: walking,
-    narrationSummary: `Đã sẵn sàng thuyết minh cho ${Math.min(stopCount, stops.length)} điểm dừng.`,
+    narrationSummary: routeUi('fallbackNarrationReady', Math.min(stopCount, stops.length)),
     stops: stops.slice(0, Math.min(stopCount, stops.length))
   });
 
   return [
-    make('quick-fallback', 'Lộ trình nhanh gọn', 'Đi nhanh, chọn các điểm nổi bật nhất.', 'Ưu tiên tiết kiệm thời gian.', 3, 95, 180000, 900),
-    make('balanced-fallback', 'Lộ trình cân bằng', 'Cân bằng trải nghiệm, thời gian và ngân sách.', 'Phù hợp đa số du khách.', 4, 140, 240000, 1500),
-    make('night-fallback', 'Lộ trình trải nghiệm đêm', 'Nhiều điểm dừng, trải nghiệm sâu hơn về đêm.', 'Ưu tiên đa dạng món và không khí.', 6, 200, 320000, 2400)
+    make('quick-fallback', routeUi('fallbackQuickTitle'), routeUi('fallbackQuickSummary'), routeUi('fallbackQuickStrategy'), 3, 95, 180000, 900),
+    make('balanced-fallback', routeUi('fallbackBalancedTitle'), routeUi('fallbackBalancedSummary'), routeUi('fallbackBalancedStrategy'), 4, 140, 240000, 1500),
+    make('night-fallback', routeUi('fallbackNightTitle'), routeUi('fallbackNightSummary'), routeUi('fallbackNightStrategy'), 6, 200, 320000, 2400)
   ];
 }
 
@@ -390,7 +794,7 @@ function normalizeOptionsResponse(result) {
 
   const fallbackOptions = buildClientOptionsFromPlan(result);
   return {
-    requestLabel: 'fallback',
+    requestLabel: routeUi('fallbackRequestLabel'),
     options: fallbackOptions
   };
 }
@@ -514,7 +918,7 @@ function updateJourneyProgressStatus(option) {
   const completed = [...completedStopKeys].length;
   const skipped = [...skippedStopKeys].length;
   const remaining = Math.max(0, total - completed - skipped);
-  journeyProgressStatus.textContent = `Hoàn thành ${completed}/${total} điểm, bỏ qua ${skipped}, còn lại ${remaining}.`;
+  journeyProgressStatus.textContent = routeUi('progressStatus', completed, total, skipped, remaining);
 }
 
 function updateEtaStatus(option) {
@@ -525,13 +929,13 @@ function updateEtaStatus(option) {
   const nextStop = getRemainingStops(option)[0];
   const distance = estimateDistanceToStop(nextStop);
   if (distance === null) {
-    journeyEtaStatus.textContent = 'Chưa xác định';
+    journeyEtaStatus.textContent = routeUi('etaUnknown');
     return;
   }
 
   const speed = Math.max(0.4, speedMetersPerSecond || 1.25);
   const etaMinutes = Math.max(1, Math.round(distance / speed / 60));
-  journeyEtaStatus.textContent = `${etaMinutes} phút (${Math.round(distance)} m)`;
+  journeyEtaStatus.textContent = routeUi('etaValue', etaMinutes, Math.round(distance));
 }
 
 function updateOffRouteAlert(option) {
@@ -560,7 +964,7 @@ function updateOffRouteAlert(option) {
   nearestRemainingStop = nearest.stop;
   const distance = Math.round(nearest.distance);
   if (distance > 380) {
-    journeyOffRouteText.textContent = `Bạn đang cách điểm gần nhất "${nearest.stop.name}" khoảng ${distance} m. Nên quay lại hoặc bấm tính lại lộ trình.`;
+    journeyOffRouteText.textContent = routeUi('offRouteText', nearest.stop.name, distance);
     journeyOffRouteAlert.classList.remove('hidden');
   } else {
     journeyOffRouteAlert.classList.add('hidden');
@@ -621,7 +1025,7 @@ function updateJourneyMap(option) {
     points.push([currentUserPosition.longitude, currentUserPosition.latitude]);
     const userMarker = new maplibregl.Marker({ color: '#36cfc9' })
       .setLngLat([currentUserPosition.longitude, currentUserPosition.latitude])
-      .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML('<strong>Vị trí của bạn</strong>'))
+      .setPopup(new maplibregl.Popup({ offset: 12 }).setHTML(`<strong>${escapeHtml(routeUi('yourLocation'))}</strong>`))
       .addTo(map);
     journeyMapMarkers.push(userMarker);
   }
@@ -682,12 +1086,12 @@ function updateJourneyMap(option) {
 
 function rerouteFromCurrentPosition() {
   if (!selectedRouteOption) {
-    alert('Bạn cần chọn một phương án lộ trình trước.');
+    alert(routeUi('needOption'));
     return;
   }
 
   if (!currentUserPosition) {
-    alert('Hãy lấy vị trí hiện tại trước khi tính lại lộ trình.');
+    alert(routeUi('needLocation'));
     return;
   }
 
@@ -722,7 +1126,7 @@ function updateUserPosition(latitude, longitude) {
   lastGeoSnapshot = { latitude, longitude, timestamp: Date.now() };
   currentUserPosition = { latitude, longitude };
   if (journeyGeoStatus) {
-    journeyGeoStatus.textContent = `Đã định vị: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+    journeyGeoStatus.textContent = routeUi('geoLocated', latitude.toFixed(5), longitude.toFixed(5));
   }
 
   if (selectedRouteOption) {
@@ -801,7 +1205,7 @@ function estimateDistanceToStop(stop) {
 async function playStopNarration(stop, source = 'manual') {
   if (!stop?.locationId) {
     if (source === 'manual') {
-      alert('Điểm dừng này chưa có dữ liệu thuyết minh tự động.');
+      alert(routeUi('noNarrationData'));
     }
     return;
   }
@@ -816,6 +1220,18 @@ async function playStopNarration(stop, source = 'manual') {
   const result = await response.json();
   if (!response.ok) {
     throw new Error(result.detail || result.message || tr('narration_failed'));
+  }
+
+  const isToneFallback = String(result.voiceName || '').toLowerCase() === 'demo-fallback-tone'
+    || String(result.audioUrl || '').toLowerCase().endsWith('.wav');
+
+  if (isToneFallback) {
+    const localizedStop = localizeRouteStop(stop);
+    const fallbackText = `${localizedStop.name}. ${localizedStop.why}. ${localizedStop.recommendedDish}.`;
+    const spoken = speakWithBrowserFallback(fallbackText, selectedLanguage);
+    if (spoken) {
+      return;
+    }
   }
 
   const host = ensureQuickPlayer();
@@ -840,7 +1256,7 @@ async function playStopNarration(stop, source = 'manual') {
 
 function openDirectionsToStop(stop) {
   if (!stop?.latitude || !stop?.longitude) {
-    alert('Điểm dừng này chưa có toạ độ để dẫn đường.');
+    alert(routeUi('noCoordinate'));
     return;
   }
 
@@ -856,6 +1272,101 @@ function openDirectionsToStop(stop) {
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
+function findLocalizedLocationForStop(stop) {
+  if (!stop || !Array.isArray(currentLocations) || currentLocations.length === 0) {
+    return null;
+  }
+
+  const byId = stop.locationId
+    ? currentLocations.find((location) => location.id === stop.locationId)
+    : null;
+  if (byId) {
+    return byId;
+  }
+
+  const stopName = String(stop.name || '').trim();
+  if (!stopName) {
+    return null;
+  }
+
+  const normalizeLookup = (value) => String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toLowerCase();
+
+  const normalizedStopName = normalizeLookup(stopName);
+  return currentLocations.find((location) => {
+    const normalizedLocationName = normalizeLookup(location.name);
+    return normalizedLocationName === normalizedStopName
+      || normalizedLocationName.includes(normalizedStopName)
+      || normalizedStopName.includes(normalizedLocationName);
+  }) || null;
+}
+
+function localizeAddressByLanguage(address) {
+  const original = String(address || '').trim();
+  if (!original) {
+    return original;
+  }
+
+  if (getPreferredLanguage() === 'vi') {
+    return original;
+  }
+
+  return original
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/\bP\.\s*(\d+)/gi, 'Ward $1')
+    .replace(/\bPhuong\s*(\d+)/gi, 'Ward $1')
+    .replace(/\bQ\.\s*(\d+)/gi, 'District $1')
+    .replace(/\bQuan\s*(\d+)/gi, 'District $1')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function localizeRouteStop(stop) {
+  const location = findLocalizedLocationForStop(stop);
+  if (location) {
+    return {
+      ...stop,
+      name: location.name || stop.name,
+      address: localizeAddressByLanguage(location.address || stop.address),
+      why: location.shortIntro || stop.why,
+      recommendedDish: location.highlight || stop.recommendedDish,
+      bestTime: location.bestTime || stop.bestTime
+    };
+  }
+
+  if (typeof window.localizeLocationData === 'function' && stop?.locationId) {
+    const localized = window.localizeLocationData({
+      id: stop.locationId,
+      name: stop.name,
+      address: stop.address,
+      category: '',
+      shortIntro: stop.why,
+      bestTime: stop.bestTime,
+      highlight: stop.recommendedDish,
+      descriptionVi: stop.why
+    }, getPreferredLanguage());
+
+    return {
+      ...stop,
+      name: localized?.name || stop.name,
+      address: localizeAddressByLanguage(localized?.address || stop.address),
+      why: localized?.shortIntro || stop.why,
+      recommendedDish: localized?.highlight || stop.recommendedDish,
+      bestTime: localized?.bestTime || stop.bestTime
+    };
+  }
+
+  return stop;
+}
+
 function renderJourney(option) {
   if (!journeyPanel || !journeyStops || !journeyTitle) {
     return;
@@ -863,12 +1374,12 @@ function renderJourney(option) {
 
   selectedRouteOption = option;
   journeyPanel.classList.remove('hidden');
-  journeyTitle.textContent = `Hành trình: ${option.title}`;
+  journeyTitle.textContent = `${routeUi('journeyPrefix')} ${option.title}`;
   updateJourneyProgressStatus(option);
 
   const remainingStops = getRemainingStops(option);
   if (remainingStops.length === 0) {
-    journeyStops.innerHTML = '<div class="timeline-item"><h4>Bạn đã hoàn thành hoặc bỏ qua tất cả điểm dừng.</h4><p>Hãy tạo lại option mới để tiếp tục hành trình.</p></div>';
+    journeyStops.innerHTML = `<div class="timeline-item"><h4>${escapeHtml(routeUi('doneTitle'))}</h4><p>${escapeHtml(routeUi('doneDesc'))}</p></div>`;
     updateEtaStatus(option);
     updateJourneyMap(option);
     return;
@@ -880,27 +1391,28 @@ function renderJourney(option) {
       .sort((a, b) => a.distance - b.distance)[0]?.key
     : getStopKey(remainingStops[0]);
 
-  journeyStops.innerHTML = remainingStops.map((stop, index) => {
+  journeyStops.innerHTML = remainingStops.map((rawStop, index) => {
+    const stop = localizeRouteStop(rawStop);
     const distance = estimateDistanceToStop(stop);
     const distanceLabel = distance === null
-      ? 'Chưa xác định khoảng cách'
-      : `Cách bạn khoảng ${Math.round(distance)} m`;
+      ? routeUi('distanceUnknown')
+      : routeUi('distanceValue', Math.round(distance));
     const stopKey = getStopKey(stop);
     const isActive = nearestKey && stopKey === nearestKey;
 
     return `
       <div class="timeline-item">
-        <h4>${index + 1}. ${escapeHtml(stop.name)} ${isActive ? '<span class="option-badge">Điểm tiếp theo</span>' : ''}</h4>
+        <h4>${index + 1}. ${escapeHtml(stop.name)} ${isActive ? `<span class="option-badge">${escapeHtml(routeUi('nextStop'))}</span>` : ''}</h4>
         <p><strong>${escapeHtml(tr('card_address'))}:</strong> ${escapeHtml(stop.address)}</p>
         <p><strong>${escapeHtml(tr('route_why_visit'))}:</strong> ${escapeHtml(stop.why)}</p>
         <p><strong>${escapeHtml(tr('route_try_dish'))}:</strong> ${escapeHtml(stop.recommendedDish)}</p>
         <p><strong>${escapeHtml(tr('route_best_time'))}:</strong> ${escapeHtml(stop.bestTime)}</p>
-        <p><strong>Khoảng cách:</strong> ${escapeHtml(distanceLabel)}</p>
+        <p><strong>${escapeHtml(routeUi('distanceLabel'))}:</strong> ${escapeHtml(distanceLabel)}</p>
         <div class="journey-stop-actions">
-          <button type="button" class="button button-primary" data-stop-narrate="${escapeHtml(stop.locationId || '')}" data-stop-index="${index}">Nghe thuyết minh điểm này</button>
-          <button type="button" class="button button-secondary" data-stop-guide="${index}">Dẫn đường</button>
-          <button type="button" class="button button-secondary" data-stop-complete="${index}">Đã đến điểm này</button>
-          <button type="button" class="button button-secondary" data-stop-skip="${index}">Bỏ qua điểm này</button>
+          <button type="button" class="button button-primary" data-stop-narrate="${escapeHtml(stop.locationId || '')}" data-stop-index="${index}">${escapeHtml(routeUi('narrateStop'))}</button>
+          <button type="button" class="button button-secondary" data-stop-guide="${index}">${escapeHtml(routeUi('guideStop'))}</button>
+          <button type="button" class="button button-secondary" data-stop-complete="${index}">${escapeHtml(routeUi('completeStop'))}</button>
+          <button type="button" class="button button-secondary" data-stop-skip="${index}">${escapeHtml(routeUi('skipStop'))}</button>
         </div>
       </div>
     `;
@@ -926,33 +1438,40 @@ function renderRouteOptions(response) {
   routeOptionsPanel.classList.remove('hidden');
   const sortMode = routeOptionSort?.value || 'recommended';
   const { sorted, recommendedId } = sortOptions(options, sortMode, latestRouteRequest);
+  const showConvertedBudget = getPreferredLanguage() !== 'vi';
 
   routeOptionsGrid.innerHTML = sorted.map((option, index) => {
     const isRecommended = option.id === recommendedId;
     return `
     <article class="card route-option-card ${isRecommended ? 'recommended' : ''}">
-      ${isRecommended ? '<span class="option-badge">Recommended</span>' : ''}
+      ${isRecommended ? `<span class="option-badge">${escapeHtml(routeUi('optionRecommended'))}</span>` : ''}
       <h3>${index + 1}. ${escapeHtml(option.title)}</h3>
       <p>${escapeHtml(option.summary)}</p>
-      <p style="margin-top:.4rem;"><strong>Chiến lược:</strong> ${escapeHtml(option.strategy)}</p>
+      <p style="margin-top:.4rem;"><strong>${escapeHtml(routeUi('optionStrategy'))}:</strong> ${escapeHtml(option.strategy)}</p>
       <div class="route-option-metrics">
         <div class="metric">
-          <div class="value">${escapeHtml(`${option.estimatedDurationMinutes} phút`)}</div>
-          <div class="label">Thời lượng</div>
+          <div class="value">${escapeHtml(`${option.estimatedDurationMinutes} ${routeUi('durationUnit')}`)}</div>
+          <div class="label">${escapeHtml(routeUi('optionDuration'))}</div>
         </div>
         <div class="metric">
           <div class="value">${escapeHtml(formatCurrencyVnd(option.estimatedBudgetPerPersonVnd))}</div>
-          <div class="label">Ngân sách/người</div>
+          <div class="label">${escapeHtml(routeUi('optionBudget'))}</div>
         </div>
+        ${showConvertedBudget ? `
+        <div class="metric">
+          <div class="value">${escapeHtml(formatConvertedCurrencyFromVnd(option.estimatedBudgetPerPersonVnd))}</div>
+          <div class="label">${escapeHtml(routeUi('optionBudgetLocal'))}</div>
+        </div>
+        ` : ''}
         <div class="metric">
           <div class="value">${escapeHtml(formatDistanceKm(option.estimatedWalkingMeters))}</div>
-          <div class="label">Đi bộ ước tính</div>
+          <div class="label">${escapeHtml(routeUi('optionWalking'))}</div>
         </div>
       </div>
-      <p><strong>Thuyết minh:</strong> ${escapeHtml(option.narrationSummary)}</p>
+      <p><strong>${escapeHtml(routeUi('optionNarration'))}:</strong> ${escapeHtml(option.narrationSummary)}</p>
       <div class="route-option-actions">
-        <button type="button" class="button button-primary" data-option-index="${index}">Chọn option này</button>
-        <button type="button" class="button button-secondary" data-option-preview="${index}">Xem chi tiết</button>
+        <button type="button" class="button button-primary" data-option-index="${index}">${escapeHtml(routeUi('optionChoose'))}</button>
+        <button type="button" class="button button-secondary" data-option-preview="${index}">${escapeHtml(routeUi('optionPreview'))}</button>
       </div>
     </article>
   `;
@@ -1005,11 +1524,11 @@ async function locateUser() {
   }
 
   if (!navigator.geolocation) {
-    journeyGeoStatus.textContent = 'Thiết bị không hỗ trợ định vị GPS trên trình duyệt.';
+    journeyGeoStatus.textContent = routeUi('geoUnsupported');
     return;
   }
 
-  journeyGeoStatus.textContent = 'Đang lấy vị trí hiện tại...';
+  journeyGeoStatus.textContent = routeUi('geoLoading');
 
   await new Promise((resolve) => {
     navigator.geolocation.getCurrentPosition((position) => {
@@ -1029,7 +1548,7 @@ async function locateUser() {
 
       resolve();
     }, (error) => {
-      journeyGeoStatus.textContent = `Không lấy được vị trí: ${error.message}`;
+      journeyGeoStatus.textContent = routeUi('geoFailed', error.message);
       resolve();
     }, {
       enableHighAccuracy: true,
@@ -1037,6 +1556,34 @@ async function locateUser() {
       maximumAge: 20000
     });
   });
+}
+
+function setTextById(id, text) {
+  const element = document.getElementById(id);
+  if (element) {
+    element.textContent = text;
+  }
+}
+
+function applyRouteStaticLabels() {
+  setTextById('routeOptionsSectionNum', routeUi('panelOptionsNum'));
+  setTextById('routeOptionsTitle', routeUi('panelOptionsTitle'));
+  setTextById('routeOptionSortLabel', routeUi('panelPriority'));
+  setTextById('routeSortRecommended', routeUi('sortRecommended'));
+  setTextById('routeSortDuration', routeUi('sortDuration'));
+  setTextById('routeSortBudget', routeUi('sortBudget'));
+  setTextById('routeSortWalking', routeUi('sortWalking'));
+
+  setTextById('journeySectionNum', routeUi('panelJourneyNum'));
+  setTextById('journeyTitle', routeUi('panelJourneyTitle'));
+  setTextById('journeyGeoStrong', routeUi('panelYourLocation'));
+  setTextById('journeyLocateBtn', routeUi('panelLocateBtn'));
+  setTextById('journeyRerouteBtn', routeUi('panelRerouteBtn'));
+  setTextById('journeyBackToNearestBtn', routeUi('panelBackNearestBtn'));
+  setTextById('journeyAutoNarrationLabel', routeUi('panelAutoNarration'));
+  setTextById('journeyOffRouteStrong', routeUi('panelOffRouteStrong'));
+  setTextById('journeyProgressStrong', routeUi('panelProgressStrong'));
+  setTextById('journeyEtaStrong', routeUi('panelEtaStrong'));
 }
 
 function initNarrationEvents() {
@@ -1197,7 +1744,7 @@ function initRouteEvents() {
       const fallback = getRemainingStops(selectedRouteOption)[0];
       const targetStop = nearestRemainingStop || fallback;
       if (!targetStop) {
-        alert('Không có điểm dừng phù hợp để dẫn đường.');
+        alert(routeUi('noGuideStop'));
         return;
       }
 
@@ -1269,12 +1816,13 @@ function initRouteEvents() {
 }
 
 async function initPage() {
+  applyRouteStaticLabels();
   initNarrationEvents();
   initLocationsEvents();
   initRouteEvents();
 
   try {
-    if (locationsGrid || locationSelect) {
+    if (locationsGrid || locationSelect || routeForm) {
       await loadLocations();
     }
 

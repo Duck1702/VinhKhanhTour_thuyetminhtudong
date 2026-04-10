@@ -406,6 +406,10 @@
       'Đang tải dữ liệu...': 'Loading data...',
       'Tạo thuyết minh cho món này': 'Listen to narration for this place',
       'Nghe thuyết minh cho món này': 'Listen to narration for this place',
+      'Nghe thuyết minh điểm này': 'Play narration for this stop',
+      'Dẫn đường': 'Navigate',
+      'Đã đến điểm này': 'Mark as arrived',
+      'Bỏ qua điểm này': 'Skip this stop',
       'Tích hợp bản đồ Vector Tiles offline và đánh dấu các vị trí quán ăn nổi bật trên trục đường Vĩnh Khánh.': 'Integrated offline vector tiles and highlighted food spots on Vinh Khanh street.',
       'Đang khởi tạo bản đồ...': 'Initializing map...'
     },
@@ -419,6 +423,10 @@
       'Đang tải dữ liệu...': 'Chargement des donnees...',
       'Tạo thuyết minh cho món này': 'Ecouter la narration de ce lieu',
       'Nghe thuyết minh cho món này': 'Ecouter la narration de ce lieu',
+      'Nghe thuyết minh điểm này': 'Lire la narration de cet arret',
+      'Dẫn đường': 'Guider',
+      'Đã đến điểm này': 'Marquer comme arrive',
+      'Bỏ qua điểm này': 'Ignorer cet arret',
       'Đang khởi tạo bản đồ...': 'Initialisation de la carte...'
     },
     ja: {
@@ -431,6 +439,10 @@
       'Đang tải dữ liệu...': 'データを読み込み中...',
       'Tạo thuyết minh cho món này': 'この場所のナレーションを再生',
       'Nghe thuyết minh cho món này': 'この場所のナレーションを再生',
+      'Nghe thuyết minh điểm này': 'この停留所を再生',
+      'Dẫn đường': '案内する',
+      'Đã đến điểm này': '到着済みにする',
+      'Bỏ qua điểm này': 'この停留所をスキップ',
       'Đang khởi tạo bản đồ...': '地図を初期化中...'
     },
     ko: {
@@ -443,6 +455,10 @@
       'Đang tải dữ liệu...': '데이터 로딩 중...',
       'Tạo thuyết minh cho món này': '이 장소 내레이션 듣기',
       'Nghe thuyết minh cho món này': '이 장소 내레이션 듣기',
+      'Nghe thuyết minh điểm này': '이 정류장 내레이션 재생',
+      'Dẫn đường': '길안내',
+      'Đã đến điểm này': '도착 처리',
+      'Bỏ qua điểm này': '이 정류장 건너뛰기',
       'Đang khởi tạo bản đồ...': '지도 초기화 중...'
     }
   };
