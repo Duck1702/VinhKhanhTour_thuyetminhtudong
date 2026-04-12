@@ -1,0 +1,15 @@
+{
+  "name": "vinhkhanhtour.autonarration",
+  "version": "1.0.0",
+  "description": "Website giới thiệu phố ẩm thực Vĩnh Khánh kết hợp API thuyết minh tự động đa ngôn ngữ, xây bằng ASP.NET Core.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}

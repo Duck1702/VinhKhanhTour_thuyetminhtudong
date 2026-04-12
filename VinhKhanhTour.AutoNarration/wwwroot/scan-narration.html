@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Nghe thuyết minh quán ăn Vĩnh Khánh qua QR." />
+  <title>Nghe thuyết minh QR - Vĩnh Khánh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20260412-3" />
+</head>
+<body class="public-page page-full">
+  <main class="qr-play-page">
+    <section class="qr-play-card">
+      <p id="qrChip" class="qr-chip">QR Audio Guide</p>
+      <h1 id="qrLocationName">Đang tải quán ăn...</h1>
+      <p id="qrLocationMeta" class="qr-play-meta">Vui lòng chờ tải dữ liệu.</p>
+      <p id="qrStatus" class="qr-play-status">Sẵn sàng phát nội dung thuyết trình.</p>
+
+      <div class="qr-play-controls">
+        <label id="qrLanguageLabel" for="qrLanguageSelect">Ngôn ngữ:</label>
+        <select id="qrLanguageSelect">
+          <option value="vi">Tiếng Việt</option>
+          <option value="en">English</option>
+          <option value="fr">Francais</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+        </select>
+      </div>
+
+      <div class="qr-play-actions">
+        <button id="qrPlayBtn" type="button" class="button button-primary">🔊 Nghe thuyết minh</button>
+        <a id="qrBackLink" href="/mon-ngon.html" class="button button-secondary">Xem danh sách quán</a>
+      </div>
+
+      <audio id="qrAudioPlayer" controls class="qr-audio"></audio>
+      <a id="qrOpenAudioLink" class="qr-open-audio hidden" href="#" target="_blank" rel="noreferrer">Mở file audio trực tiếp</a>
+    </section>
+  </main>
+
+  <script src="/scan-narration.js?v=20260412-7"></script>
+</body>
+</html>

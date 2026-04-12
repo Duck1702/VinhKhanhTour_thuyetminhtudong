@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Cổng chủ quán Vĩnh Khánh - quản lý nội dung, QR và thuyết minh." />
+  <title>Chủ quán - Vinh Khanh Tour</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20260412-merchant-1" />
+</head>
+<body class="public-page page-full merchant-page">
+  <nav>
+    <a href="/" class="logo">Merchant Console</a>
+    <ul class="nav-links">
+      <li><a href="#merchantProfile">Hiệu suất</a></li>
+      <li><a href="#merchantContent">Nội dung</a></li>
+      <li><a href="#merchantQr">QR & Audio</a></li>
+      <li><a href="#merchantSubmissions">Đề xuất đã gửi</a></li>
+      <li><a href="/admin.html">Sang Admin</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <h1>Cổng quản lý cho Chủ quán</h1>
+    <p class="subtitle">Quản lý mô tả quán, tạo QR theo ngôn ngữ, nghe thử thuyết minh và gửi đề xuất duyệt cho quản trị.</p>
+    <div class="hero-actions merchant-hero-actions">
+      <button id="merchantRefreshBtn" class="button button-primary merchant-action-btn" type="button">Làm mới dữ liệu quán</button>
+      <a href="/scan-narration.html?locationId=oc-oanh&lang=vi" class="button button-secondary merchant-action-btn">Mở trang QR mẫu</a>
+      <a href="/admin.html#merchant-submissions" class="button button-secondary merchant-action-btn">Đến khu duyệt của Admin</a>
+    </div>
+  </div>
+
+  <section id="merchantProfile" class="content-wide">
+    <div class="section-header">
+      <div class="icon">🏪</div>
+      <div>
+        <div class="section-num">Merchant 01</div>
+        <h2>Thông tin tài khoản và hiệu suất</h2>
+      </div>
+    </div>
+
+    <div class="account-summary">
+      <div class="account-identity">
+        <h3 id="merchantUserName">Đang tải tài khoản...</h3>
+        <p id="merchantUserEmail" class="account-email"></p>
+      </div>
+      <button id="merchantLogoutBtn" class="button button-secondary" type="button">Đăng xuất</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div id="merchantMetricVisits" class="value">0</div>
+        <div class="label">Lượt truy cập gần đây</div>
+      </div>
+      <div class="stat-card">
+        <div id="merchantMetricNarrations" class="value">0</div>
+        <div class="label">Lượt tạo thuyết minh</div>
+      </div>
+      <div class="stat-card">
+        <div id="merchantMetricRoutes" class="value">0</div>
+        <div class="label">Lượt tạo lộ trình</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="merchantContent" class="content-wide">
+    <div class="section-header">
+      <div class="icon">📝</div>
+      <div>
+        <div class="section-num">Merchant 02</div>
+        <h2>Soạn thảo nội dung quán</h2>
+      </div>
+    </div>
+
+    <form id="merchantForm" class="form-layout">
+      <label>
+        Chọn quán muốn quản lý
+        <select id="merchantLocationSelect" required></select>
+      </label>
+      <label>
+        Ngôn ngữ QR mặc định
+        <select id="merchantLanguageSelect">
+          <option value="vi">Tiếng Việt</option>
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+        </select>
+      </label>
+      <label class="form-row-wide">
+        Giới thiệu ngắn
+        <textarea id="merchantShortIntro" rows="2"></textarea>
+      </label>
+      <label class="form-row-wide">
+        Điểm nổi bật
+        <textarea id="merchantHighlight" rows="2"></textarea>
+      </label>
+      <label class="form-row-wide">
+        Nội dung thuyết minh đề xuất
+        <textarea id="merchantDraftText" rows="5"></textarea>
+      </label>
+      <div class="form-row-wide admin-row-actions">
+        <button id="merchantSaveDraftBtn" class="button button-secondary" type="button">Lưu bản nháp cục bộ</button>
+        <button id="merchantSubmitBtn" class="button button-primary" type="submit">Gửi đề xuất cho Admin</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="merchantQr" class="content-wide">
+    <div class="section-header">
+      <div class="icon">🔳</div>
+      <div>
+        <div class="section-num">Merchant 03</div>
+        <h2>QR theo quán và ngôn ngữ</h2>
+      </div>
+    </div>
+
+    <div class="card-grid merchant-tools-grid">
+      <article class="card merchant-tool-card">
+        <h3>Tạo mã QR</h3>
+        <p id="merchantQrHint">QR sẽ mở trang nghe thuyết minh của quán đang chọn.</p>
+        <div class="merchant-qr-wrap">
+          <img id="merchantQrImage" alt="Mã QR quán ăn" />
+        </div>
+        <a id="merchantQrLink" class="button button-secondary" target="_blank" rel="noreferrer" href="#">Mở link QR trực tiếp</a>
+      </article>
+
+      <article class="card merchant-tool-card">
+        <h3>Nghe thử thuyết minh</h3>
+        <p id="merchantPreviewStatus">Sẵn sàng phát audio kiểm tra.</p>
+        <button id="merchantPreviewBtn" class="button button-primary" type="button">Tạo audio xem trước</button>
+        <audio id="merchantAudioPlayer" controls></audio>
+      </article>
+    </div>
+  </section>
+
+  <section id="merchantSubmissions" class="content-wide">
+    <div class="section-header">
+      <div class="icon">📨</div>
+      <div>
+        <div class="section-num">Merchant 04</div>
+        <h2>Lịch sử đề xuất đã gửi</h2>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="merchantSubmissionTable" class="admin-table"></table>
+    </div>
+  </section>
+
+  <script src="/i18n.js?v=20260409-4"></script>
+  <script src="/nav.js?v=20260409-4"></script>
+  <script src="/merchant.js?v=20260412-merchant-1"></script>
+</body>
+</html>

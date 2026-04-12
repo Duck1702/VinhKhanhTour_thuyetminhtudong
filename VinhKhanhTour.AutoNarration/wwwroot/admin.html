@@ -14,11 +14,13 @@
     <a href="/" class="logo">Admin Console</a>
     <ul class="nav-links">
       <li><a href="/">Trang chủ</a></li>
+      <li><a href="/merchant.html">Chủ quán</a></li>
       <li><a href="#dashboard">Dashboard</a></li>
       <li><a href="#locations">Locations</a></li>
       <li><a href="#voices">Voices</a></li>
       <li><a href="#templates">Templates</a></li>
       <li><a href="#tts">TTS</a></li>
+      <li><a href="#merchant-submissions">Đề xuất quán</a></li>
       <li><a href="#logs">Logs</a></li>
     </ul>
   </nav>
@@ -243,11 +245,30 @@
     </div>
   </section>
 
+  <section id="merchant-submissions">
+    <div class="section-header">
+      <div class="icon">📨</div>
+      <div>
+        <div class="section-num">Admin 06</div>
+        <h2>Duyệt đề xuất từ chủ quán</h2>
+      </div>
+    </div>
+
+    <div class="admin-row-actions" style="margin-bottom:0.8rem;">
+      <button id="refreshMerchantSubmissions" class="button button-secondary" type="button">Làm mới danh sách</button>
+    </div>
+
+    <div class="table-wrap"><table id="merchantSubmissionsTable" class="admin-table"></table></div>
+    <p style="margin-top:0.65rem;color:var(--text-secondary);font-size:0.9rem;">
+      Ghi chú: đây là hàng chờ đề xuất nội dung quán do chủ quán gửi từ cổng merchant.
+    </p>
+  </section>
+
   <section id="logs">
     <div class="section-header">
       <div class="icon">🧮</div>
       <div>
-        <div class="section-num">Admin 06</div>
+        <div class="section-num">Admin 07</div>
         <h2>Logs AI, chi phí và truy cập</h2>
       </div>
     </div>
@@ -261,7 +282,7 @@
 
   <script src="/i18n.js?v=20260407-2"></script>
   <script src="/nav.js?v=20260409-4"></script>
-  <script src="/admin.js"></script>
+  <script src="/admin.js?v=20260412-admin-1"></script>
 </body>
 </html>
 

@@ -75,7 +75,8 @@ app.Use(async (context, next) =>
         && (path.Equals("/", StringComparison.OrdinalIgnoreCase)
             || path.EndsWith(".html", StringComparison.OrdinalIgnoreCase));
     var isPublicAuthPage = path.Equals("/login.html", StringComparison.OrdinalIgnoreCase)
-        || path.Equals("/register.html", StringComparison.OrdinalIgnoreCase);
+        || path.Equals("/register.html", StringComparison.OrdinalIgnoreCase)
+        || path.Equals("/scan-narration.html", StringComparison.OrdinalIgnoreCase);
 
     if (isHtmlPageRequest && !isPublicAuthPage && context.User.Identity?.IsAuthenticated != true)
     {
@@ -86,7 +87,8 @@ app.Use(async (context, next) =>
 
     var isProtectedApi = path.StartsWith("/api", StringComparison.OrdinalIgnoreCase)
         && !path.StartsWith("/api/auth", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/api/admin", StringComparison.OrdinalIgnoreCase);
+        && !path.StartsWith("/api/admin", StringComparison.OrdinalIgnoreCase)
+        && !path.StartsWith("/api/public", StringComparison.OrdinalIgnoreCase);
 
     if (isProtectedApi
         && !HttpMethods.IsOptions(context.Request.Method)
@@ -213,6 +215,133 @@ app.MapGet("/api/locations", (ILocationContentService locationContentService) =>
     return Results.Ok(locationContentService.GetAll());
 })
 .WithName("GetLocations");
+
+app.MapGet("/api/public/locations/{locationId}", (
+    string locationId,
+    ILocationContentService locationContentService) =>
+{
+    if (string.IsNullOrWhiteSpace(locationId))
+    {
+        return Results.BadRequest(new { message = "LocationId không hợp lệ." });
+    }
+
+    var location = locationContentService.GetById(locationId);
+    if (location is null)
+    {
+        return Results.NotFound(new { message = "Không tìm thấy quán ăn." });
+    }
+
+    return Results.Ok(location);
+})
+.WithName("GetPublicLocationById");
+
+app.MapGet("/api/public/tts-capabilities", (IOptions<AzureAiOptions> azureOptions) =>
+{
+    static bool IsConfigured(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Trim();
+        return !normalized.StartsWith("YOUR_", StringComparison.OrdinalIgnoreCase);
+    }
+
+    var options = azureOptions.Value;
+    var cloudNarrationAvailable = IsConfigured(options.TranslatorKey)
+        && IsConfigured(options.SpeechKey)
+        && !string.IsNullOrWhiteSpace(options.TranslatorEndpoint)
+        && !string.IsNullOrWhiteSpace(options.SpeechRegion);
+
+    return Results.Ok(new
+    {
+        cloudNarrationAvailable,
+        fallbackMode = cloudNarrationAvailable ? "cloud-first" : "browser-audio-fallback"
+    });
+})
+.WithName("GetPublicTtsCapabilities");
+
+app.MapPost("/api/public/narrations/instant", async (
+    GenerateNarrationRequest request,
+    NarrationOrchestrator narrationOrchestrator,
+    HttpContext httpContext,
+    CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(request.LocationId))
+    {
+        return Results.BadRequest(new { message = "Bạn cần truyền LocationId để nghe thuyết minh nhanh." });
+    }
+
+    var language = string.IsNullOrWhiteSpace(request.TargetLanguage) ? "vi" : request.TargetLanguage.Trim().ToLowerInvariant();
+    var supportedLanguages = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "vi", "en", "fr", "ja", "ko" };
+    if (!supportedLanguages.Contains(language))
+    {
+        return Results.BadRequest(new { message = "Ngôn ngữ không được hỗ trợ." });
+    }
+
+    try
+    {
+        var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+        var response = await narrationOrchestrator.GetOrCreateInstantAsync(request.LocationId, language, baseUrl, cancellationToken);
+        return Results.Ok(response);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { message = ex.Message });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+    }
+})
+.WithName("GeneratePublicInstantNarration");
+
+app.MapGet("/api/public/tts-proxy", async (
+    string text,
+    string? lang,
+    IHttpClientFactory httpClientFactory,
+    CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(text))
+    {
+        return Results.BadRequest(new { message = "Thiếu nội dung text để tạo audio." });
+    }
+
+    var safeText = text.Trim();
+    if (safeText.Length > 500)
+    {
+        return Results.BadRequest(new { message = "Nội dung text quá dài cho fallback audio." });
+    }
+
+    var normalizedLang = string.IsNullOrWhiteSpace(lang) ? "vi" : lang.Trim().ToLowerInvariant();
+    var supported = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "vi", "en", "fr", "ja", "ko" };
+    if (!supported.Contains(normalizedLang))
+    {
+        normalizedLang = "vi";
+    }
+
+    var googleUrl = $"https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl={Uri.EscapeDataString(normalizedLang)}&q={Uri.EscapeDataString(safeText)}";
+    try
+    {
+        var client = httpClientFactory.CreateClient();
+        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, googleUrl);
+        requestMessage.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile Safari/604.1");
+        using var response = await client.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return Results.Problem("Không tải được audio fallback từ nguồn TTS.", statusCode: StatusCodes.Status502BadGateway);
+        }
+
+        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+        return Results.File(bytes, "audio/mpeg");
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Lỗi fallback audio: {ex.Message}", statusCode: StatusCodes.Status502BadGateway);
+    }
+})
+.WithName("ProxyPublicTts");
 
 app.MapGet("/api/voice-profiles", (IAdminManagementService adminManagementService) =>
 {

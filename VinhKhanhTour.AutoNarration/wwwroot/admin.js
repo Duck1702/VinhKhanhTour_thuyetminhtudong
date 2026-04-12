@@ -33,6 +33,10 @@ const adminAudioLink = document.getElementById('adminAudioLink');
 
 const aiLogsTable = document.getElementById('aiLogsTable');
 const visitLogsTable = document.getElementById('visitLogsTable');
+const merchantSubmissionsTable = document.getElementById('merchantSubmissionsTable');
+const refreshMerchantSubmissionsBtn = document.getElementById('refreshMerchantSubmissions');
+
+const MERCHANT_SUBMISSION_STORAGE_KEY = 'merchantDraftSubmissions';
 
 const locationFields = {
   id: document.getElementById('locationId'),
@@ -124,6 +128,19 @@ function safe(text) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
+}
+
+function getMerchantSubmissions() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MERCHANT_SUBMISSION_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMerchantSubmissions(items) {
+  localStorage.setItem(MERCHANT_SUBMISSION_STORAGE_KEY, JSON.stringify(items));
 }
 
 function fillForm(fields, data) {
@@ -403,6 +420,77 @@ async function loadLogs() {
   `;
 }
 
+function updateMerchantSubmissionStatus(id, status) {
+  const items = getMerchantSubmissions();
+  const index = items.findIndex((x) => x.id === id);
+  if (index < 0) {
+    return;
+  }
+
+  items[index] = {
+    ...items[index],
+    status,
+    note: status === 'Đã duyệt' ? 'Admin đã duyệt nội dung.' : 'Admin đã từ chối, cần chỉnh sửa lại.',
+    reviewedAt: new Date().toISOString()
+  };
+
+  saveMerchantSubmissions(items);
+  renderMerchantSubmissions();
+}
+
+function renderMerchantSubmissions() {
+  if (!merchantSubmissionsTable) {
+    return;
+  }
+
+  const items = getMerchantSubmissions()
+    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+
+  merchantSubmissionsTable.innerHTML = `
+    <thead>
+      <tr>
+        <th>Thời gian gửi</th>
+        <th>Chủ quán</th>
+        <th>Quán</th>
+        <th>Ngôn ngữ</th>
+        <th>Trạng thái</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${items.length === 0 ? '<tr><td colspan="6">Chưa có đề xuất nào từ chủ quán.</td></tr>' : items.map((item) => `
+        <tr>
+          <td>${safe(new Date(item.submittedAt).toLocaleString('vi-VN'))}</td>
+          <td>${safe(item.merchantName || item.merchantEmail || '-')}</td>
+          <td>${safe(item.locationName || item.locationId || '-')}</td>
+          <td>${safe(item.language || 'vi')}</td>
+          <td>${safe(item.status || 'Chờ duyệt')}</td>
+          <td>
+            <button type="button" class="button button-secondary submission-action" data-id="${safe(item.id)}" data-action="approve">Duyệt</button>
+            <button type="button" class="button button-secondary submission-action" data-id="${safe(item.id)}" data-action="reject">Từ chối</button>
+          </td>
+        </tr>
+      `).join('')}
+    </tbody>
+  `;
+
+  merchantSubmissionsTable.querySelectorAll('.submission-action').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.id;
+      const action = button.dataset.action;
+      if (!id || !action) {
+        return;
+      }
+
+      if (action === 'approve') {
+        updateMerchantSubmissionStatus(id, 'Đã duyệt');
+      } else {
+        updateMerchantSubmissionStatus(id, 'Từ chối');
+      }
+    });
+  });
+}
+
 async function refreshAll() {
   await Promise.all([
     loadDashboard(),
@@ -413,6 +501,7 @@ async function refreshAll() {
   ]);
 
   await loadAdminNarrationSources();
+  renderMerchantSubmissions();
 }
 
 locationForm.addEventListener('submit', async (event) => {
@@ -589,6 +678,12 @@ refreshAllBtn.addEventListener('click', async () => {
   }
 });
 
+if (refreshMerchantSubmissionsBtn) {
+  refreshMerchantSubmissionsBtn.addEventListener('click', () => {
+    renderMerchantSubmissions();
+  });
+}
+
 (async () => {
   try {
     await loadAdminNarrationSources();
@@ -603,4 +698,6 @@ refreshAllBtn.addEventListener('click', async () => {
       console.error(error);
     }
   }
+
+  renderMerchantSubmissions();
 })();

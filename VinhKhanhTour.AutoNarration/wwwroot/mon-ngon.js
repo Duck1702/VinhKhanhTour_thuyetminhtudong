@@ -4,6 +4,8 @@ let allLocations = [];
 let rawLocations = [];
 let quickPlayerHost;
 let browserVoices = [];
+let qrModalHost;
+const QR_BASE_URL_STORAGE_KEY = 'qrPublicBaseUrl';
 
 const pageMessages = {
   vi: {
@@ -20,8 +22,16 @@ const pageMessages = {
     card_price: 'Giá tham khảo',
     card_highlight: 'Điểm nhấn',
     btn_narrate: '🔊 Thuyết minh bằng giọng nói',
+    btn_qr: '📱 Tạo QR nghe thuyết minh',
     btn_stop: '⏹ Dừng',
     btn_close: 'Đóng',
+    btn_open_link: 'Mở link',
+    qr_title: 'QR nghe thuyết minh',
+    qr_hint: 'Quét mã QR để mở trang nghe thuyết minh quán này.',
+    qr_direct_link: 'Link trực tiếp',
+    qr_base_url_label: 'Domain cho điện thoại',
+    qr_base_url_hint: 'Nếu chạy localhost, hãy nhập IP LAN của máy tính. Ví dụ: http://192.168.1.10:5292',
+    qr_localhost_warning: 'Bạn đang dùng localhost. Điện thoại không truy cập được localhost của máy tính. Hãy nhập IP LAN ở ô bên dưới.',
     quick_title: 'Thuyết minh',
     quick_hint_browser_tts: 'Đang đọc bằng giọng trình duyệt theo ngôn ngữ đã chọn.',
     quick_link_demo: 'Không dùng file audio cloud (demo miễn phí)',
@@ -48,8 +58,16 @@ const pageMessages = {
     card_price: 'Price range',
     card_highlight: 'Highlights',
     btn_narrate: '🔊 Voice narration',
+    btn_qr: '📱 Generate narration QR',
     btn_stop: '⏹ Stop',
     btn_close: 'Close',
+    btn_open_link: 'Open link',
+    qr_title: 'Narration QR',
+    qr_hint: 'Scan this QR code to open narration for this place.',
+    qr_direct_link: 'Direct link',
+    qr_base_url_label: 'Phone-accessible domain',
+    qr_base_url_hint: 'If running on localhost, enter your computer LAN IP, e.g. http://192.168.1.10:5292',
+    qr_localhost_warning: 'You are using localhost. Phones cannot access your PC localhost. Enter your LAN IP below.',
     quick_title: 'Narration',
     quick_hint_browser_tts: 'Reading with browser voice in the selected language.',
     quick_link_demo: 'No cloud audio file (free demo mode)',
@@ -76,8 +94,16 @@ const pageMessages = {
     card_price: 'Gamme de prix',
     card_highlight: 'Points forts',
     btn_narrate: '🔊 Narration vocale',
+    btn_qr: '📱 Generer QR narration',
     btn_stop: '⏹ Arreter',
     btn_close: 'Fermer',
+    btn_open_link: 'Ouvrir le lien',
+    qr_title: 'QR narration',
+    qr_hint: 'Scannez ce QR pour ouvrir la narration de ce lieu.',
+    qr_direct_link: 'Lien direct',
+    qr_base_url_label: 'Domaine mobile',
+    qr_base_url_hint: 'Si localhost est utilise, entrez l IP LAN du PC, ex: http://192.168.1.10:5292',
+    qr_localhost_warning: 'Vous utilisez localhost. Le telephone ne peut pas y acceder. Entrez l IP LAN ci-dessous.',
     quick_title: 'Narration',
     quick_hint_browser_tts: 'Lecture vocale du navigateur selon la langue choisie.',
     quick_link_demo: 'Pas de fichier audio cloud (mode demo gratuit)',
@@ -104,8 +130,16 @@ const pageMessages = {
     card_price: '価格帯',
     card_highlight: 'おすすめ',
     btn_narrate: '🔊 音声ガイド',
+    btn_qr: '📱 音声QRを作成',
     btn_stop: '⏹ 停止',
     btn_close: '閉じる',
+    btn_open_link: 'リンクを開く',
+    qr_title: '音声QR',
+    qr_hint: 'QRをスキャンしてこの店舗の音声案内ページを開きます。',
+    qr_direct_link: '直接リンク',
+    qr_base_url_label: 'スマホ用ドメイン',
+    qr_base_url_hint: 'localhost の場合はPCのLAN IPを入力: 例 http://192.168.1.10:5292',
+    qr_localhost_warning: 'localhost 使用中。スマホからアクセス不可です。下にLAN IPを入力してください。',
     quick_title: 'ナレーション',
     quick_hint_browser_tts: '選択した言語でブラウザ音声を再生しています。',
     quick_link_demo: 'クラウド音声ファイルなし（無料デモ）',
@@ -132,8 +166,16 @@ const pageMessages = {
     card_price: '가격대',
     card_highlight: '포인트',
     btn_narrate: '🔊 음성 안내',
+    btn_qr: '📱 음성 QR 만들기',
     btn_stop: '⏹ 정지',
     btn_close: '닫기',
+    btn_open_link: '링크 열기',
+    qr_title: '음성 QR',
+    qr_hint: 'QR 코드를 스캔해 이 매장의 음성 안내를 엽니다.',
+    qr_direct_link: '직접 링크',
+    qr_base_url_label: '휴대폰 접속 도메인',
+    qr_base_url_hint: 'localhost 사용 시 PC의 LAN IP를 입력하세요. 예: http://192.168.1.10:5292',
+    qr_localhost_warning: 'localhost 사용 중입니다. 휴대폰에서 접속할 수 없습니다. 아래 LAN IP를 입력하세요.',
     quick_title: '내레이션',
     quick_hint_browser_tts: '선택한 언어로 브라우저 음성을 재생 중입니다.',
     quick_link_demo: '클라우드 오디오 없음 (무료 데모)',
@@ -437,6 +479,117 @@ function ensureQuickPlayer() {
   return host;
 }
 
+function ensureQrModal() {
+  if (qrModalHost) {
+    return qrModalHost;
+  }
+
+  const host = document.createElement('div');
+  host.className = 'qr-modal hidden';
+  host.innerHTML = `
+    <div class="qr-modal-backdrop" data-qr-close="true"></div>
+    <div class="qr-modal-card" role="dialog" aria-modal="true" aria-label="QR narration dialog">
+      <div class="qr-modal-head">
+        <strong id="qrModalTitle">${escapeHtml(pageText('qr_title'))}</strong>
+        <button type="button" class="button button-secondary" data-qr-close="true">${escapeHtml(pageText('btn_close'))}</button>
+      </div>
+      <p id="qrModalHint" class="qr-modal-hint">${escapeHtml(pageText('qr_hint'))}</p>
+      <div class="qr-image-wrap">
+        <img id="qrModalImage" alt="QR narration" loading="lazy" />
+      </div>
+      <p id="qrModalWarning" class="qr-modal-warning hidden"></p>
+      <div class="qr-base-url-wrap">
+        <label for="qrBaseUrlInput">${escapeHtml(pageText('qr_base_url_label'))}</label>
+        <input id="qrBaseUrlInput" type="text" placeholder="http://192.168.1.10:5292" />
+        <small>${escapeHtml(pageText('qr_base_url_hint'))}</small>
+      </div>
+      <div class="qr-link-wrap">
+        <span>${escapeHtml(pageText('qr_direct_link'))}:</span>
+        <a id="qrModalDirectLink" href="#" target="_blank" rel="noreferrer">${escapeHtml(pageText('btn_open_link'))}</a>
+      </div>
+    </div>
+  `;
+
+  host.addEventListener('click', (event) => {
+    if (event.target.closest('[data-qr-close="true"]')) {
+      host.classList.add('hidden');
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      host.classList.add('hidden');
+    }
+  });
+
+  document.body.appendChild(host);
+  qrModalHost = host;
+  return host;
+}
+
+function buildQrNarrationUrl(locationId) {
+  const savedBaseUrl = localStorage.getItem(QR_BASE_URL_STORAGE_KEY);
+  const baseUrl = savedBaseUrl && String(savedBaseUrl).trim()
+    ? String(savedBaseUrl).trim()
+    : window.location.origin;
+
+  const url = new URL('/scan-narration.html', baseUrl);
+  url.searchParams.set('locationId', locationId);
+  url.searchParams.set('lang', getPreferredLanguage());
+  url.searchParams.set('v', '20260412-8');
+  return url.toString();
+}
+
+function openQrModalForLocation(location) {
+  const host = ensureQrModal();
+  const title = host.querySelector('#qrModalTitle');
+  const hint = host.querySelector('#qrModalHint');
+  const image = host.querySelector('#qrModalImage');
+  const link = host.querySelector('#qrModalDirectLink');
+  const warning = host.querySelector('#qrModalWarning');
+  const baseUrlInput = host.querySelector('#qrBaseUrlInput');
+
+  if (baseUrlInput && !baseUrlInput.dataset.bound) {
+    baseUrlInput.value = localStorage.getItem(QR_BASE_URL_STORAGE_KEY) || '';
+    baseUrlInput.addEventListener('change', () => {
+      const value = String(baseUrlInput.value || '').trim();
+      if (!value) {
+        localStorage.removeItem(QR_BASE_URL_STORAGE_KEY);
+      } else {
+        localStorage.setItem(QR_BASE_URL_STORAGE_KEY, value);
+      }
+      openQrModalForLocation(location);
+    });
+    baseUrlInput.dataset.bound = 'true';
+  }
+
+  const shareUrl = buildQrNarrationUrl(location.id);
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}`;
+  const customBaseUrl = localStorage.getItem(QR_BASE_URL_STORAGE_KEY) || '';
+  const isLocalOnly = !customBaseUrl && ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+
+  if (title) {
+    title.textContent = `${pageText('qr_title')}: ${location.name}`;
+  }
+  if (hint) {
+    hint.textContent = pageText('qr_hint');
+  }
+  if (warning) {
+    warning.textContent = pageText('qr_localhost_warning');
+    warning.classList.toggle('hidden', !isLocalOnly);
+  }
+  if (image) {
+    image.setAttribute('src', qrImageUrl);
+    image.setAttribute('alt', `QR ${location.name}`);
+  }
+  if (link) {
+    link.setAttribute('href', shareUrl);
+    link.textContent = pageText('btn_open_link');
+  }
+
+  host.classList.remove('hidden');
+}
+
 function stopNarrationPlayback() {
   const host = ensureQuickPlayer();
   const audio = host.querySelector('#quickPlayerAudio');
@@ -707,6 +860,7 @@ function renderFoodGroups(locations) {
             </div>
             <div class="food-card-actions">
               <button type="button" class="button button-primary" data-location-id="${escapeHtml(location.id)}">${escapeHtml(pageText('btn_narrate'))}</button>
+              <button type="button" class="button button-secondary" data-location-qr-id="${escapeHtml(location.id)}">${escapeHtml(pageText('btn_qr'))}</button>
               <button type="button" class="button button-secondary" data-stop-audio="true">${escapeHtml(pageText('btn_stop'))}</button>
             </div>
           </article>
@@ -817,6 +971,16 @@ async function initFoodPage() {
       }
 
       const button = event.target.closest('[data-location-id]');
+      const qrButton = event.target.closest('[data-location-qr-id]');
+      if (qrButton) {
+        const qrLocationId = qrButton.getAttribute('data-location-qr-id');
+        const qrLocation = getNarrationLocationById(qrLocationId);
+        if (qrLocation) {
+          openQrModalForLocation(qrLocation);
+        }
+        return;
+      }
+
       if (!button) {
         return;
       }

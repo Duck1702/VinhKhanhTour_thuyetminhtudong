@@ -58,7 +58,7 @@ public sealed class NarrationOrchestrator
                 throw new ArgumentException($"Không tìm thấy địa điểm với id '{request.LocationId}'.");
             }
 
-            sourceTextVi ??= location.DescriptionVi;
+            sourceTextVi ??= BuildLocationNarrationSourceText(location);
             locationName = location.Name;
         }
 
@@ -176,6 +176,9 @@ public sealed class NarrationOrchestrator
         var normalizedLocationId = locationId.Trim();
         var normalizedLanguage = targetLanguage.Trim();
         var key = $"{normalizedLocationId}|{normalizedLanguage}";
+        var location = _locationContentService.GetById(normalizedLocationId)
+            ?? throw new ArgumentException($"Không tìm thấy địa điểm với id '{normalizedLocationId}'.");
+        var expectedSourceText = BuildLocationNarrationSourceText(location);
 
         var publishedTemplate = _adminManagementService
             .GetNarrationTemplates(publishedOnly: true)
@@ -187,9 +190,6 @@ public sealed class NarrationOrchestrator
 
         if (publishedTemplate is not null)
         {
-            var location = _locationContentService.GetById(normalizedLocationId)
-                ?? throw new ArgumentException($"Không tìm thấy địa điểm với id '{normalizedLocationId}'.");
-
             var templateAudioUrl = RewriteAudioUrlForCurrentHost(publishedTemplate.AudioUrl!, baseUrl);
 
             return new GenerateNarrationResponse
@@ -207,6 +207,12 @@ public sealed class NarrationOrchestrator
 
         if (InstantNarrationCache.TryGetValue(key, out var cached))
         {
+            if (!string.Equals(cached.SourceTextVi, expectedSourceText, StringComparison.Ordinal))
+            {
+                InstantNarrationCache.TryRemove(key, out _);
+            }
+            else
+            {
             return new GenerateNarrationResponse
             {
                 LocationId = cached.LocationId,
@@ -218,6 +224,7 @@ public sealed class NarrationOrchestrator
                 AudioUrl = RewriteAudioUrlForCurrentHost(cached.AudioUrl, baseUrl),
                 GeneratedAt = cached.GeneratedAt
             };
+            }
         }
 
         var created = await GenerateAsync(new GenerateNarrationRequest
@@ -249,6 +256,26 @@ public sealed class NarrationOrchestrator
         }
 
         return $"[DEMO {targetLanguage.ToUpperInvariant()}] {sourceTextVi}";
+    }
+
+    private static string BuildLocationNarrationSourceText(StreetLocation location)
+    {
+        static string Safe(string? value) => string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim();
+
+        var parts = new List<string>
+        {
+            $"{Safe(location.Name)} là một địa điểm thuộc nhóm {Safe(location.Category)} tại phố ẩm thực Vĩnh Khánh.",
+            $"Địa chỉ: {Safe(location.Address)}.",
+            $"Giờ mở cửa: {Safe(location.OpeningHours)}.",
+            string.IsNullOrWhiteSpace(location.PriceRange) ? string.Empty : $"Mức giá tham khảo: {Safe(location.PriceRange)}.",
+            $"Điểm nổi bật: {Safe(location.Highlight)}.",
+            string.IsNullOrWhiteSpace(location.DishSamples) ? string.Empty : $"Món nên thử: {Safe(location.DishSamples)}.",
+            $"Thời điểm phù hợp để ghé quán: {Safe(location.BestTime)}.",
+            $"Tổng quan: {Safe(location.ShortIntro)}.",
+            Safe(location.DescriptionVi)
+        };
+
+        return string.Join(" ", parts.Where(part => !string.IsNullOrWhiteSpace(part)));
     }
 
     private static byte[] BuildFallbackWaveAudio()

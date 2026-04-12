@@ -90,13 +90,14 @@
       <p class="lead">
         Tài liệu PRD này tổng hợp định hướng sản phẩm, yêu cầu chức năng, kiến trúc nghiệp vụ,
         API, dữ liệu, rủi ro và các sequence diagram cho hệ thống hướng dẫn tham quan ẩm thực bằng
-        QR, GPS, bản đồ số, AI assistant và phát thuyết minh đa ngôn ngữ.
+        QR, GPS, bản đồ số, AI assistant và phát thuyết minh đa ngôn ngữ cho 3 vai trò: khách du lịch,
+        chủ quán và admin quản lý.
       </p>
       <div class="meta">
         <div class="metric"><strong>PWA</strong><span class="subtle">Offline-first cho mobile</span></div>
         <div class="metric"><strong>QR + GPS</strong><span class="subtle">Kích hoạt nội dung theo điểm đến</span></div>
         <div class="metric"><strong>AI Audio</strong><span class="subtle">Dịch và phát giọng đọc đa ngôn ngữ</span></div>
-        <div class="metric"><strong>Admin</strong><span class="subtle">CRUD nội dung, duyệt thuyết minh, theo dõi log</span></div>
+        <div class="metric"><strong>3 Portals</strong><span class="subtle">Tourist, Merchant, Admin vận hành trên cùng nền tảng</span></div>
       </div>
     </section>
 
@@ -116,7 +117,8 @@
         <a href="#api">11. API & tích hợp</a>
         <a href="#sequence">12. Sequence diagrams</a>
         <a href="#launch">13. Kế hoạch triển khai</a>
-        <a href="#rui-ro">14. Rủi ro & câu hỏi mở</a>
+        <a href="#mobile">14. Định hướng mobile app</a>
+        <a href="#rui-ro">15. Rủi ro & câu hỏi mở</a>
       </aside>
 
       <main class="grid">
@@ -131,6 +133,7 @@
             <span class="pill">Vanilla JS + PWA</span>
             <span class="pill">MapLibre / GPS</span>
             <span class="pill">Azure Translator / Speech</span>
+            <span class="pill">Merchant portal</span>
             <span class="pill">Admin dashboard</span>
             <span class="pill">AI routing</span>
           </div>
@@ -191,11 +194,13 @@
             <h2>4. Phạm vi sản phẩm</h2>
             <h3>In scope</h3>
             <ul>
-              <li>Mobile web/PWA cho khách tham quan.</li>
+              <li>Web/PWA cho khách tham quan.</li>
+              <li>Web portal cho chủ quán: chỉnh nội dung, tạo QR, nghe thử audio, gửi đề xuất duyệt.</li>
+              <li>Web portal cho admin: vận hành dữ liệu, duyệt đề xuất, quản lý voice/template, theo dõi log.</li>
               <li>Trang chủ, trang chi tiết, bản đồ, danh sách món/quán, AI assistant.</li>
               <li>QR dẫn đến trang chính hoặc trang/điểm đến cụ thể.</li>
               <li>Tạo thuyết minh đa ngôn ngữ, phát audio trên trình duyệt.</li>
-              <li>Admin dashboard: CRUD quán/món, duyệt nội dung, quản lý voice/template, xem log.</li>
+              <li>Lộ trình mobile app đa nền tảng dùng chung backend.</li>
             </ul>
           </div>
           <div>
@@ -203,9 +208,9 @@
             <ul>
               <li>Thanh toán trực tuyến trong app.</li>
               <li>Đặt bàn/đặt món trực tiếp với nhà hàng.</li>
-              <li>Đăng nhập người dùng cuối bắt buộc.</li>
+              <li>Workflow duyệt đa cấp phức tạp (nhiều hơn chủ quán -> admin).</li>
               <li>Recommendation engine cá nhân hóa sâu theo lịch sử tài khoản.</li>
-              <li>CMS đa vai trò phức tạp, workflow nhiều cấp duyệt.</li>
+              <li>Đồng bộ dữ liệu real-time hai chiều trên app mobile ở phase đầu.</li>
             </ul>
           </div>
         </section>
@@ -221,11 +226,11 @@
             </ul>
           </div>
           <div>
-            <h3>Khách nội địa / nhóm bạn trẻ</h3>
+            <h3>Chủ quán ăn</h3>
             <ul>
-              <li>Muốn xem bản đồ, điểm hot, món nổi bật, lịch trình đêm.</li>
-              <li>Thích trải nghiệm trực quan, nhanh, ít thao tác.</li>
-              <li>Ưu tiên gợi ý lộ trình và khám phá quán mới.</li>
+              <li>Muốn tự chỉnh nội dung quán và tạo QR theo từng ngôn ngữ.</li>
+              <li>Cần nghe thử thuyết minh trước khi gửi duyệt.</li>
+              <li>Cần theo dõi hiệu suất truy cập, audio và lịch sử đề xuất.</li>
             </ul>
           </div>
           <div>
@@ -247,6 +252,8 @@
             <div class="metric"><strong>Map & GPS</strong><span class="subtle">Hiển thị quán nổi bật, hỗ trợ xác định vị trí tương đối và gợi ý di chuyển.</span></div>
             <div class="metric"><strong>AI Routing</strong><span class="subtle">Tạo lộ trình khám phá theo sở thích, thời gian hoặc điểm bắt đầu.</span></div>
             <div class="metric"><strong>AI Assistant</strong><span class="subtle">Hỏi đáp về món ăn, quán phù hợp, thời gian và hành trình gợi ý.</span></div>
+            <div class="metric"><strong>Merchant Portal</strong><span class="subtle">Chỉnh mô tả quán, tạo QR, nghe thử audio, gửi đề xuất.</span></div>
+            <div class="metric"><strong>Submission Queue</strong><span class="subtle">Hàng chờ duyệt đề xuất chủ quán trên admin console.</span></div>
             <div class="metric"><strong>Content Admin</strong><span class="subtle">CRUD location, duyệt public narration, quản lý template.</span></div>
             <div class="metric"><strong>Voice Admin</strong><span class="subtle">Quản lý giọng đọc theo ngôn ngữ và kịch bản.</span></div>
             <div class="metric"><strong>Monitoring</strong><span class="subtle">Theo dõi visit log, AI usage log, top page và cost ước tính.</span></div>
@@ -255,7 +262,7 @@
 
         <section id="flow" class="card">
           <h2>7. User flow</h2>
-          <div class="grid grid-2">
+          <div class="grid grid-3">
             <div>
               <h3>Flow chính cho khách</h3>
               <ol>
@@ -268,11 +275,21 @@
               </ol>
             </div>
             <div>
+              <h3>Flow của chủ quán</h3>
+              <ol>
+                <li>Chủ quán đăng nhập và mở cổng merchant.</li>
+                <li>Chọn quán phụ trách, chỉnh nội dung giới thiệu và thuyết minh.</li>
+                <li>Tạo QR theo ngôn ngữ, nghe thử audio để kiểm tra.</li>
+                <li>Gửi đề xuất nội dung để admin duyệt.</li>
+                <li>Theo dõi trạng thái duyệt trong lịch sử đề xuất.</li>
+              </ol>
+            </div>
+            <div>
               <h3>Flow quản trị</h3>
               <ol>
                 <li>Admin truy cập trang quản trị và cung cấp X-Admin-Key.</li>
                 <li>CRUD location hoặc template thuyết minh.</li>
-                <li>Duyệt bản narration public.</li>
+                <li>Duyệt đề xuất từ chủ quán trước khi public.</li>
                 <li>Quản lý voice profile theo ngôn ngữ.</li>
                 <li>Theo dõi dashboard, log AI và log truy cập.</li>
               </ol>
@@ -315,7 +332,13 @@
                 <td>FR-09</td><td>Admin CRUD</td><td>Quản trị location, template, voice profile.</td><td>Must</td><td>Tất cả API admin yêu cầu header X-Admin-Key hợp lệ.</td>
               </tr>
               <tr>
-                <td>FR-10</td><td>Dashboard và log</td><td>Thống kê lượng location, narration, visits, cost.</td><td>Should</td><td>Dashboard hiển thị được số liệu tổng quan và top page.</td>
+                <td>FR-10</td><td>Merchant portal</td><td>Chủ quán có trang riêng để quản lý nội dung, QR và audio preview.</td><td>Must</td><td>Chủ quán đăng nhập được, tạo QR theo location/language và nghe thử audio.</td>
+              </tr>
+              <tr>
+                <td>FR-11</td><td>Duyệt đề xuất chủ quán</td><td>Admin có hàng chờ đề xuất từ merchant để duyệt/từ chối.</td><td>Should</td><td>Admin thấy trạng thái đề xuất và cập nhật trạng thái duyệt được.</td>
+              </tr>
+              <tr>
+                <td>FR-12</td><td>Dashboard và log</td><td>Thống kê lượng location, narration, visits, cost.</td><td>Should</td><td>Dashboard hiển thị được số liệu tổng quan và top page.</td>
               </tr>
             </table>
           </div>
@@ -328,6 +351,7 @@
               <li><strong>Hiệu năng:</strong> tải landing ban đầu nhanh, audio phát được trên mobile browser phổ biến.</li>
               <li><strong>Khả dụng:</strong> hỗ trợ PWA/offline cho asset và nội dung đã cache.</li>
               <li><strong>Bảo mật:</strong> API admin chỉ dùng với X-Admin-Key; không lộ key trên client public.</li>
+              <li><strong>Phân quyền:</strong> tách luồng khách, chủ quán, admin; merchant không truy cập API admin trực tiếp.</li>
               <li><strong>Khả mở rộng:</strong> dữ liệu quán/món và voice profile có thể thêm mới mà không cần sửa front-end cấu trúc lớn.</li>
               <li><strong>Khả quan sát:</strong> có visit log, AI usage log, cost ước tính.</li>
               <li><strong>Khả bảo trì:</strong> code tách theo service, options, models; chuẩn hóa endpoint.</li>
@@ -359,6 +383,7 @@
               <li><strong>AiUsageLog:</strong> endpoint, input, language, cost ước tính, timestamp.</li>
               <li><strong>VisitLog:</strong> path, method, userAgent, timestamp.</li>
               <li><strong>RoutePlan:</strong> yêu cầu đầu vào, danh sách điểm dừng, thời lượng, ghi chú.</li>
+              <li><strong>MerchantSubmission:</strong> đề xuất chỉnh sửa nội dung từ chủ quán, trạng thái duyệt.</li>
             </ul>
           </div>
           <div>
@@ -379,11 +404,19 @@
               <h3>API public</h3>
               <table>
                 <tr><th>Method</th><th>Endpoint</th><th>Mục đích</th></tr>
+                <tr><td>POST</td><td>/api/auth/register</td><td>Đăng ký tài khoản người dùng/chủ quán</td></tr>
+                <tr><td>POST</td><td>/api/auth/login</td><td>Đăng nhập tạo phiên cookie</td></tr>
+                <tr><td>GET</td><td>/api/auth/me</td><td>Lấy thông tin phiên hiện tại</td></tr>
+                <tr><td>GET</td><td>/api/account/dashboard</td><td>Dashboard cá nhân của user/merchant</td></tr>
                 <tr><td>GET</td><td>/api/locations</td><td>Lấy danh sách quán/món/điểm đến mẫu</td></tr>
                 <tr><td>GET</td><td>/api/voice-profiles</td><td>Lấy voice profile đang active cho client</td></tr>
                 <tr><td>GET</td><td>/api/narration-templates</td><td>Lấy template narration đã public</td></tr>
                 <tr><td>POST</td><td>/api/narrations</td><td>Tạo narration mới từ location hoặc custom text</td></tr>
                 <tr><td>POST</td><td>/api/narrations/instant</td><td>Nghe nhanh narration theo locationId + language</td></tr>
+                <tr><td>GET</td><td>/api/public/locations/{id}</td><td>Lấy dữ liệu location cho trang scan QR không cần đăng nhập</td></tr>
+                <tr><td>POST</td><td>/api/public/narrations/instant</td><td>Tạo audio công khai cho trang scan QR</td></tr>
+                <tr><td>GET</td><td>/api/public/tts-capabilities</td><td>Kiểm tra cloud/fallback mode cho audio</td></tr>
+                <tr><td>GET</td><td>/api/public/tts-proxy</td><td>Proxy audio fallback để tăng tương thích mobile</td></tr>
                 <tr><td>POST</td><td>/api/routes/plan</td><td>Tạo lộ trình AI</td></tr>
                 <tr><td>POST</td><td>/api/assistant/ask</td><td>Hỏi trợ lý du lịch</td></tr>
               </table>
@@ -522,6 +555,24 @@ sequenceDiagram
     MGT-->>API: Bản public đã duyệt
     API-->>ADM: Kết quả duyệt thành công
           </div>
+
+          <h3>12.6 Chủ quán gửi đề xuất và admin xử lý</h3>
+          <div class="mermaid">
+    sequenceDiagram
+        autonumber
+        participant M as Chủ quán
+        participant MP as Merchant Portal
+        participant Q as Submission Queue
+        participant ADM as Admin Portal
+
+        M->>MP: Chỉnh nội dung quán, tạo QR, nghe thử audio
+        M->>MP: Gửi đề xuất duyệt
+        MP->>Q: Lưu đề xuất (location, language, draft text)
+        ADM->>Q: Mở hàng chờ đề xuất
+        ADM->>Q: Duyệt hoặc từ chối
+        Q-->>MP: Cập nhật trạng thái đề xuất
+        MP-->>M: Hiển thị kết quả duyệt
+          </div>
         </section>
 
         <section id="launch" class="card grid grid-2">
@@ -530,8 +581,9 @@ sequenceDiagram
             <table>
               <tr><th>Giai đoạn</th><th>Nội dung</th><th>Kết quả</th></tr>
               <tr><td>Phase 1</td><td>Ổn định dữ liệu mẫu, QR, audio, UI mobile</td><td>Bản demo nội bộ</td></tr>
-              <tr><td>Phase 2</td><td>Map, AI assistant, route planning, admin</td><td>Pilot tại khu phố</td></tr>
-              <tr><td>Phase 3</td><td>Tối ưu cache, log, cost control, thêm dữ liệu thật</td><td>Bản trình diễn hoàn chỉnh</td></tr>
+              <tr><td>Phase 2</td><td>Map, AI assistant, route planning, admin portal</td><td>Pilot tại khu phố</td></tr>
+              <tr><td>Phase 3</td><td>Merchant portal + quy trình duyệt đề xuất</td><td>Vận hành 3 vai trò trên web</td></tr>
+              <tr><td>Phase 4</td><td>Mobile app đa nền tảng dùng chung API</td><td>Beta Android/iOS</td></tr>
             </table>
           </div>
           <div>
@@ -546,9 +598,30 @@ sequenceDiagram
           </div>
         </section>
 
+        <section id="mobile" class="card grid grid-2">
+          <div>
+            <h2>14. Định hướng mobile app</h2>
+            <ul>
+              <li>Ưu tiên Flutter để dùng 1 codebase cho Android + iOS.</li>
+              <li>Tách 3 luồng trong app: Tourist Shell, Merchant Shell, Admin Shell.</li>
+              <li>Dùng lại API hiện tại, chỉ mở rộng endpoint phân quyền khi cần.</li>
+              <li>Tính năng phase đầu: quét QR trong app, nghe audio, dashboard chủ quán, duyệt nhanh cho admin.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Tiêu chí MVP mobile</h3>
+            <ul>
+              <li>Đăng nhập phiên ổn định, không mất trạng thái khi chuyển app.</li>
+              <li>Tải location + phát audio dưới 3 giây trên 4G ổn định.</li>
+              <li>Màn hình merchant tạo QR và gửi đề xuất hoạt động đầy đủ.</li>
+              <li>Màn hình admin duyệt đề xuất và xem chỉ số chính.</li>
+            </ul>
+          </div>
+        </section>
+
         <section id="rui-ro" class="card grid grid-2">
           <div>
-            <h2>14. Rủi ro & câu hỏi mở</h2>
+            <h2>15. Rủi ro & câu hỏi mở</h2>
             <div class="note danger">
               Rủi ro chính: chi phí AI tăng khi người dùng tạo narration liên tục; độ chính xác nội dung quán/món; chất lượng GPS tại khu phố đông;
               phụ thuộc mạng khi chưa có cache đủ tốt.
