@@ -26,4 +26,11 @@ public interface IAdminManagementService
 
     void TrackRoutePlan(RoutePlanLogEntry routePlanLog);
     IReadOnlyCollection<RoutePlanLogEntry> GetRoutePlanLogs(int take);
+
+    // Merchant Request Management
+    MerchantRequest SubmitMerchantRequest(MerchantRequest request);
+    IReadOnlyCollection<MerchantRequest> GetMerchantRequests(string? status = null, string? currentUserEmail = null);
+    MerchantRequest? ApproveMerchantRequest(string requestId, string adminEmail);
+    MerchantRequest? RejectMerchantRequest(string requestId, string adminEmail, string response);
+    MerchantRequest? UpdateMerchantRequestHighlight(string requestId, bool isPinnedTop, int priorityScore, DateTimeOffset? campaignStartAt, DateTimeOffset? campaignEndAt);
 }

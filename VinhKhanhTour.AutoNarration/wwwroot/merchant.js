@@ -9,6 +9,10 @@ const merchantMetricRoutes = document.getElementById('merchantMetricRoutes');
 
 const merchantForm = document.getElementById('merchantForm');
 const merchantLocationSelect = document.getElementById('merchantLocationSelect');
+const merchantRequestType = document.getElementById('merchantRequestType');
+const merchantRequestTitle = document.getElementById('merchantRequestTitle');
+const merchantCampaignStart = document.getElementById('merchantCampaignStart');
+const merchantCampaignEnd = document.getElementById('merchantCampaignEnd');
 const merchantLanguageSelect = document.getElementById('merchantLanguageSelect');
 const merchantShortIntro = document.getElementById('merchantShortIntro');
 const merchantHighlight = document.getElementById('merchantHighlight');
@@ -24,7 +28,6 @@ const merchantAudioPlayer = document.getElementById('merchantAudioPlayer');
 const merchantSubmissionTable = document.getElementById('merchantSubmissionTable');
 
 const DRAFT_STORAGE_KEY = 'merchantDraftByLocation';
-const SUBMISSION_STORAGE_KEY = 'merchantDraftSubmissions';
 
 let allLocations = [];
 let currentAccount = null;
@@ -55,19 +58,6 @@ function getDraftStore() {
 
 function saveDraftStore(store) {
   localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(store));
-}
-
-function getSubmissionStore() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(SUBMISSION_STORAGE_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveSubmissionStore(items) {
-  localStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(items));
 }
 
 function getSelectedLocation() {
@@ -116,33 +106,54 @@ function updateQrPreview() {
   merchantQrLink.textContent = shareUrl;
 }
 
-function renderSubmissionTable() {
+async function renderSubmissionTable() {
   if (!merchantSubmissionTable) {
     return;
   }
 
-  const items = getSubmissionStore()
-    .filter((x) => !currentAccount?.email || x.merchantEmail === currentAccount.email)
-    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  let items = [];
+  try {
+    const response = await fetch('/api/merchant/requests');
+    if (!response.ok) {
+      throw new Error('Không tải được lịch sử đề xuất.');
+    }
+    items = await response.json();
+  } catch (error) {
+    merchantSubmissionTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Thời gian</th>
+          <th>Loại</th>
+          <th>Tiêu đề</th>
+          <th>Trạng thái</th>
+          <th>Phản hồi admin</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="5">${escapeHtml(error?.message || 'Không tải được dữ liệu.')}</td></tr>
+      </tbody>
+    `;
+    return;
+  }
 
   merchantSubmissionTable.innerHTML = `
     <thead>
       <tr>
         <th>Thời gian</th>
-        <th>Quán</th>
-        <th>Ngôn ngữ</th>
+        <th>Loại</th>
+        <th>Tiêu đề</th>
         <th>Trạng thái</th>
-        <th>Ghi chú</th>
+        <th>Phản hồi admin</th>
       </tr>
     </thead>
     <tbody>
       ${items.length === 0 ? '<tr><td colspan="5">Chưa có đề xuất nào.</td></tr>' : items.map((item) => `
         <tr>
-          <td>${escapeHtml(new Date(item.submittedAt).toLocaleString('vi-VN'))}</td>
-          <td>${escapeHtml(item.locationName)}</td>
-          <td>${escapeHtml(item.language)}</td>
-          <td>${escapeHtml(item.status || 'Chờ duyệt')}</td>
-          <td>${escapeHtml(item.note || '')}</td>
+          <td>${escapeHtml(new Date(item.createdAt).toLocaleString('vi-VN'))}</td>
+          <td>${escapeHtml(item.requestType || 'other')}</td>
+          <td>${escapeHtml(item.title || '-')}</td>
+          <td>${escapeHtml(item.status || 'pending')}</td>
+          <td>${escapeHtml(item.adminResponse || '')}</td>
         </tr>
       `).join('')}
     </tbody>
@@ -190,36 +201,51 @@ function saveDraftLocally() {
   alert('Đã lưu bản nháp cục bộ cho quán này.');
 }
 
-function submitSuggestion() {
+async function submitSuggestion() {
   const location = getSelectedLocation();
   if (!location || !currentAccount?.email) {
     return;
   }
 
   const text = merchantDraftText.value.trim();
+  const title = merchantRequestTitle?.value.trim() || '';
+  const requestType = merchantRequestType?.value || 'edit-info';
   if (!text) {
     alert('Bạn cần nhập nội dung thuyết minh đề xuất.');
     return;
   }
 
-  const items = getSubmissionStore();
-  items.unshift({
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    merchantEmail: currentAccount.email,
-    merchantName: currentAccount.fullName || currentAccount.email,
+  if (!title) {
+    alert('Bạn cần nhập tiêu đề yêu cầu.');
+    return;
+  }
+
+  const payload = {
     locationId: location.id,
-    locationName: location.name,
-    language: normalizeLanguage(merchantLanguageSelect.value),
-    shortIntro: merchantShortIntro.value.trim(),
-    highlight: merchantHighlight.value.trim(),
-    draftText: text,
-    status: 'Chờ duyệt',
-    note: '',
-    submittedAt: new Date().toISOString()
+    requestType,
+    title,
+    campaignStartAt: merchantCampaignStart?.value ? new Date(merchantCampaignStart.value).toISOString() : null,
+    campaignEndAt: merchantCampaignEnd?.value ? new Date(merchantCampaignEnd.value).toISOString() : null,
+    description: [
+      `Ngôn ngữ: ${normalizeLanguage(merchantLanguageSelect.value)}`,
+      `Giới thiệu ngắn: ${merchantShortIntro.value.trim()}`,
+      `Điểm nổi bật: ${merchantHighlight.value.trim()}`,
+      `Nội dung đề xuất: ${text}`
+    ].filter(Boolean).join('\n')
+  };
+
+  const response = await fetch('/api/merchant/requests', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
   });
 
-  saveSubmissionStore(items);
-  renderSubmissionTable();
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result?.message || 'Không gửi được yêu cầu tới admin.');
+  }
+
+  await renderSubmissionTable();
   alert('Đã gửi đề xuất sang trang Admin để duyệt.');
 }
 
@@ -309,7 +335,7 @@ async function loadLocations() {
 async function refreshPage() {
   await loadMerchantAccount();
   await loadLocations();
-  renderSubmissionTable();
+  await renderSubmissionTable();
 }
 
 merchantLocationSelect?.addEventListener('change', fillEditorFromLocation);
@@ -327,7 +353,9 @@ merchantRefreshBtn?.addEventListener('click', () => {
 
 merchantForm?.addEventListener('submit', (event) => {
   event.preventDefault();
-  submitSuggestion();
+  void submitSuggestion().catch((error) => {
+    alert(error?.message || 'Không gửi được yêu cầu.');
+  });
 });
 
 merchantLogoutBtn?.addEventListener('click', async () => {

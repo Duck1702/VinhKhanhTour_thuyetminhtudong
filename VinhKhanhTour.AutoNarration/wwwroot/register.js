@@ -158,6 +158,7 @@ async function onSubmit(event) {
   const fullName = document.getElementById('fullName')?.value?.trim() || '';
   const email = document.getElementById('email')?.value?.trim() || '';
   const password = document.getElementById('password')?.value || '';
+  const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
 
   if (submitButton) {
     submitButton.disabled = true;
@@ -168,7 +169,7 @@ async function onSubmit(event) {
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fullName, email, password })
+      body: JSON.stringify({ fullName, email, password, role })
     });
 
     const data = await response.json().catch(() => ({}));
@@ -176,8 +177,21 @@ async function onSubmit(event) {
       throw new Error(data.message || t('failed'));
     }
 
+    // Lưu role vào localStorage
+    localStorage.setItem('userRole', role);
+
     setMessage(t('success'), false);
-    window.location.href = getReturnUrl();
+    
+    // Chuyển hướng dựa trên role
+    const lang = getLang();
+    let redirectUrl = `/?lang=${encodeURIComponent(lang)}`;
+    if (role === 'merchant') {
+      redirectUrl = `/merchant.html?lang=${encodeURIComponent(lang)}`;
+    } else if (role === 'admin') {
+      redirectUrl = `/admin.html?lang=${encodeURIComponent(lang)}`;
+    }
+    
+    window.location.href = redirectUrl;
   } catch (error) {
     setMessage(error.message || t('generic'), true);
   } finally {

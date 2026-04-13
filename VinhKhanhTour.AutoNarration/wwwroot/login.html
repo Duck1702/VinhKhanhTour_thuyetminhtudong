@@ -24,6 +24,21 @@
       <h1>Đăng nhập</h1>
       <p class="auth-subtitle">Đăng nhập để sử dụng các chức năng AI, bản đồ và thuyết minh tự động.</p>
 
+      <div class="role-selector">
+        <label class="role-option">
+          <input type="radio" name="role" value="user" checked />
+          <span class="role-label">👤 Khách tham quan</span>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="merchant" />
+          <span class="role-label">🍜 Quán ăn</span>
+        </label>
+        <label class="role-option">
+          <input type="radio" name="role" value="admin" />
+          <span class="role-label">⚙️ Admin</span>
+        </label>
+      </div>
+
       <form id="loginForm" class="form-layout auth-form">
         <label class="form-row-wide">
           <span>Email</span>

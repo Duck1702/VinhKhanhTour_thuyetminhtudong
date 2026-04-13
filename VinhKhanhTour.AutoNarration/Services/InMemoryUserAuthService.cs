@@ -12,7 +12,7 @@ public sealed class InMemoryUserAuthService : IUserAuthService
 
     private readonly ConcurrentDictionary<string, UserAccount> _usersByEmail = new(StringComparer.OrdinalIgnoreCase);
 
-    public (bool Success, string? Error, AuthUserResponse? User) Register(string fullName, string email, string password)
+    public (bool Success, string? Error, AuthUserResponse? User) Register(string fullName, string email, string password, string role = "user")
     {
         var normalizedEmail = NormalizeEmail(email);
         var normalizedName = fullName?.Trim() ?? string.Empty;
@@ -32,6 +32,13 @@ public sealed class InMemoryUserAuthService : IUserAuthService
             return (false, "Mật khẩu phải có ít nhất 6 ký tự.", null);
         }
 
+        // Validate role is one of the valid values
+        var validRoles = new[] { "user", "admin", "merchant" };
+        if (!validRoles.Contains(role?.ToLowerInvariant() ?? "user"))
+        {
+            return (false, "Vai trò không hợp lệ.", null);
+        }
+
         if (_usersByEmail.ContainsKey(normalizedEmail))
         {
             return (false, "Email này đã được đăng ký.", null);
@@ -47,6 +54,7 @@ public sealed class InMemoryUserAuthService : IUserAuthService
             Email = normalizedEmail,
             PasswordSalt = Convert.ToBase64String(salt),
             PasswordHash = Convert.ToBase64String(hash),
+            Role = role?.ToLowerInvariant() ?? "user",
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -58,12 +66,20 @@ public sealed class InMemoryUserAuthService : IUserAuthService
         return (true, null, ToAuthUser(user));
     }
 
-    public (bool Success, string? Error, AuthUserResponse? User) Login(string email, string password)
+    public (bool Success, string? Error, AuthUserResponse? User) Login(string email, string password, string role = "user")
     {
         var normalizedEmail = NormalizeEmail(email);
         if (string.IsNullOrWhiteSpace(normalizedEmail) || string.IsNullOrWhiteSpace(password))
         {
             return (false, "Email hoặc mật khẩu không hợp lệ.", null);
+        }
+
+        // Normalize and validate role
+        role = role?.ToLowerInvariant() ?? "user";
+        var validRoles = new[] { "user", "admin", "merchant" };
+        if (!validRoles.Contains(role))
+        {
+            return (false, "Vai trò không hợp lệ.", null);
         }
 
         if (!_usersByEmail.TryGetValue(normalizedEmail, out var user))
@@ -76,7 +92,13 @@ public sealed class InMemoryUserAuthService : IUserAuthService
             return (false, "Sai email hoặc mật khẩu.", null);
         }
 
-        return (true, null, ToAuthUser(user));
+        // Verify that the user's stored role matches the requested role
+        if (user.Role != role)
+        {
+            return (false, "Vai trò không khớp với tài khoản.", null);
+        }
+
+        return (true, null, ToAuthUser(user, role));
     }
 
     public AuthUserResponse? GetByEmail(string email)
@@ -89,6 +111,16 @@ public sealed class InMemoryUserAuthService : IUserAuthService
 
         return _usersByEmail.TryGetValue(normalizedEmail, out var user) ? ToAuthUser(user) : null;
     }
+
+    public IEnumerable<AuthUserResponse> GetAdmins() =>
+        _usersByEmail.Values
+            .Where(u => u.Role == "admin")
+            .Select(u => ToAuthUser(u));
+
+    public IEnumerable<AuthUserResponse> GetMerchants() =>
+        _usersByEmail.Values
+            .Where(u => u.Role == "merchant")
+            .Select(u => ToAuthUser(u));
 
     private static string NormalizeEmail(string value) => value?.Trim().ToLowerInvariant() ?? string.Empty;
 
@@ -114,10 +146,11 @@ public sealed class InMemoryUserAuthService : IUserAuthService
         return CryptographicOperations.FixedTimeEquals(computed, expectedHash);
     }
 
-    private static AuthUserResponse ToAuthUser(UserAccount user) => new()
+    private static AuthUserResponse ToAuthUser(UserAccount user, string? role = null) => new()
     {
         Id = user.Id,
         FullName = user.FullName,
-        Email = user.Email
+        Email = user.Email,
+        Role = role ?? user.Role
     };
 }

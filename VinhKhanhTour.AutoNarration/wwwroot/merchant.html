@@ -80,6 +80,27 @@
         <select id="merchantLocationSelect" required></select>
       </label>
       <label>
+        Loại yêu cầu
+        <select id="merchantRequestType" required>
+          <option value="edit-info">Chỉnh sửa thông tin quán</option>
+          <option value="promotion">Đăng ưu đãi khuyến mãi</option>
+          <option value="advertisement">Đăng quảng cáo nổi bật</option>
+          <option value="other">Yêu cầu khác</option>
+        </select>
+      </label>
+      <label>
+        Tiêu đề yêu cầu
+        <input id="merchantRequestTitle" type="text" maxlength="140" placeholder="VD: Flash sale hải sản cuối tuần" required />
+      </label>
+      <label>
+        Bắt đầu hiển thị
+        <input id="merchantCampaignStart" type="datetime-local" />
+      </label>
+      <label>
+        Kết thúc hiển thị
+        <input id="merchantCampaignEnd" type="datetime-local" />
+      </label>
+      <label>
         Ngôn ngữ QR mặc định
         <select id="merchantLanguageSelect">
           <option value="vi">Tiếng Việt</option>

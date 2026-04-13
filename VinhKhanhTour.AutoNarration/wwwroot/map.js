@@ -18,6 +18,11 @@ function setMapStatus(message, isWarning = false) {
   mapStatus.classList.toggle('warning', isWarning);
 }
 
+function getFocusLocationId() {
+  const value = new URLSearchParams(window.location.search).get('locationId');
+  return value ? value.trim().toLowerCase() : '';
+}
+
 function buildOfflineStyle() {
   // True offline vector rendering requires a complete style.json (with source-layer mappings).
   return '/assets/vector-tiles/vinh-khanh/style.json';
@@ -290,6 +295,32 @@ async function initMapPage() {
     map.on('mouseleave', 'vinh-khanh-poi-circle', () => {
       map.getCanvas().style.cursor = '';
     });
+
+    const focusLocationId = getFocusLocationId();
+    if (!focusLocationId) {
+      return;
+    }
+
+    const target = locations.find((item) => String(item.id || '').toLowerCase() === focusLocationId);
+    if (!target || !Number.isFinite(target.longitude) || !Number.isFinite(target.latitude)) {
+      return;
+    }
+
+    map.flyTo({
+      center: [target.longitude, target.latitude],
+      zoom: 16.8,
+      essential: true
+    });
+
+    new maplibregl.Popup({ closeButton: true })
+      .setLngLat([target.longitude, target.latitude])
+      .setHTML(`
+        <strong>${target.name ?? ''}</strong><br/>
+        <span>${target.category ?? ''}</span><br/>
+        <span>${target.address ?? ''}</span><br/>
+        <em>${target.highlight ?? ''}</em>
+      `)
+      .addTo(map);
   });
 }
 

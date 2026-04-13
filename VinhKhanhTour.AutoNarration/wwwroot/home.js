@@ -14,6 +14,10 @@ const metricRoutes = document.getElementById('metricRoutes');
 const visitHistoryList = document.getElementById('visitHistoryList');
 const routeHistoryList = document.getElementById('routeHistoryList');
 const narrationHistoryList = document.getElementById('narrationHistoryList');
+const merchantAdsGrid = document.getElementById('merchantAdsGrid');
+const adsTypeFilter = document.getElementById('adsTypeFilter');
+const adsTimeFilter = document.getElementById('adsTimeFilter');
+const adsFilterApplyBtn = document.getElementById('adsFilterApplyBtn');
 
 const SITE_LANGUAGE_KEY = 'siteLanguage';
 
@@ -417,12 +421,73 @@ function initAccountLogout() {
   });
 }
 
+async function loadMerchantAds() {
+  if (!merchantAdsGrid) {
+    return;
+  }
+
+  try {
+    const selectedType = adsTypeFilter?.value || 'all';
+    const selectedTime = adsTimeFilter?.value || 'all';
+    const query = new URLSearchParams({
+      take: '8',
+      type: selectedType,
+      time: selectedTime
+    });
+    const response = await fetch(`/api/public/merchant-ads?${query.toString()}`);
+    if (!response.ok) {
+      throw new Error('Không tải được quảng cáo từ quán ăn.');
+    }
+
+    const ads = await response.json();
+    if (!Array.isArray(ads) || ads.length === 0) {
+      merchantAdsGrid.innerHTML = '<article class="card"><p>Hiện chưa có ưu đãi nào được duyệt.</p></article>';
+      return;
+    }
+
+    const lang = getLang();
+    merchantAdsGrid.innerHTML = ads.map((item) => `
+      <article class="card merchant-ad-card">
+        <div class="card-head">
+          <span class="tag">${escapeHtml(item.requestType === 'promotion' ? 'Khuyến mãi' : 'Quảng cáo')}</span>
+          ${item.isPinnedTop ? '<span class="tag ad-top-tag">TOP</span>' : ''}
+          <span class="tag" style="background:var(--bg); color:var(--text-secondary); border: 1px solid var(--border);">${escapeHtml(new Date(item.approvedAt).toLocaleDateString('vi-VN'))}</span>
+        </div>
+        <h3>${escapeHtml(item.title || 'Ưu đãi từ quán')}</h3>
+        <p><strong>${escapeHtml(item.locationName || item.locationId || 'Quán ăn')}</strong></p>
+        <p>${escapeHtml(item.description || '')}</p>
+        <p class="merchant-ad-time">${escapeHtml(item.campaignStartAt ? new Date(item.campaignStartAt).toLocaleString('vi-VN') : 'Ngay bây giờ')} - ${escapeHtml(item.campaignEndAt ? new Date(item.campaignEndAt).toLocaleString('vi-VN') : 'Không giới hạn')}</p>
+        <div class="merchant-ad-actions">
+          <a class="button button-primary" href="/scan-narration.html?locationId=${encodeURIComponent(item.locationId || '')}&lang=${encodeURIComponent(lang)}">Xem chi tiết quán</a>
+          <a class="button button-secondary" href="/ban-do.html?locationId=${encodeURIComponent(item.locationId || '')}&lang=${encodeURIComponent(lang)}">Mở bản đồ</a>
+        </div>
+      </article>
+    `).join('');
+  } catch (error) {
+    merchantAdsGrid.innerHTML = `<article class="card"><p>${escapeHtml(error?.message || 'Không tải được ưu đãi.')}</p></article>`;
+  }
+}
+
 (async function initHomePage() {
   const lang = getLang();
   applyI18n(lang);
   initLanguageModal();
   initAssistant();
   initAccountLogout();
+
+  adsFilterApplyBtn?.addEventListener('click', () => {
+    void loadMerchantAds();
+  });
+
+  adsTypeFilter?.addEventListener('change', () => {
+    void loadMerchantAds();
+  });
+
+  adsTimeFilter?.addEventListener('change', () => {
+    void loadMerchantAds();
+  });
+
   await loadAccountDashboard();
+  await loadMerchantAds();
   await renderFeaturedLocations(lang);
 })();

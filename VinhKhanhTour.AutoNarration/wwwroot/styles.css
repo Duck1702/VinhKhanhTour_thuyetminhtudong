@@ -281,6 +281,61 @@ body.home-landing #footer {
     margin-bottom: 3.2rem;
 }
 
+.merchant-ads-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.merchant-ad-card {
+    border: 1px solid rgba(255, 194, 102, 0.4);
+    background: linear-gradient(180deg, rgba(255, 172, 72, 0.14), rgba(10, 15, 22, 0.86));
+}
+
+.merchant-ad-card h3 {
+    margin-top: 0.45rem;
+    margin-bottom: 0.35rem;
+}
+
+.ad-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    align-items: flex-end;
+    margin-bottom: 1rem;
+}
+
+.ad-filter-row label {
+    display: grid;
+    gap: 0.3rem;
+    min-width: 190px;
+}
+
+.ad-filter-row select {
+    background: rgba(7, 10, 16, 0.82);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.45rem 0.55rem;
+}
+
+.merchant-ad-actions {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.merchant-ad-time {
+    margin-top: 0.45rem;
+    color: var(--text-secondary);
+    font-size: 0.86rem;
+}
+
+.ad-top-tag {
+    background: rgba(255, 96, 0, 0.22);
+    border: 1px solid rgba(255, 190, 160, 0.6);
+    color: #ffe4c7;
+}
+
 .qr-modal {
     position: fixed;
     inset: 0;
@@ -1557,6 +1612,60 @@ body.auth-page::before {
 .auth-subtitle {
     color: #d8e3f2;
     margin-bottom: 1.1rem;
+}
+
+.role-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+}
+
+.role-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.8rem;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.role-option input[type="radio"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.role-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #d8e3f2;
+    flex: 1;
+}
+
+.role-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.role-option input[type="radio"]:checked + .role-label {
+    color: #ffe6bf;
+    font-weight: 600;
+}
+
+.role-option input[type="radio"]:checked {
+    accent-color: var(--primary-light);
+}
+
+.role-option:has(input[type="radio"]:checked) {
+    background: rgba(230, 81, 0, 0.15);
+    border-color: var(--primary-light);
 }
 
 .auth-form {

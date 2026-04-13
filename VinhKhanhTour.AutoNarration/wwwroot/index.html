@@ -242,6 +242,41 @@
     </div>
   </section>
 
+  <section id="merchantAdsSection">
+    <div class="section-header">
+      <div class="icon">📢</div>
+      <div>
+        <div class="section-num">Deals</div>
+        <h2>Ưu đãi và quảng cáo từ quán ăn</h2>
+      </div>
+    </div>
+
+    <div class="ad-filter-row">
+      <label>
+        Loại quảng cáo
+        <select id="adsTypeFilter">
+          <option value="all">Tất cả</option>
+          <option value="promotion">Khuyến mãi</option>
+          <option value="advertisement">Quảng cáo</option>
+        </select>
+      </label>
+      <label>
+        Thời gian
+        <select id="adsTimeFilter">
+          <option value="all">Tất cả thời gian</option>
+          <option value="active">Đang diễn ra</option>
+          <option value="today">Trong hôm nay</option>
+          <option value="week">7 ngày</option>
+        </select>
+      </label>
+      <button id="adsFilterApplyBtn" type="button" class="button button-secondary">Lọc</button>
+    </div>
+
+    <div id="merchantAdsGrid" class="card-grid merchant-ads-grid">
+      <article class="card"><p>Đang tải ưu đãi mới nhất...</p></article>
+    </div>
+  </section>
+
   <!-- PATTERNS / FOOTER -->
   <section id="footer">
     <div class="highlight info">

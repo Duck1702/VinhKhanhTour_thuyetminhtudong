@@ -11,6 +11,7 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
     private readonly List<VisitLogEntry> _visitLogs = [];
     private readonly List<AiUsageLogEntry> _aiUsageLogs = [];
     private readonly List<RoutePlanLogEntry> _routePlanLogs = [];
+    private readonly List<MerchantRequest> _merchantRequests = [];
 
     public InMemoryLocationContentService()
     {
@@ -835,6 +836,164 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             CreatedAt = template.CreatedAt,
             UpdatedAt = template.UpdatedAt
         };
+
+    // Merchant Request Management
+    public MerchantRequest SubmitMerchantRequest(MerchantRequest request)
+    {
+        lock (_syncLock)
+        {
+            var newRequest = new MerchantRequest
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                LocationId = request.LocationId,
+                MerchantEmail = request.MerchantEmail,
+                MerchantName = request.MerchantName,
+                RequestType = request.RequestType,
+                Title = request.Title,
+                Description = request.Description,
+                Status = "pending",
+                IsPinnedTop = request.IsPinnedTop,
+                PriorityScore = request.PriorityScore,
+                CampaignStartAt = request.CampaignStartAt,
+                CampaignEndAt = request.CampaignEndAt,
+                CreatedAt = DateTimeOffset.UtcNow
+            };
+            _merchantRequests.Add(newRequest);
+            return newRequest;
+        }
+    }
+
+    public IReadOnlyCollection<MerchantRequest> GetMerchantRequests(string? status = null, string? currentUserEmail = null)
+    {
+        lock (_syncLock)
+        {
+            var query = _merchantRequests.AsEnumerable();
+            
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(x => x.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+            }
+            
+            if (!string.IsNullOrEmpty(currentUserEmail))
+            {
+                query = query.Where(x => x.MerchantEmail.Equals(currentUserEmail, StringComparison.OrdinalIgnoreCase));
+            }
+            
+            return query.OrderByDescending(x => x.CreatedAt).ToArray();
+        }
+    }
+
+    public MerchantRequest? ApproveMerchantRequest(string requestId, string adminEmail)
+    {
+        lock (_syncLock)
+        {
+            var request = _merchantRequests.FirstOrDefault(x => x.Id == requestId);
+            if (request == null) return null;
+            
+            var updated = new MerchantRequest
+            {
+                Id = request.Id,
+                LocationId = request.LocationId,
+                MerchantEmail = request.MerchantEmail,
+                MerchantName = request.MerchantName,
+                RequestType = request.RequestType,
+                Title = request.Title,
+                Description = request.Description,
+                Status = "approved",
+                AdminResponse = "Đã duyệt",
+                IsPinnedTop = request.IsPinnedTop,
+                PriorityScore = request.PriorityScore,
+                CampaignStartAt = request.CampaignStartAt,
+                CampaignEndAt = request.CampaignEndAt,
+                CreatedAt = request.CreatedAt,
+                ReviewedAt = DateTimeOffset.UtcNow,
+                ReviewedBy = adminEmail
+            };
+            
+            var index = _merchantRequests.FindIndex(x => x.Id == requestId);
+            if (index >= 0) _merchantRequests[index] = updated;
+            return updated;
+        }
+    }
+
+    public MerchantRequest? RejectMerchantRequest(string requestId, string adminEmail, string response)
+    {
+        lock (_syncLock)
+        {
+            var request = _merchantRequests.FirstOrDefault(x => x.Id == requestId);
+            if (request == null) return null;
+            
+            var updated = new MerchantRequest
+            {
+                Id = request.Id,
+                LocationId = request.LocationId,
+                MerchantEmail = request.MerchantEmail,
+                MerchantName = request.MerchantName,
+                RequestType = request.RequestType,
+                Title = request.Title,
+                Description = request.Description,
+                Status = "rejected",
+                AdminResponse = response,
+                IsPinnedTop = request.IsPinnedTop,
+                PriorityScore = request.PriorityScore,
+                CampaignStartAt = request.CampaignStartAt,
+                CampaignEndAt = request.CampaignEndAt,
+                CreatedAt = request.CreatedAt,
+                ReviewedAt = DateTimeOffset.UtcNow,
+                ReviewedBy = adminEmail
+            };
+            
+            var index = _merchantRequests.FindIndex(x => x.Id == requestId);
+            if (index >= 0) _merchantRequests[index] = updated;
+            return updated;
+        }
+    }
+
+    public MerchantRequest? UpdateMerchantRequestHighlight(
+        string requestId,
+        bool isPinnedTop,
+        int priorityScore,
+        DateTimeOffset? campaignStartAt,
+        DateTimeOffset? campaignEndAt)
+    {
+        lock (_syncLock)
+        {
+            var request = _merchantRequests.FirstOrDefault(x => x.Id == requestId);
+            if (request == null)
+            {
+                return null;
+            }
+
+            var safePriority = Math.Clamp(priorityScore, 0, 100);
+            var updated = new MerchantRequest
+            {
+                Id = request.Id,
+                LocationId = request.LocationId,
+                MerchantEmail = request.MerchantEmail,
+                MerchantName = request.MerchantName,
+                RequestType = request.RequestType,
+                Title = request.Title,
+                Description = request.Description,
+                Status = request.Status,
+                AdminResponse = request.AdminResponse,
+                IsPinnedTop = isPinnedTop,
+                PriorityScore = safePriority,
+                CampaignStartAt = campaignStartAt,
+                CampaignEndAt = campaignEndAt,
+                CreatedAt = request.CreatedAt,
+                ReviewedAt = request.ReviewedAt,
+                ReviewedBy = request.ReviewedBy
+            };
+
+            var index = _merchantRequests.FindIndex(x => x.Id == requestId);
+            if (index >= 0)
+            {
+                _merchantRequests[index] = updated;
+            }
+
+            return updated;
+        }
+    }
 
     private static string Slugify(string input)
     {

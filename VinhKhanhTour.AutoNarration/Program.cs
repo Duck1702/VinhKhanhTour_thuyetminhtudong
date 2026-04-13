@@ -60,6 +60,58 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    
+    // Initialize test accounts (development only)
+    var authService = app.Services.GetRequiredService<IUserAuthService>();
+    var contentService = app.Services.GetRequiredService<ILocationContentService>();
+    
+    // Create admin test account
+    var (adminSuccess, adminError, _) = authService.Register(
+        "Admin Vĩnh Khánh",
+        "admin@vinh-khanh.test",
+        "Admin@1234",
+        "admin"
+    );
+    if (adminSuccess)
+    {
+        System.Console.WriteLine("✅ Admin test account created: admin@vinh-khanh.test / Admin@1234");
+    }
+    else if (!adminError?.Contains("already") ?? false)
+    {
+        System.Console.WriteLine($"⚠️  Admin account: {adminError}");
+    }
+    
+    // Get all locations and create merchant accounts
+    try
+    {
+        var locations = contentService.GetAll();
+        var merchantCount = 0;
+        foreach (var loc in locations)
+        {
+            var email = $"{loc.Id}@vinh-khanh.test".ToLowerInvariant();
+            var password = "Merchant@1234";
+            var (success, error, _) = authService.Register(
+                loc.Name,
+                email,
+                password,
+                "merchant"
+            );
+            if (success)
+            {
+                System.Console.WriteLine($"  ✅ Merchant: {loc.Name} ({email})");
+                merchantCount++;
+            }
+            else if (!error?.Contains("already") ?? false)
+            {
+                System.Console.WriteLine($"  ⚠️  {loc.Name}: {error}");
+            }
+        }
+        System.Console.WriteLine($"\n📊 {merchantCount} merchant account(s) created/available");
+    }
+    catch (Exception ex)
+    {
+        System.Console.WriteLine($"⚠️  Error creating merchant accounts: {ex.Message}");
+    }
 }
 
 app.UseDefaultFiles();
@@ -142,7 +194,8 @@ static ClaimsPrincipal CreateUserPrincipal(AuthUserResponse user)
     {
         new(ClaimTypes.NameIdentifier, user.Id),
         new(ClaimTypes.Name, user.FullName),
-        new(ClaimTypes.Email, user.Email)
+        new(ClaimTypes.Email, user.Email),
+        new(ClaimTypes.Role, user.Role)
     };
 
     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -154,7 +207,7 @@ app.MapPost("/api/auth/register", async (
     IUserAuthService userAuthService,
     HttpContext httpContext) =>
 {
-    var result = userAuthService.Register(request.FullName, request.Email, request.Password);
+    var result = userAuthService.Register(request.FullName, request.Email, request.Password, request.Role);
     if (!result.Success || result.User is null)
     {
         return Results.BadRequest(new { message = result.Error ?? "Không thể đăng ký tài khoản." });
@@ -172,7 +225,7 @@ app.MapPost("/api/auth/login", async (
     IUserAuthService userAuthService,
     HttpContext httpContext) =>
 {
-    var result = userAuthService.Login(request.Email, request.Password);
+    var result = userAuthService.Login(request.Email, request.Password, request.Role);
     if (!result.Success || result.User is null)
     {
         return Results.Json(
@@ -204,7 +257,8 @@ app.MapGet("/api/auth/me", (HttpContext httpContext) =>
     {
         Id = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty,
         FullName = httpContext.User.FindFirstValue(ClaimTypes.Name) ?? string.Empty,
-        Email = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty
+        Email = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
+        Role = httpContext.User.FindFirstValue(ClaimTypes.Role) ?? "user"
     };
 
     return Results.Ok(user);
@@ -816,5 +870,245 @@ app.MapGet("/api/admin/logs/visits", (
 
     return Results.Ok(adminManagementService.GetVisitLogs(take));
 });
+
+// Merchant Request APIs
+app.MapPost("/api/merchant/requests", (
+    MerchantRequest request,
+    HttpContext httpContext,
+    IAdminManagementService adminManagementService) =>
+{
+    if (httpContext.User.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    var userEmail = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+    var fullName = httpContext.User.FindFirstValue(ClaimTypes.Name) ?? userEmail;
+    var role = httpContext.User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+
+    if (!role.Equals("merchant", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(
+            new { message = "Chỉ tài khoản chủ quán mới được gửi yêu cầu." },
+            statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var newRequest = new MerchantRequest
+    {
+        Id = Guid.NewGuid().ToString("N"),
+        LocationId = request.LocationId,
+        MerchantEmail = userEmail,
+        MerchantName = fullName,
+        RequestType = request.RequestType,
+        Title = request.Title,
+        Description = request.Description,
+        Status = "pending",
+        CampaignStartAt = request.CampaignStartAt,
+        CampaignEndAt = request.CampaignEndAt,
+        CreatedAt = DateTimeOffset.UtcNow
+    };
+
+    var created = adminManagementService.SubmitMerchantRequest(newRequest);
+    return Results.Ok(new { message = "Yêu cầu đã được gửi tới admin", request = created });
+})
+.WithName("SubmitMerchantRequest")
+.RequireAuthorization();
+
+app.MapGet("/api/merchant/requests", (
+    HttpContext httpContext,
+    IAdminManagementService adminManagementService) =>
+{
+    if (httpContext.User.Identity?.IsAuthenticated != true)
+    {
+        return Results.Unauthorized();
+    }
+
+    var userEmail = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+    var role = httpContext.User.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
+
+    if (!role.Equals("merchant", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.Json(
+            new { message = "Chỉ tài khoản chủ quán mới được xem lịch sử yêu cầu." },
+            statusCode: StatusCodes.Status403Forbidden);
+    }
+
+    var requests = adminManagementService.GetMerchantRequests(currentUserEmail: userEmail);
+    return Results.Ok(requests);
+})
+.WithName("GetMyMerchantRequests")
+.RequireAuthorization();
+
+app.MapGet("/api/admin/merchant-requests", (
+    HttpContext httpContext,
+    IOptions<AdminOptions> adminOptions,
+    IAdminManagementService adminManagementService,
+    string? status = null) =>
+{
+    if (!IsAdmin(httpContext.Request, adminOptions))
+    {
+        return UnauthorizedAdmin();
+    }
+
+    var requests = adminManagementService.GetMerchantRequests(status: status);
+    return Results.Ok(requests);
+})
+.WithName("GetAllMerchantRequests");
+
+app.MapGet("/api/public/merchant-ads", (
+    IAdminManagementService adminManagementService,
+    ILocationContentService locationContentService,
+    int take = 12,
+    string? type = null,
+    string? time = null) =>
+{
+    var locations = locationContentService
+        .GetAll()
+        .ToDictionary(x => x.Id, StringComparer.OrdinalIgnoreCase);
+
+    var normalizedType = string.IsNullOrWhiteSpace(type)
+        ? "all"
+        : type.Trim().ToLowerInvariant();
+    var normalizedTime = string.IsNullOrWhiteSpace(time)
+        ? "all"
+        : time.Trim().ToLowerInvariant();
+    var now = DateTimeOffset.UtcNow;
+
+    var query = adminManagementService
+        .GetMerchantRequests(status: "approved")
+        .Where(x => x.RequestType.Equals("promotion", StringComparison.OrdinalIgnoreCase)
+            || x.RequestType.Equals("advertisement", StringComparison.OrdinalIgnoreCase));
+
+    if (normalizedType.Equals("promotion", StringComparison.OrdinalIgnoreCase)
+        || normalizedType.Equals("advertisement", StringComparison.OrdinalIgnoreCase))
+    {
+        query = query.Where(x => x.RequestType.Equals(normalizedType, StringComparison.OrdinalIgnoreCase));
+    }
+
+    if (normalizedTime.Equals("active", StringComparison.OrdinalIgnoreCase))
+    {
+        query = query.Where(x => (!x.CampaignStartAt.HasValue || x.CampaignStartAt.Value <= now)
+            && (!x.CampaignEndAt.HasValue || x.CampaignEndAt.Value >= now));
+    }
+    else if (normalizedTime.Equals("today", StringComparison.OrdinalIgnoreCase))
+    {
+        var start = now.Date;
+        var end = start.AddDays(1).AddTicks(-1);
+        query = query.Where(x => (x.CampaignStartAt ?? x.ReviewedAt ?? x.CreatedAt) <= end
+            && (x.CampaignEndAt ?? x.ReviewedAt ?? x.CreatedAt) >= start);
+    }
+    else if (normalizedTime.Equals("week", StringComparison.OrdinalIgnoreCase))
+    {
+        var start = now.Date;
+        var end = start.AddDays(7).AddTicks(-1);
+        query = query.Where(x => (x.CampaignStartAt ?? x.ReviewedAt ?? x.CreatedAt) <= end
+            && (x.CampaignEndAt ?? x.ReviewedAt ?? x.CreatedAt) >= start);
+    }
+
+    var ads = query
+        .OrderByDescending(x => x.IsPinnedTop)
+        .ThenByDescending(x => x.PriorityScore)
+        .ThenByDescending(x => x.ReviewedAt ?? x.CreatedAt)
+        .Take(Math.Clamp(take, 1, 30))
+        .Select(x => new
+        {
+            x.Id,
+            x.LocationId,
+            locationName = locations.TryGetValue(x.LocationId, out var location) ? location.Name : x.LocationId,
+            x.Title,
+            x.Description,
+            x.RequestType,
+            approvedAt = x.ReviewedAt ?? x.CreatedAt,
+            merchantName = x.MerchantName,
+            x.IsPinnedTop,
+            x.PriorityScore,
+            x.CampaignStartAt,
+            x.CampaignEndAt
+        });
+
+    return Results.Ok(ads);
+})
+.WithName("GetPublicMerchantAds");
+
+app.MapPost("/api/admin/merchant-requests/{requestId}/approve", (
+    string requestId,
+    HttpContext httpContext,
+    IOptions<AdminOptions> adminOptions,
+    IAdminManagementService adminManagementService) =>
+{
+    if (!IsAdmin(httpContext.Request, adminOptions))
+    {
+        return UnauthorizedAdmin();
+    }
+
+    var adminEmail = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? "admin";
+    var updated = adminManagementService.ApproveMerchantRequest(requestId, adminEmail);
+    if (updated == null)
+    {
+        return Results.NotFound(new { message = "Yêu cầu không tìm thấy" });
+    }
+
+    return Results.Ok(new { message = "Yêu cầu đã được duyệt", request = updated });
+})
+.WithName("ApproveMerchantRequest");
+
+app.MapPost("/api/admin/merchant-requests/{requestId}/reject", (
+    string requestId,
+    HttpContext httpContext,
+    IOptions<AdminOptions> adminOptions,
+    IAdminManagementService adminManagementService,
+    string? response = null) =>
+{
+    if (!IsAdmin(httpContext.Request, adminOptions))
+    {
+        return UnauthorizedAdmin();
+    }
+
+    var adminEmail = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? "admin";
+    var updated = adminManagementService.RejectMerchantRequest(requestId, adminEmail, response ?? "Bị từ chối");
+    if (updated == null)
+    {
+        return Results.NotFound(new { message = "Yêu cầu không tìm thấy" });
+    }
+
+    return Results.Ok(new { message = "Yêu cầu đã bị từ chối", request = updated });
+})
+.WithName("RejectMerchantRequest");
+
+app.MapPost("/api/admin/merchant-requests/{requestId}/highlight", (
+    string requestId,
+    HttpContext httpContext,
+    IOptions<AdminOptions> adminOptions,
+    IAdminManagementService adminManagementService,
+    bool isPinnedTop = false,
+    int priorityScore = 0,
+    DateTimeOffset? campaignStartAt = null,
+    DateTimeOffset? campaignEndAt = null) =>
+{
+    if (!IsAdmin(httpContext.Request, adminOptions))
+    {
+        return UnauthorizedAdmin();
+    }
+
+    if (campaignStartAt.HasValue && campaignEndAt.HasValue && campaignStartAt > campaignEndAt)
+    {
+        return Results.BadRequest(new { message = "Khoảng thời gian chiến dịch không hợp lệ." });
+    }
+
+    var updated = adminManagementService.UpdateMerchantRequestHighlight(
+        requestId,
+        isPinnedTop,
+        priorityScore,
+        campaignStartAt,
+        campaignEndAt);
+
+    if (updated == null)
+    {
+        return Results.NotFound(new { message = "Yêu cầu không tìm thấy" });
+    }
+
+    return Results.Ok(new { message = "Đã cập nhật ưu tiên quảng cáo", request = updated });
+})
+.WithName("UpdateMerchantRequestHighlight");
 
 app.Run();

@@ -36,8 +36,6 @@ const visitLogsTable = document.getElementById('visitLogsTable');
 const merchantSubmissionsTable = document.getElementById('merchantSubmissionsTable');
 const refreshMerchantSubmissionsBtn = document.getElementById('refreshMerchantSubmissions');
 
-const MERCHANT_SUBMISSION_STORAGE_KEY = 'merchantDraftSubmissions';
-
 const locationFields = {
   id: document.getElementById('locationId'),
   name: document.getElementById('locationName'),
@@ -130,17 +128,31 @@ function safe(text) {
     .replaceAll("'", '&#39;');
 }
 
-function getMerchantSubmissions() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(MERCHANT_SUBMISSION_STORAGE_KEY) || '[]');
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+function formatLocalDateTime(value) {
+  if (!value) {
+    return '-';
   }
+
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) {
+    return '-';
+  }
+
+  return dt.toLocaleString('vi-VN');
 }
 
-function saveMerchantSubmissions(items) {
-  localStorage.setItem(MERCHANT_SUBMISSION_STORAGE_KEY, JSON.stringify(items));
+function toInputDateTimeLocal(value) {
+  if (!value) {
+    return '';
+  }
+
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) {
+    return '';
+  }
+
+  const pad = (x) => String(x).padStart(2, '0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
 }
 
 function fillForm(fields, data) {
@@ -420,54 +432,70 @@ async function loadLogs() {
   `;
 }
 
-function updateMerchantSubmissionStatus(id, status) {
-  const items = getMerchantSubmissions();
-  const index = items.findIndex((x) => x.id === id);
-  if (index < 0) {
+async function updateMerchantSubmissionStatus(id, action) {
+  if (!id || (action !== 'approve' && action !== 'reject')) {
     return;
   }
 
-  items[index] = {
-    ...items[index],
-    status,
-    note: status === 'Đã duyệt' ? 'Admin đã duyệt nội dung.' : 'Admin đã từ chối, cần chỉnh sửa lại.',
-    reviewedAt: new Date().toISOString()
-  };
+  if (action === 'approve') {
+    await adminFetch(`/api/admin/merchant-requests/${encodeURIComponent(id)}/approve`, { method: 'POST' });
+    await renderMerchantSubmissions();
+    return;
+  }
 
-  saveMerchantSubmissions(items);
-  renderMerchantSubmissions();
+  const responseText = prompt('Nhập lý do từ chối (gửi lại cho chủ quán):', 'Nội dung chưa đạt, vui lòng chỉnh sửa và gửi lại.');
+  if (responseText === null) {
+    return;
+  }
+
+  const query = responseText.trim()
+    ? `?response=${encodeURIComponent(responseText.trim())}`
+    : '';
+  await adminFetch(`/api/admin/merchant-requests/${encodeURIComponent(id)}/reject${query}`, { method: 'POST' });
+  await renderMerchantSubmissions();
 }
 
-function renderMerchantSubmissions() {
+async function renderMerchantSubmissions() {
   if (!merchantSubmissionsTable) {
     return;
   }
 
-  const items = getMerchantSubmissions()
-    .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  const items = await adminFetch('/api/admin/merchant-requests');
 
   merchantSubmissionsTable.innerHTML = `
     <thead>
       <tr>
-        <th>Thời gian gửi</th>
+        <th>Thời gian</th>
+        <th>Loại</th>
+        <th>Tiêu đề</th>
         <th>Chủ quán</th>
         <th>Quán</th>
-        <th>Ngôn ngữ</th>
         <th>Trạng thái</th>
+        <th>Pin / Priority</th>
+        <th>Thời gian chạy</th>
+        <th>Phản hồi</th>
         <th>Hành động</th>
       </tr>
     </thead>
     <tbody>
-      ${items.length === 0 ? '<tr><td colspan="6">Chưa có đề xuất nào từ chủ quán.</td></tr>' : items.map((item) => `
+      ${items.length === 0 ? '<tr><td colspan="10">Chưa có đề xuất nào từ chủ quán.</td></tr>' : items.map((item) => `
         <tr>
-          <td>${safe(new Date(item.submittedAt).toLocaleString('vi-VN'))}</td>
+          <td>${safe(new Date(item.createdAt).toLocaleString('vi-VN'))}</td>
+          <td>${safe(item.requestType || 'other')}</td>
+          <td>${safe(item.title || '-')}</td>
           <td>${safe(item.merchantName || item.merchantEmail || '-')}</td>
           <td>${safe(item.locationName || item.locationId || '-')}</td>
-          <td>${safe(item.language || 'vi')}</td>
-          <td>${safe(item.status || 'Chờ duyệt')}</td>
+          <td>${safe(item.status || 'pending')}</td>
+          <td>${item.isPinnedTop ? 'TOP' : '-'} / ${safe(item.priorityScore ?? 0)}</td>
+          <td>${safe(formatLocalDateTime(item.campaignStartAt))} → ${safe(formatLocalDateTime(item.campaignEndAt))}</td>
+          <td>${safe(item.adminResponse || '')}</td>
           <td>
-            <button type="button" class="button button-secondary submission-action" data-id="${safe(item.id)}" data-action="approve">Duyệt</button>
-            <button type="button" class="button button-secondary submission-action" data-id="${safe(item.id)}" data-action="reject">Từ chối</button>
+            ${item.status === 'pending'
+              ? `<button type="button" class="button button-secondary submission-action" data-id="${safe(item.id)}" data-action="approve">Duyệt</button>
+                 <button type="button" class="button button-secondary submission-action" data-id="${safe(item.id)}" data-action="reject">Từ chối</button>`
+              : item.status === 'approved'
+                ? `<button type="button" class="button button-secondary submission-action" data-id="${safe(item.id)}" data-action="highlight">Set TOP</button>`
+                : '<span style="color:var(--text-secondary)">Đã xử lý</span>'}
           </td>
         </tr>
       `).join('')}
@@ -482,11 +510,48 @@ function renderMerchantSubmissions() {
         return;
       }
 
-      if (action === 'approve') {
-        updateMerchantSubmissionStatus(id, 'Đã duyệt');
-      } else {
-        updateMerchantSubmissionStatus(id, 'Từ chối');
+      if (action === 'highlight') {
+        const target = items.find((x) => x.id === id);
+        if (!target) {
+          return;
+        }
+
+        const pinned = confirm('Đặt quảng cáo này lên TOP?\nOK = ghim TOP | Cancel = bỏ TOP');
+        const priorityInput = prompt('Nhập độ ưu tiên 0-100 (cao hơn sẽ lên trước):', String(target.priorityScore ?? (pinned ? 80 : 0)));
+        if (priorityInput === null) {
+          return;
+        }
+
+        const startInput = prompt('Thời gian bắt đầu (yyyy-MM-ddTHH:mm), để trống = không giới hạn:', toInputDateTimeLocal(target.campaignStartAt));
+        if (startInput === null) {
+          return;
+        }
+
+        const endInput = prompt('Thời gian kết thúc (yyyy-MM-ddTHH:mm), để trống = không giới hạn:', toInputDateTimeLocal(target.campaignEndAt));
+        if (endInput === null) {
+          return;
+        }
+
+        const priorityScore = Number.parseInt(priorityInput, 10);
+        const query = new URLSearchParams();
+        query.set('isPinnedTop', String(pinned));
+        query.set('priorityScore', String(Number.isFinite(priorityScore) ? priorityScore : 0));
+        if (startInput.trim()) {
+          query.set('campaignStartAt', new Date(startInput.trim()).toISOString());
+        }
+        if (endInput.trim()) {
+          query.set('campaignEndAt', new Date(endInput.trim()).toISOString());
+        }
+
+        void adminFetch(`/api/admin/merchant-requests/${encodeURIComponent(id)}/highlight?${query.toString()}`, { method: 'POST' })
+          .then(() => renderMerchantSubmissions())
+          .catch((error) => alert(error?.message || 'Không cập nhật được ưu tiên quảng cáo.'));
+        return;
       }
+
+      void updateMerchantSubmissionStatus(id, action).catch((error) => {
+        alert(error?.message || 'Không xử lý được yêu cầu.');
+      });
     });
   });
 }
@@ -501,7 +566,7 @@ async function refreshAll() {
   ]);
 
   await loadAdminNarrationSources();
-  renderMerchantSubmissions();
+  await renderMerchantSubmissions();
 }
 
 locationForm.addEventListener('submit', async (event) => {
@@ -680,7 +745,9 @@ refreshAllBtn.addEventListener('click', async () => {
 
 if (refreshMerchantSubmissionsBtn) {
   refreshMerchantSubmissionsBtn.addEventListener('click', () => {
-    renderMerchantSubmissions();
+    void renderMerchantSubmissions().catch((error) => {
+      alert(error?.message || 'Không tải được danh sách đề xuất.');
+    });
   });
 }
 
@@ -699,5 +766,7 @@ if (refreshMerchantSubmissionsBtn) {
     }
   }
 
-  renderMerchantSubmissions();
+  void renderMerchantSubmissions().catch((error) => {
+    console.error(error);
+  });
 })();

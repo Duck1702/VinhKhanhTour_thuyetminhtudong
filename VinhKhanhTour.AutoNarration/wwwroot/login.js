@@ -152,6 +152,7 @@ async function onSubmit(event) {
   const submitButton = loginForm.querySelector('button[type="submit"]');
   const email = document.getElementById('email')?.value?.trim() || '';
   const password = document.getElementById('password')?.value || '';
+  const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
 
   if (submitButton) {
     submitButton.disabled = true;
@@ -162,7 +163,7 @@ async function onSubmit(event) {
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, role })
     });
 
     const data = await response.json().catch(() => ({}));
@@ -170,8 +171,21 @@ async function onSubmit(event) {
       throw new Error(data.message || t('failed'));
     }
 
+    // Lưu role vào localStorage
+    localStorage.setItem('userRole', role);
+
     setMessage(t('success'), false);
-    window.location.href = getReturnUrl();
+    
+    // Chuyển hướng dựa trên role
+    const lang = getLang();
+    let redirectUrl = `/?lang=${encodeURIComponent(lang)}`;
+    if (role === 'merchant') {
+      redirectUrl = `/merchant.html?lang=${encodeURIComponent(lang)}`;
+    } else if (role === 'admin') {
+      redirectUrl = `/admin.html?lang=${encodeURIComponent(lang)}`;
+    }
+    
+    window.location.href = redirectUrl;
   } catch (error) {
     setMessage(error.message || t('generic'), true);
   } finally {
@@ -186,9 +200,34 @@ if (registerLink) {
   registerLink.href = `/register.html?lang=${encodeURIComponent(getLang())}&returnUrl=${encodeURIComponent(getReturnUrl())}`;
 }
 
+function setupRoleSelector() {
+  const roleTabs = document.querySelectorAll('.role-tab');
+  const roleInput = document.getElementById('selectedRole');
+
+  roleTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      roleTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      if (roleInput) {
+        roleInput.value = tab.dataset.role || 'user';
+      }
+
+      const roleContents = document.querySelectorAll('.role-tab-content');
+      roleContents.forEach(content => content.classList.remove('active'));
+      
+      const activeContent = document.querySelector(`.role-tab-content[data-role="${tab.dataset.role}"]`);
+      if (activeContent) {
+        activeContent.classList.add('active');
+      }
+    });
+  });
+}
+
 if (loginForm) {
   loginForm.addEventListener('submit', onSubmit);
 }
 
 applyText();
+setupRoleSelector();
 void checkAuthenticated();
