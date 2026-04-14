@@ -84,6 +84,69 @@
     </div>
   </section>
 
+  <section id="merchantAdsSection">
+    <div class="section-header">
+      <div class="icon">📢</div>
+      <div>
+        <div class="section-num">Deals</div>
+        <h2 id="merchantAdsTitle">Khám phá Vĩnh Khánh với vô vàn ưu đãi</h2>
+      </div>
+    </div>
+
+    <div class="ad-filter-row">
+      <label>
+        <span id="adsTypeFilterLabel">Loại quảng cáo</span>
+        <select id="adsTypeFilter">
+          <option id="adsTypeOptionAll" value="all">Tất cả</option>
+          <option id="adsTypeOptionPromotion" value="promotion">Khuyến mãi</option>
+          <option id="adsTypeOptionAdvertisement" value="advertisement">Quảng cáo</option>
+        </select>
+      </label>
+      <label>
+        <span id="adsTimeFilterLabel">Thời gian</span>
+        <select id="adsTimeFilter">
+          <option id="adsTimeOptionAll" value="all">Tất cả thời gian</option>
+          <option id="adsTimeOptionActive" value="active">Đang diễn ra</option>
+          <option id="adsTimeOptionToday" value="today">Trong hôm nay</option>
+          <option id="adsTimeOptionWeek" value="week">7 ngày</option>
+        </select>
+      </label>
+      <button id="adsFilterApplyBtn" type="button" class="button button-secondary">Lọc</button>
+    </div>
+
+    <div id="merchantAdsCarousel" class="merchant-ads-carousel" aria-label="Carousel ưu đãi quán ăn">
+      <button id="merchantAdsPrevBtn" class="merchant-ads-nav merchant-ads-nav-prev" type="button" aria-label="Ưu đãi trước">
+        ‹
+      </button>
+      <div class="merchant-ads-window">
+        <div id="merchantAdsGrid" class="merchant-ads-grid">
+          <article class="card merchant-ad-card merchant-ad-slide-item"><p>Đang tải ưu đãi mới nhất...</p></article>
+        </div>
+      </div>
+      <button id="merchantAdsNextBtn" class="merchant-ads-nav merchant-ads-nav-next" type="button" aria-label="Ưu đãi tiếp theo">
+        ›
+      </button>
+    </div>
+    <div id="merchantAdsDots" class="merchant-ads-dots" aria-label="Điều hướng ưu đãi"></div>
+  </section>
+
+  <div id="merchantAdModal" class="merchant-ad-modal hidden" role="dialog" aria-modal="true" aria-labelledby="merchantAdModalTitle">
+    <button type="button" class="merchant-ad-modal-backdrop" data-ad-modal-close aria-label="Đóng chi tiết ưu đãi"></button>
+    <article class="merchant-ad-modal-card">
+      <div class="merchant-ad-modal-head">
+        <h3 id="merchantAdModalTitle">Chi tiết ưu đãi</h3>
+        <button type="button" class="button button-secondary" id="merchantAdModalCloseBtn">Đóng</button>
+      </div>
+      <p id="merchantAdModalMeta" class="merchant-ad-modal-meta"></p>
+      <p id="merchantAdModalDesc" class="merchant-ad-modal-desc"></p>
+      <p id="merchantAdModalTime" class="merchant-ad-modal-time"></p>
+      <div class="merchant-ad-modal-actions">
+        <a id="merchantAdModalDetailLink" class="button button-primary" href="/scan-narration.html">Xem thông tin quán</a>
+        <a id="merchantAdModalMapLink" class="button button-secondary" href="/ban-do.html">Mở bản đồ</a>
+      </div>
+    </article>
+  </div>
+
   <!-- OVERVIEW -->
   <section id="gioi-thieu">
     <div class="section-header">
@@ -107,31 +170,6 @@
         <h3 data-i18n="home_overview_card3_title">3. Du lịch thông minh</h3>
         <p data-i18n="home_overview_card3_desc">Website được thiết kế để gắn QR tại các địa điểm. Khách du lịch quét mã, nghe thuyết minh bằng mọi ngôn ngữ và tiếp cận thông tin offline dễ dàng.</p>
       </article>
-    </div>
-  </section>
-
-  <section id="trai-nghiem-day-du">
-    <div class="section-header">
-      <div class="icon">🧭</div>
-      <div>
-        <div class="section-num">Chapter 02</div>
-        <h2 data-i18n="detail_timeline_title">Gợi ý trải nghiệm (Timeline)</h2>
-      </div>
-    </div>
-
-    <div class="timeline">
-      <div class="timeline-item">
-        <h4 data-i18n="detail_stop1_title">1. Từ Quận 1 di chuyển qua (18:00)</h4>
-        <p data-i18n="detail_stop1_desc">Hướng đi dọc ngã Đồng Khởi → Tôn Đức Thắng → Cầu Khánh Hội → Đoàn Như Hài → Hoàng Diệu → Vĩnh Khánh.</p>
-      </div>
-      <div class="timeline-item">
-        <h4 data-i18n="detail_stop2_title">2. Điểm mạnh chính (19:00 - 21:00)</h4>
-        <p data-i18n="detail_stop2_desc">Ghé các trụ cột như Ốc Oanh, Ốc Vũ, Thảo Ốc. Nơi đây là điểm nóng nhất, rất nhộn nhịp.</p>
-      </div>
-      <div class="timeline-item">
-        <h4 data-i18n="detail_stop3_title">3. Trạm nghỉ cuối (22:00)</h4>
-        <p data-i18n="detail_stop3_desc">Cảm nhận nhịp chậm hơn tại những quán Bê Ốc hoặc nhâm nhi đồ ngọt trước khi kết thúc lịch trình.</p>
-      </div>
     </div>
   </section>
 
@@ -185,102 +223,6 @@
     <div id="assistantResult" class="result-box hidden">
       <p><strong data-i18n="assistant_answer_label">Trả lời:</strong> <span id="assistantAnswer"></span></p>
       <p><strong data-i18n="assistant_suggested_label">Gợi ý địa điểm:</strong> <span id="assistantSuggested"></span></p>
-    </div>
-  </section>
-
-  <section id="accountDashboard">
-    <div class="section-header">
-      <div class="icon">👤</div>
-      <div>
-        <div class="section-num">My Dashboard</div>
-        <h2>Tài khoản cá nhân</h2>
-      </div>
-    </div>
-
-    <div class="account-summary">
-      <div class="account-identity">
-        <h3 id="accountFullName">Đang tải thông tin...</h3>
-        <p id="accountEmail" class="account-email"></p>
-      </div>
-      <button id="accountLogoutBtn" type="button" class="button button-secondary">Đăng xuất</button>
-    </div>
-
-    <div class="stats-row account-metrics">
-      <div class="stat-card">
-        <div id="metricVisits" class="value">0</div>
-        <div class="label">Lượt truy cập gần đây</div>
-      </div>
-      <div class="stat-card">
-        <div id="metricNarrations" class="value">0</div>
-        <div class="label">Lượt tạo thuyết minh</div>
-      </div>
-      <div class="stat-card">
-        <div id="metricRoutes" class="value">0</div>
-        <div class="label">Lịch trình đã gợi ý</div>
-      </div>
-    </div>
-
-    <div class="card-grid account-history-grid">
-      <article class="card">
-        <h3>Đã đi tới đâu</h3>
-        <ul id="visitHistoryList" class="account-history-list">
-          <li>Chưa có dữ liệu.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <h3>Gợi ý lịch trình đã tạo</h3>
-        <ul id="routeHistoryList" class="account-history-list">
-          <li>Chưa có dữ liệu.</li>
-        </ul>
-      </article>
-      <article class="card">
-        <h3>Lịch sử thuyết minh</h3>
-        <ul id="narrationHistoryList" class="account-history-list">
-          <li>Chưa có dữ liệu.</li>
-        </ul>
-      </article>
-    </div>
-  </section>
-
-  <section id="merchantAdsSection">
-    <div class="section-header">
-      <div class="icon">📢</div>
-      <div>
-        <div class="section-num">Deals</div>
-        <h2>Ưu đãi và quảng cáo từ quán ăn</h2>
-      </div>
-    </div>
-
-    <div class="ad-filter-row">
-      <label>
-        Loại quảng cáo
-        <select id="adsTypeFilter">
-          <option value="all">Tất cả</option>
-          <option value="promotion">Khuyến mãi</option>
-          <option value="advertisement">Quảng cáo</option>
-        </select>
-      </label>
-      <label>
-        Thời gian
-        <select id="adsTimeFilter">
-          <option value="all">Tất cả thời gian</option>
-          <option value="active">Đang diễn ra</option>
-          <option value="today">Trong hôm nay</option>
-          <option value="week">7 ngày</option>
-        </select>
-      </label>
-      <button id="adsFilterApplyBtn" type="button" class="button button-secondary">Lọc</button>
-    </div>
-
-    <div id="merchantAdsGrid" class="card-grid merchant-ads-grid">
-      <article class="card"><p>Đang tải ưu đãi mới nhất...</p></article>
-    </div>
-  </section>
-
-  <!-- PATTERNS / FOOTER -->
-  <section id="footer">
-    <div class="highlight info">
-      <strong>VinhKhanhTour Auto Narration:</strong> <span data-i18n="home_footer_desc">Được xây dựng cho việc tự động hóa dịch ngôn ngữ và giọng đọc. Kết hợp API và giao diện UI tĩnh phục vụ PWA.</span>
     </div>
   </section>
 

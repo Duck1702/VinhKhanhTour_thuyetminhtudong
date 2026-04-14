@@ -49,6 +49,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
         }.ToDictionary(x => x.Id, StringComparer.OrdinalIgnoreCase);
 
         _templates = new Dictionary<string, NarrationTemplate>(StringComparer.OrdinalIgnoreCase);
+
+        _merchantRequests.AddRange(SeedMerchantRequests());
     }
 
     private static IReadOnlyCollection<StreetLocation> SeedLocations() =>
@@ -394,6 +396,72 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             Longitude = 106.703902
         }
     ];
+
+    private static IReadOnlyCollection<MerchantRequest> SeedMerchantRequests()
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        return
+        [
+            new MerchantRequest
+            {
+                Id = "seed-promo-oc-oanh",
+                LocationId = "oc-oanh",
+                MerchantEmail = "merchant.oc-oanh@vinhkhanh.local",
+                MerchantName = "Ốc Oanh",
+                RequestType = "promotion",
+                Title = "Combo Hải Sản Đêm Giảm 20%",
+                Description = "Giảm 20% cho combo 3 món ốc + 1 nước khi đi theo nhóm từ 3 người sau 20:00.",
+                Status = "approved",
+                AdminResponse = "Đã duyệt hiển thị thử nghiệm",
+                IsPinnedTop = true,
+                PriorityScore = 98,
+                CampaignStartAt = now.AddDays(-1),
+                CampaignEndAt = now.AddDays(7),
+                CreatedAt = now.AddDays(-2),
+                ReviewedAt = now.AddDays(-1),
+                ReviewedBy = "admin@vinhkhanh.local"
+            },
+            new MerchantRequest
+            {
+                Id = "seed-ad-oc-vu",
+                LocationId = "oc-vu",
+                MerchantEmail = "merchant.oc-vu@vinhkhanh.local",
+                MerchantName = "Ốc Vũ",
+                RequestType = "advertisement",
+                Title = "Món Signature Sốt Me Trứng Muối",
+                Description = "Đặt bàn trước 19:00 để được tặng 1 phần nước chấm đặc biệt và ưu tiên lên món nhanh.",
+                Status = "approved",
+                AdminResponse = "Đã duyệt hiển thị thử nghiệm",
+                IsPinnedTop = false,
+                PriorityScore = 86,
+                CampaignStartAt = now.AddDays(-2),
+                CampaignEndAt = now.AddDays(5),
+                CreatedAt = now.AddDays(-3),
+                ReviewedAt = now.AddDays(-2),
+                ReviewedBy = "admin@vinhkhanh.local"
+            },
+            new MerchantRequest
+            {
+                Id = "seed-promo-chilli",
+                LocationId = "chilli-bbq-hotpot",
+                MerchantEmail = "merchant.chilli@vinhkhanh.local",
+                MerchantName = "Chilli BBQ Hotpot",
+                RequestType = "promotion",
+                Title = "Happy Hour Lẩu Nướng 79K",
+                Description = "Khung giờ 17:00 - 19:00: combo lẩu + nướng đồng giá 79K/người cho bàn từ 2 khách.",
+                Status = "approved",
+                AdminResponse = "Đã duyệt hiển thị thử nghiệm",
+                IsPinnedTop = false,
+                PriorityScore = 83,
+                CampaignStartAt = now.AddHours(-12),
+                CampaignEndAt = now.AddDays(10),
+                CreatedAt = now.AddDays(-1),
+                ReviewedAt = now.AddHours(-10),
+                ReviewedBy = "admin@vinhkhanh.local"
+            }
+        ];
+    }
 
     public IReadOnlyCollection<StreetLocation> GetAll()
     {

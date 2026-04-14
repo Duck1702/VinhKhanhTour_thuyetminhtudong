@@ -5,19 +5,31 @@ const assistantQuestion = document.getElementById('assistantQuestion');
 const assistantResult = document.getElementById('assistantResult');
 const assistantAnswer = document.getElementById('assistantAnswer');
 const assistantSuggested = document.getElementById('assistantSuggested');
-const accountFullName = document.getElementById('accountFullName');
-const accountEmail = document.getElementById('accountEmail');
-const accountLogoutBtn = document.getElementById('accountLogoutBtn');
-const metricVisits = document.getElementById('metricVisits');
-const metricNarrations = document.getElementById('metricNarrations');
-const metricRoutes = document.getElementById('metricRoutes');
-const visitHistoryList = document.getElementById('visitHistoryList');
-const routeHistoryList = document.getElementById('routeHistoryList');
-const narrationHistoryList = document.getElementById('narrationHistoryList');
 const merchantAdsGrid = document.getElementById('merchantAdsGrid');
 const adsTypeFilter = document.getElementById('adsTypeFilter');
 const adsTimeFilter = document.getElementById('adsTimeFilter');
 const adsFilterApplyBtn = document.getElementById('adsFilterApplyBtn');
+const merchantAdsCarousel = document.getElementById('merchantAdsCarousel');
+const merchantAdsPrevBtn = document.getElementById('merchantAdsPrevBtn');
+const merchantAdsNextBtn = document.getElementById('merchantAdsNextBtn');
+const merchantAdsDots = document.getElementById('merchantAdsDots');
+const merchantAdModal = document.getElementById('merchantAdModal');
+const merchantAdModalTitle = document.getElementById('merchantAdModalTitle');
+const merchantAdModalMeta = document.getElementById('merchantAdModalMeta');
+const merchantAdModalDesc = document.getElementById('merchantAdModalDesc');
+const merchantAdModalTime = document.getElementById('merchantAdModalTime');
+const merchantAdModalDetailLink = document.getElementById('merchantAdModalDetailLink');
+const merchantAdModalMapLink = document.getElementById('merchantAdModalMapLink');
+const merchantAdModalCloseBtn = document.getElementById('merchantAdModalCloseBtn');
+
+const MERCHANT_AD_FALLBACK_IMAGES = [
+  '/assets/vinh-khanh-banner.jpg',
+  '/assets/vinh-khanh-street.jpg',
+  '/assets/map.svg'
+];
+let merchantAdsData = [];
+let merchantAdsCurrentIndex = 0;
+let merchantAdsAutoSlideTimer;
 
 const SITE_LANGUAGE_KEY = 'siteLanguage';
 
@@ -78,6 +90,210 @@ const i18n = {
     featuredHint: '선택한 언어로 바로 재생됩니다'
   }
 };
+
+const dealsI18n = {
+  vi: {
+    sectionTitle: 'Khám phá Vĩnh Khánh với vô vàn ưu đãi',
+    typeLabel: 'Loại quảng cáo',
+    timeLabel: 'Thời gian',
+    typeAll: 'Tất cả',
+    typePromotion: 'Khuyến mãi',
+    typeAdvertisement: 'Quảng cáo',
+    timeAll: 'Tất cả thời gian',
+    timeActive: 'Đang diễn ra',
+    timeToday: 'Trong hôm nay',
+    timeWeek: '7 ngày',
+    applyFilter: 'Lọc',
+    carouselAria: 'Carousel ưu đãi quán ăn',
+    prevAria: 'Ưu đãi trước',
+    nextAria: 'Ưu đãi tiếp theo',
+    dotsAria: 'Điều hướng ưu đãi',
+    dotAria: (index) => `Xem ưu đãi ${index + 1}`,
+    loading: 'Đang tải ưu đãi mới nhất...',
+    empty: 'Hiện chưa có ưu đãi nào được duyệt.',
+    openCta: 'Bấm để xem chi tiết ưu đãi',
+    requestPromotion: 'Khuyến mãi',
+    requestAdvertisement: 'Quảng cáo',
+    topTag: 'TOP',
+    fallbackTitle: 'Ưu đãi từ quán',
+    fallbackLocation: 'Quán ăn',
+    fallbackDescription: 'Ưu đãi đang được cập nhật chi tiết.',
+    now: 'Ngay bây giờ',
+    unlimited: 'Không giới hạn',
+    detailButton: 'Xem ưu đãi chi tiết',
+    mapButton: 'Mở bản đồ',
+    modalTitle: 'Chi tiết ưu đãi',
+    modalClose: 'Đóng',
+    modalDetailLink: 'Xem thông tin quán',
+    modalMapLink: 'Mở bản đồ',
+    modalCloseAria: 'Đóng chi tiết ưu đãi',
+    apiError: 'Không tải được quảng cáo từ quán ăn.'
+  },
+  en: {
+    sectionTitle: 'Explore Vinh Khanh with plenty of offers',
+    typeLabel: 'Ad type',
+    timeLabel: 'Time',
+    typeAll: 'All',
+    typePromotion: 'Promotion',
+    typeAdvertisement: 'Advertisement',
+    timeAll: 'All time',
+    timeActive: 'Active now',
+    timeToday: 'Today',
+    timeWeek: '7 days',
+    applyFilter: 'Filter',
+    carouselAria: 'Restaurant offers carousel',
+    prevAria: 'Previous offer',
+    nextAria: 'Next offer',
+    dotsAria: 'Offer navigation',
+    dotAria: (index) => `View offer ${index + 1}`,
+    loading: 'Loading latest offers...',
+    empty: 'No approved offers yet.',
+    openCta: 'Tap to view offer details',
+    requestPromotion: 'Promotion',
+    requestAdvertisement: 'Advertisement',
+    topTag: 'TOP',
+    fallbackTitle: 'Offer from restaurant',
+    fallbackLocation: 'Restaurant',
+    fallbackDescription: 'Offer details are being updated.',
+    now: 'Now',
+    unlimited: 'No limit',
+    detailButton: 'View offer details',
+    mapButton: 'Open map',
+    modalTitle: 'Offer details',
+    modalClose: 'Close',
+    modalDetailLink: 'View restaurant details',
+    modalMapLink: 'Open map',
+    modalCloseAria: 'Close offer details',
+    apiError: 'Unable to load restaurant offers.'
+  },
+  fr: {
+    sectionTitle: 'Decouvrez Vinh Khanh avec de nombreuses offres',
+    typeLabel: 'Type',
+    timeLabel: 'Periode',
+    typeAll: 'Tout',
+    typePromotion: 'Promotion',
+    typeAdvertisement: 'Publicite',
+    timeAll: 'Toute periode',
+    timeActive: 'En cours',
+    timeToday: 'Aujourd hui',
+    timeWeek: '7 jours',
+    applyFilter: 'Filtrer',
+    carouselAria: 'Carrousel des offres',
+    prevAria: 'Offre precedente',
+    nextAria: 'Offre suivante',
+    dotsAria: 'Navigation des offres',
+    dotAria: (index) => `Voir offre ${index + 1}`,
+    loading: 'Chargement des offres...',
+    empty: 'Aucune offre approuvee pour le moment.',
+    openCta: 'Touchez pour voir les details',
+    requestPromotion: 'Promotion',
+    requestAdvertisement: 'Publicite',
+    topTag: 'TOP',
+    fallbackTitle: 'Offre du restaurant',
+    fallbackLocation: 'Restaurant',
+    fallbackDescription: 'Details en cours de mise a jour.',
+    now: 'Maintenant',
+    unlimited: 'Sans limite',
+    detailButton: 'Voir les details',
+    mapButton: 'Ouvrir la carte',
+    modalTitle: 'Details de l offre',
+    modalClose: 'Fermer',
+    modalDetailLink: 'Voir le restaurant',
+    modalMapLink: 'Ouvrir la carte',
+    modalCloseAria: 'Fermer les details',
+    apiError: 'Impossible de charger les offres.'
+  },
+  ja: {
+    sectionTitle: '特典いっぱいのビンカインを探索',
+    typeLabel: '広告タイプ',
+    timeLabel: '期間',
+    typeAll: 'すべて',
+    typePromotion: 'キャンペーン',
+    typeAdvertisement: '広告',
+    timeAll: 'すべての期間',
+    timeActive: '開催中',
+    timeToday: '本日',
+    timeWeek: '7日間',
+    applyFilter: '絞り込み',
+    carouselAria: '特典カルーセル',
+    prevAria: '前の特典',
+    nextAria: '次の特典',
+    dotsAria: '特典ナビゲーション',
+    dotAria: (index) => `特典 ${index + 1} を表示`,
+    loading: '最新特典を読み込み中...',
+    empty: '承認済み特典はまだありません。',
+    openCta: 'タップして詳細を見る',
+    requestPromotion: 'キャンペーン',
+    requestAdvertisement: '広告',
+    topTag: 'TOP',
+    fallbackTitle: '店舗からの特典',
+    fallbackLocation: '店舗',
+    fallbackDescription: '特典詳細を更新中です。',
+    now: '今すぐ',
+    unlimited: '期限なし',
+    detailButton: '特典詳細を見る',
+    mapButton: '地図を開く',
+    modalTitle: '特典詳細',
+    modalClose: '閉じる',
+    modalDetailLink: '店舗情報を見る',
+    modalMapLink: '地図を開く',
+    modalCloseAria: '特典詳細を閉じる',
+    apiError: '特典を読み込めません。'
+  },
+  ko: {
+    sectionTitle: '다양한 혜택으로 빈칸 탐험하기',
+    typeLabel: '광고 유형',
+    timeLabel: '기간',
+    typeAll: '전체',
+    typePromotion: '프로모션',
+    typeAdvertisement: '광고',
+    timeAll: '전체 기간',
+    timeActive: '진행 중',
+    timeToday: '오늘',
+    timeWeek: '7일',
+    applyFilter: '필터',
+    carouselAria: '혜택 캐러셀',
+    prevAria: '이전 혜택',
+    nextAria: '다음 혜택',
+    dotsAria: '혜택 탐색',
+    dotAria: (index) => `혜택 ${index + 1} 보기`,
+    loading: '최신 혜택 불러오는 중...',
+    empty: '승인된 혜택이 아직 없습니다.',
+    openCta: '눌러서 혜택 상세 보기',
+    requestPromotion: '프로모션',
+    requestAdvertisement: '광고',
+    topTag: 'TOP',
+    fallbackTitle: '매장 혜택',
+    fallbackLocation: '매장',
+    fallbackDescription: '혜택 상세를 업데이트 중입니다.',
+    now: '지금',
+    unlimited: '기한 없음',
+    detailButton: '혜택 상세 보기',
+    mapButton: '지도 열기',
+    modalTitle: '혜택 상세',
+    modalClose: '닫기',
+    modalDetailLink: '매장 정보 보기',
+    modalMapLink: '지도 열기',
+    modalCloseAria: '혜택 상세 닫기',
+    apiError: '매장 혜택을 불러올 수 없습니다.'
+  }
+};
+
+function getDealsText(lang) {
+  return dealsI18n[lang] ?? dealsI18n.vi;
+}
+
+function getDateLocale(lang) {
+  const map = {
+    vi: 'vi-VN',
+    en: 'en-US',
+    fr: 'fr-FR',
+    ja: 'ja-JP',
+    ko: 'ko-KR'
+  };
+
+  return map[lang] ?? 'vi-VN';
+}
 
 let quickPlayer;
 
@@ -168,6 +384,7 @@ async function playInstantNarration(locationId, locationName, lang) {
 
 function applyI18n(lang) {
   const t = i18n[lang] ?? i18n.vi;
+  const dealText = getDealsText(lang);
   const heroTitle = document.getElementById('heroTitle');
   const heroSubtitle = document.getElementById('heroSubtitle');
   const heroPrimary = document.getElementById('heroPrimaryAction');
@@ -183,6 +400,39 @@ function applyI18n(lang) {
   if (featuredTitle) featuredTitle.textContent = t.featuredTitle;
   if (modalTitle) modalTitle.textContent = t.modalTitle;
   if (modalHint) modalHint.textContent = t.modalHint;
+
+  const merchantAdsTitle = document.getElementById('merchantAdsTitle');
+  const adsTypeFilterLabel = document.getElementById('adsTypeFilterLabel');
+  const adsTimeFilterLabel = document.getElementById('adsTimeFilterLabel');
+  const adsTypeOptionAll = document.getElementById('adsTypeOptionAll');
+  const adsTypeOptionPromotion = document.getElementById('adsTypeOptionPromotion');
+  const adsTypeOptionAdvertisement = document.getElementById('adsTypeOptionAdvertisement');
+  const adsTimeOptionAll = document.getElementById('adsTimeOptionAll');
+  const adsTimeOptionActive = document.getElementById('adsTimeOptionActive');
+  const adsTimeOptionToday = document.getElementById('adsTimeOptionToday');
+  const adsTimeOptionWeek = document.getElementById('adsTimeOptionWeek');
+  const modalBackdrop = merchantAdModal?.querySelector('[data-ad-modal-close]');
+
+  if (merchantAdsTitle) merchantAdsTitle.textContent = dealText.sectionTitle;
+  if (adsTypeFilterLabel) adsTypeFilterLabel.textContent = dealText.typeLabel;
+  if (adsTimeFilterLabel) adsTimeFilterLabel.textContent = dealText.timeLabel;
+  if (adsTypeOptionAll) adsTypeOptionAll.textContent = dealText.typeAll;
+  if (adsTypeOptionPromotion) adsTypeOptionPromotion.textContent = dealText.typePromotion;
+  if (adsTypeOptionAdvertisement) adsTypeOptionAdvertisement.textContent = dealText.typeAdvertisement;
+  if (adsTimeOptionAll) adsTimeOptionAll.textContent = dealText.timeAll;
+  if (adsTimeOptionActive) adsTimeOptionActive.textContent = dealText.timeActive;
+  if (adsTimeOptionToday) adsTimeOptionToday.textContent = dealText.timeToday;
+  if (adsTimeOptionWeek) adsTimeOptionWeek.textContent = dealText.timeWeek;
+  if (adsFilterApplyBtn) adsFilterApplyBtn.textContent = dealText.applyFilter;
+  if (merchantAdsCarousel) merchantAdsCarousel.setAttribute('aria-label', dealText.carouselAria);
+  if (merchantAdsPrevBtn) merchantAdsPrevBtn.setAttribute('aria-label', dealText.prevAria);
+  if (merchantAdsNextBtn) merchantAdsNextBtn.setAttribute('aria-label', dealText.nextAria);
+  if (merchantAdsDots) merchantAdsDots.setAttribute('aria-label', dealText.dotsAria);
+  if (merchantAdModalTitle) merchantAdModalTitle.textContent = dealText.modalTitle;
+  if (merchantAdModalCloseBtn) merchantAdModalCloseBtn.textContent = dealText.modalClose;
+  if (merchantAdModalDetailLink) merchantAdModalDetailLink.textContent = dealText.modalDetailLink;
+  if (merchantAdModalMapLink) merchantAdModalMapLink.textContent = dealText.modalMapLink;
+  if (modalBackdrop) modalBackdrop.setAttribute('aria-label', dealText.modalCloseAria);
 
   if (window.siteI18n?.applySiteLanguage) {
     window.siteI18n.applySiteLanguage(lang);
@@ -325,100 +575,177 @@ function initLanguageModal() {
       setLang(lang);
       applyI18n(lang);
       languageModal.classList.add('hidden');
+      await loadMerchantAds();
       await renderFeaturedLocations(lang);
     });
   });
 }
 
-function formatDateTime(value) {
-  if (!value) {
-    return '';
-  }
-
-  const dt = new Date(value);
-  if (Number.isNaN(dt.getTime())) {
-    return '';
-  }
-
-  return dt.toLocaleString('vi-VN');
-}
-
-function renderHistoryList(container, items) {
-  if (!container) {
+function initMerchantAdModal() {
+  if (!merchantAdModal) {
     return;
   }
 
-  if (!items || items.length === 0) {
-    container.innerHTML = '<li>Chưa có dữ liệu.</li>';
-    return;
-  }
+  const closeModal = () => {
+    merchantAdModal.classList.add('hidden');
+  };
 
-  container.innerHTML = items.map((item) => `<li>${item}</li>`).join('');
-}
+  merchantAdModalCloseBtn?.addEventListener('click', closeModal);
+  merchantAdModal.querySelector('[data-ad-modal-close]')?.addEventListener('click', closeModal);
 
-async function loadAccountDashboard() {
-  if (!accountFullName || !accountEmail) {
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/account/dashboard');
-    if (!response.ok) {
-      throw new Error('Không tải được dữ liệu tài khoản.');
+  merchantAdModal.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
     }
 
-    const data = await response.json();
-    const user = data.user || {};
-    const metrics = data.metrics || {};
-    const visits = Array.isArray(data.visitHistory) ? data.visitHistory : [];
-    const routes = Array.isArray(data.routeHistory) ? data.routeHistory : [];
-    const narrations = Array.isArray(data.narrationHistory) ? data.narrationHistory : [];
-
-    accountFullName.textContent = user.fullName || 'Tài khoản cá nhân';
-    accountEmail.textContent = user.email || '';
-
-    if (metricVisits) {
-      metricVisits.textContent = String(metrics.totalVisits ?? visits.length ?? 0);
-    }
-
-    if (metricNarrations) {
-      metricNarrations.textContent = String(metrics.totalNarrations ?? narrations.length ?? 0);
-    }
-
-    if (metricRoutes) {
-      metricRoutes.textContent = String(metrics.totalRoutes ?? routes.length ?? 0);
-    }
-
-    renderHistoryList(visitHistoryList, visits.map((x) => `${escapeHtml(x.path || '/')} - ${formatDateTime(x.visitedAt)}`));
-    renderHistoryList(routeHistoryList, routes.map((x) => {
-      const pref = x.preferences ? ` | sở thích: ${escapeHtml(x.preferences)}` : '';
-      const stops = x.stopSummary ? ` | điểm: ${escapeHtml(x.stopSummary)}` : '';
-      return `${escapeHtml(x.planTitle || 'Lộ trình')} (${escapeHtml(x.generatedBy || 'AI')})${pref}${stops} - ${formatDateTime(x.createdAt)}`;
-    }));
-    renderHistoryList(narrationHistoryList, narrations.map((x) => {
-      const locationName = x.locationName || 'Nội dung tùy chỉnh';
-      return `${escapeHtml(locationName)} | ${escapeHtml(x.targetLanguage || '')} | ${escapeHtml(x.voiceName || '')} - ${formatDateTime(x.generatedAt)}`;
-    }));
-  } catch (error) {
-    accountFullName.textContent = 'Không tải được dashboard';
-    accountEmail.textContent = error.message || 'Vui lòng thử lại.';
-  }
-}
-
-function initAccountLogout() {
-  if (!accountLogoutBtn) {
-    return;
-  }
-
-  accountLogoutBtn.addEventListener('click', async () => {
-    accountLogoutBtn.setAttribute('disabled', 'disabled');
-
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-    } finally {
-      window.location.href = '/login.html';
+    if (target.hasAttribute('data-ad-modal-close')) {
+      closeModal();
     }
   });
+}
+
+function stopMerchantAdsAutoSlide() {
+  if (merchantAdsAutoSlideTimer) {
+    clearInterval(merchantAdsAutoSlideTimer);
+    merchantAdsAutoSlideTimer = undefined;
+  }
+}
+
+function updateMerchantAdsDots() {
+  if (!merchantAdsDots) {
+    return;
+  }
+
+  const dots = merchantAdsDots.querySelectorAll('[data-ad-dot-index]');
+  dots.forEach((dot, index) => {
+    dot.classList.toggle('active', index === merchantAdsCurrentIndex);
+  });
+}
+
+function showMerchantAdSlide(index) {
+  if (!merchantAdsGrid || merchantAdsData.length === 0) {
+    return;
+  }
+
+  const safeIndex = ((index % merchantAdsData.length) + merchantAdsData.length) % merchantAdsData.length;
+  merchantAdsCurrentIndex = safeIndex;
+  merchantAdsGrid.style.transform = `translateX(-${safeIndex * 100}%)`;
+  updateMerchantAdsDots();
+}
+
+function startMerchantAdsAutoSlide() {
+  stopMerchantAdsAutoSlide();
+
+  if (merchantAdsData.length <= 1) {
+    return;
+  }
+
+  merchantAdsAutoSlideTimer = setInterval(() => {
+    showMerchantAdSlide(merchantAdsCurrentIndex + 1);
+  }, 5000);
+}
+
+function renderMerchantAdsDots() {
+  if (!merchantAdsDots) {
+    return;
+  }
+
+  if (merchantAdsData.length <= 1) {
+    merchantAdsDots.innerHTML = '';
+    return;
+  }
+
+  const lang = getLang();
+  const dealText = getDealsText(lang);
+
+  merchantAdsDots.innerHTML = merchantAdsData
+    .map((_, index) => `<button type="button" class="merchant-ads-dot" data-ad-dot-index="${index}" aria-label="${escapeHtml(dealText.dotAria(index))}"></button>`)
+    .join('');
+
+  merchantAdsDots.querySelectorAll('[data-ad-dot-index]').forEach((dot) => {
+    dot.addEventListener('click', () => {
+      const index = Number(dot.getAttribute('data-ad-dot-index'));
+      if (Number.isNaN(index)) {
+        return;
+      }
+
+      showMerchantAdSlide(index);
+      startMerchantAdsAutoSlide();
+    });
+  });
+
+  updateMerchantAdsDots();
+}
+
+function initMerchantAdsCarouselControls() {
+  merchantAdsPrevBtn?.addEventListener('click', () => {
+    showMerchantAdSlide(merchantAdsCurrentIndex - 1);
+    startMerchantAdsAutoSlide();
+  });
+
+  merchantAdsNextBtn?.addEventListener('click', () => {
+    showMerchantAdSlide(merchantAdsCurrentIndex + 1);
+    startMerchantAdsAutoSlide();
+  });
+
+  merchantAdsGrid?.addEventListener('mouseenter', stopMerchantAdsAutoSlide);
+  merchantAdsGrid?.addEventListener('mouseleave', startMerchantAdsAutoSlide);
+}
+
+function getMerchantAdImages(item) {
+  const fromPayload = [
+    item.imageUrl,
+    item.thumbnailUrl,
+    item.bannerUrl,
+    item.coverImage,
+    item.photoUrl
+  ].filter((value) => typeof value === 'string' && value.trim().length > 0);
+
+  const uniqueImages = [...new Set([...fromPayload, ...MERCHANT_AD_FALLBACK_IMAGES])];
+  return uniqueImages.slice(0, 3);
+}
+
+function openMerchantAdModal(item) {
+  if (!merchantAdModal) {
+    return;
+  }
+
+  const lang = getLang();
+  const locale = getDateLocale(lang);
+  const dealText = getDealsText(lang);
+  const locationId = item.locationId || '';
+  const locationName = item.locationName || locationId || dealText.fallbackLocation;
+  const title = item.title || dealText.fallbackTitle;
+  const description = item.description || dealText.fallbackDescription;
+  const campaignStart = item.campaignStartAt ? new Date(item.campaignStartAt).toLocaleString(locale) : dealText.now;
+  const campaignEnd = item.campaignEndAt ? new Date(item.campaignEndAt).toLocaleString(locale) : dealText.unlimited;
+
+  if (merchantAdModalTitle) {
+    merchantAdModalTitle.textContent = title;
+  }
+
+  if (merchantAdModalMeta) {
+    merchantAdModalMeta.textContent = `${item.requestType === 'promotion' ? dealText.requestPromotion : dealText.requestAdvertisement} | ${locationName}`;
+  }
+
+  if (merchantAdModalDesc) {
+    merchantAdModalDesc.textContent = description;
+  }
+
+  if (merchantAdModalTime) {
+    merchantAdModalTime.textContent = `${campaignStart} - ${campaignEnd}`;
+  }
+
+  if (merchantAdModalDetailLink) {
+    merchantAdModalDetailLink.href = `/scan-narration.html?locationId=${encodeURIComponent(locationId)}&lang=${encodeURIComponent(lang)}`;
+  }
+
+  if (merchantAdModalMapLink) {
+    merchantAdModalMapLink.href = `/ban-do.html?locationId=${encodeURIComponent(locationId)}&lang=${encodeURIComponent(lang)}`;
+  }
+
+  merchantAdModal.classList.remove('hidden');
 }
 
 async function loadMerchantAds() {
@@ -427,6 +754,9 @@ async function loadMerchantAds() {
   }
 
   try {
+    const lang = getLang();
+    const locale = getDateLocale(lang);
+    const dealText = getDealsText(lang);
     const selectedType = adsTypeFilter?.value || 'all';
     const selectedTime = adsTimeFilter?.value || 'all';
     const query = new URLSearchParams({
@@ -436,35 +766,76 @@ async function loadMerchantAds() {
     });
     const response = await fetch(`/api/public/merchant-ads?${query.toString()}`);
     if (!response.ok) {
-      throw new Error('Không tải được quảng cáo từ quán ăn.');
+      throw new Error(dealText.apiError);
     }
 
     const ads = await response.json();
     if (!Array.isArray(ads) || ads.length === 0) {
-      merchantAdsGrid.innerHTML = '<article class="card"><p>Hiện chưa có ưu đãi nào được duyệt.</p></article>';
+      merchantAdsData = [];
+      merchantAdsGrid.style.transform = 'translateX(0)';
+      merchantAdsGrid.innerHTML = `<article class="card merchant-ad-card merchant-ad-slide-item"><p>${escapeHtml(dealText.empty)}</p></article>`;
+      if (merchantAdsDots) {
+        merchantAdsDots.innerHTML = '';
+      }
+      stopMerchantAdsAutoSlide();
       return;
     }
 
-    const lang = getLang();
-    merchantAdsGrid.innerHTML = ads.map((item) => `
-      <article class="card merchant-ad-card">
+    merchantAdsData = ads;
+    merchantAdsCurrentIndex = 0;
+    merchantAdsGrid.style.transform = 'translateX(0)';
+
+    merchantAdsGrid.innerHTML = ads.map((item, index) => {
+      const adImages = getMerchantAdImages(item);
+      return `
+      <article class="card merchant-ad-card merchant-ad-slide-item">
+        <button type="button" class="merchant-ad-media" data-open-ad="${index}" aria-label="${escapeHtml(`${dealText.modalTitle} ${item.title || dealText.fallbackLocation}`)}">
+          <img class="merchant-ad-slide merchant-ad-slide-a" src="${escapeHtml(adImages[0])}" alt="${escapeHtml(item.locationName || dealText.fallbackLocation)}">
+          <img class="merchant-ad-slide merchant-ad-slide-b" src="${escapeHtml(adImages[1] || adImages[0])}" alt="${escapeHtml(item.locationName || dealText.fallbackLocation)}">
+          <img class="merchant-ad-slide merchant-ad-slide-c" src="${escapeHtml(adImages[2] || adImages[0])}" alt="${escapeHtml(item.locationName || dealText.fallbackLocation)}">
+          <span class="merchant-ad-media-cta">${escapeHtml(dealText.openCta)}</span>
+        </button>
         <div class="card-head">
-          <span class="tag">${escapeHtml(item.requestType === 'promotion' ? 'Khuyến mãi' : 'Quảng cáo')}</span>
-          ${item.isPinnedTop ? '<span class="tag ad-top-tag">TOP</span>' : ''}
-          <span class="tag" style="background:var(--bg); color:var(--text-secondary); border: 1px solid var(--border);">${escapeHtml(new Date(item.approvedAt).toLocaleDateString('vi-VN'))}</span>
+          <span class="tag">${escapeHtml(item.requestType === 'promotion' ? dealText.requestPromotion : dealText.requestAdvertisement)}</span>
+          ${item.isPinnedTop ? `<span class="tag ad-top-tag">${escapeHtml(dealText.topTag)}</span>` : ''}
+          <span class="tag" style="background:var(--bg); color:var(--text-secondary); border: 1px solid var(--border);">${escapeHtml(new Date(item.approvedAt).toLocaleDateString(locale))}</span>
         </div>
-        <h3>${escapeHtml(item.title || 'Ưu đãi từ quán')}</h3>
-        <p><strong>${escapeHtml(item.locationName || item.locationId || 'Quán ăn')}</strong></p>
+        <h3>${escapeHtml(item.title || dealText.fallbackTitle)}</h3>
+        <p><strong>${escapeHtml(item.locationName || item.locationId || dealText.fallbackLocation)}</strong></p>
         <p>${escapeHtml(item.description || '')}</p>
-        <p class="merchant-ad-time">${escapeHtml(item.campaignStartAt ? new Date(item.campaignStartAt).toLocaleString('vi-VN') : 'Ngay bây giờ')} - ${escapeHtml(item.campaignEndAt ? new Date(item.campaignEndAt).toLocaleString('vi-VN') : 'Không giới hạn')}</p>
+        <p class="merchant-ad-time">${escapeHtml(item.campaignStartAt ? new Date(item.campaignStartAt).toLocaleString(locale) : dealText.now)} - ${escapeHtml(item.campaignEndAt ? new Date(item.campaignEndAt).toLocaleString(locale) : dealText.unlimited)}</p>
         <div class="merchant-ad-actions">
-          <a class="button button-primary" href="/scan-narration.html?locationId=${encodeURIComponent(item.locationId || '')}&lang=${encodeURIComponent(lang)}">Xem chi tiết quán</a>
-          <a class="button button-secondary" href="/ban-do.html?locationId=${encodeURIComponent(item.locationId || '')}&lang=${encodeURIComponent(lang)}">Mở bản đồ</a>
+          <button type="button" class="button button-primary" data-open-ad="${index}">${escapeHtml(dealText.detailButton)}</button>
+          <a class="button button-secondary" href="/ban-do.html?locationId=${encodeURIComponent(item.locationId || '')}&lang=${encodeURIComponent(lang)}">${escapeHtml(dealText.mapButton)}</a>
         </div>
       </article>
-    `).join('');
+    `;
+    }).join('');
+
+    merchantAdsGrid.querySelectorAll('[data-open-ad]').forEach((element) => {
+      element.addEventListener('click', () => {
+        const adIndex = Number(element.getAttribute('data-open-ad'));
+        if (Number.isNaN(adIndex) || !merchantAdsData[adIndex]) {
+          return;
+        }
+
+        openMerchantAdModal(merchantAdsData[adIndex]);
+      });
+    });
+
+    renderMerchantAdsDots();
+    showMerchantAdSlide(0);
+    startMerchantAdsAutoSlide();
   } catch (error) {
-    merchantAdsGrid.innerHTML = `<article class="card"><p>${escapeHtml(error?.message || 'Không tải được ưu đãi.')}</p></article>`;
+    const lang = getLang();
+    const dealText = getDealsText(lang);
+    merchantAdsData = [];
+    merchantAdsGrid.style.transform = 'translateX(0)';
+    merchantAdsGrid.innerHTML = `<article class="card merchant-ad-card merchant-ad-slide-item"><p>${escapeHtml(error?.message || dealText.apiError)}</p></article>`;
+    if (merchantAdsDots) {
+      merchantAdsDots.innerHTML = '';
+    }
+    stopMerchantAdsAutoSlide();
   }
 }
 
@@ -473,7 +844,8 @@ async function loadMerchantAds() {
   applyI18n(lang);
   initLanguageModal();
   initAssistant();
-  initAccountLogout();
+  initMerchantAdModal();
+  initMerchantAdsCarouselControls();
 
   adsFilterApplyBtn?.addEventListener('click', () => {
     void loadMerchantAds();
@@ -487,7 +859,6 @@ async function loadMerchantAds() {
     void loadMerchantAds();
   });
 
-  await loadAccountDashboard();
   await loadMerchantAds();
   await renderFeaturedLocations(lang);
 })();
