@@ -12,7 +12,7 @@ public sealed class InMemoryUserAuthService : IUserAuthService
 
     private readonly ConcurrentDictionary<string, UserAccount> _usersByEmail = new(StringComparer.OrdinalIgnoreCase);
 
-    public (bool Success, string? Error, AuthUserResponse? User) Register(string fullName, string email, string password, string role = "user")
+    public (bool Success, string? Error, AuthUserResponse? User) Register(string fullName, string email, string password, string role = "merchant")
     {
         var normalizedEmail = NormalizeEmail(email);
         var normalizedName = fullName?.Trim() ?? string.Empty;
@@ -33,8 +33,8 @@ public sealed class InMemoryUserAuthService : IUserAuthService
         }
 
         // Validate role is one of the valid values
-        var validRoles = new[] { "user", "admin", "merchant" };
-        if (!validRoles.Contains(role?.ToLowerInvariant() ?? "user"))
+        var validRoles = new[] { "admin", "merchant" };
+        if (!validRoles.Contains(role?.ToLowerInvariant() ?? "merchant"))
         {
             return (false, "Vai trò không hợp lệ.", null);
         }
@@ -54,7 +54,7 @@ public sealed class InMemoryUserAuthService : IUserAuthService
             Email = normalizedEmail,
             PasswordSalt = Convert.ToBase64String(salt),
             PasswordHash = Convert.ToBase64String(hash),
-            Role = role?.ToLowerInvariant() ?? "user",
+            Role = role?.ToLowerInvariant() ?? "merchant",
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -66,7 +66,7 @@ public sealed class InMemoryUserAuthService : IUserAuthService
         return (true, null, ToAuthUser(user));
     }
 
-    public (bool Success, string? Error, AuthUserResponse? User) Login(string email, string password, string role = "user")
+    public (bool Success, string? Error, AuthUserResponse? User) Login(string email, string password, string role = "merchant")
     {
         var normalizedEmail = NormalizeEmail(email);
         if (string.IsNullOrWhiteSpace(normalizedEmail) || string.IsNullOrWhiteSpace(password))
@@ -75,8 +75,8 @@ public sealed class InMemoryUserAuthService : IUserAuthService
         }
 
         // Normalize and validate role
-        role = role?.ToLowerInvariant() ?? "user";
-        var validRoles = new[] { "user", "admin", "merchant" };
+        role = role?.ToLowerInvariant() ?? "merchant";
+        var validRoles = new[] { "admin", "merchant" };
         if (!validRoles.Contains(role))
         {
             return (false, "Vai trò không hợp lệ.", null);

@@ -21,9 +21,7 @@ const pageMessages = {
     card_phone: 'SĐT',
     card_price: 'Giá tham khảo',
     card_highlight: 'Điểm nhấn',
-    btn_narrate: '🔊 Thuyết minh bằng giọng nói',
-    btn_qr: '📱 Tạo QR nghe thuyết minh',
-    btn_stop: '⏹ Dừng',
+    btn_payment: '💳 Thanh toán để xem chi tiết & nghe thuyết minh',
     btn_close: 'Đóng',
     btn_open_link: 'Mở link',
     qr_title: 'QR nghe thuyết minh',
@@ -57,9 +55,7 @@ const pageMessages = {
     card_phone: 'Phone',
     card_price: 'Price range',
     card_highlight: 'Highlights',
-    btn_narrate: '🔊 Voice narration',
-    btn_qr: '📱 Generate narration QR',
-    btn_stop: '⏹ Stop',
+    btn_payment: '💳 Pay to view details & listen',
     btn_close: 'Close',
     btn_open_link: 'Open link',
     qr_title: 'Narration QR',
@@ -93,9 +89,7 @@ const pageMessages = {
     card_phone: 'Telephone',
     card_price: 'Gamme de prix',
     card_highlight: 'Points forts',
-    btn_narrate: '🔊 Narration vocale',
-    btn_qr: '📱 Generer QR narration',
-    btn_stop: '⏹ Arreter',
+    btn_payment: '💳 Payer pour voir les details & ecouter',
     btn_close: 'Fermer',
     btn_open_link: 'Ouvrir le lien',
     qr_title: 'QR narration',
@@ -129,9 +123,7 @@ const pageMessages = {
     card_phone: '電話番号',
     card_price: '価格帯',
     card_highlight: 'おすすめ',
-    btn_narrate: '🔊 音声ガイド',
-    btn_qr: '📱 音声QRを作成',
-    btn_stop: '⏹ 停止',
+    btn_payment: '💳 支払って詳細と解説を見る',
     btn_close: '閉じる',
     btn_open_link: 'リンクを開く',
     qr_title: '音声QR',
@@ -165,9 +157,7 @@ const pageMessages = {
     card_phone: '전화번호',
     card_price: '가격대',
     card_highlight: '포인트',
-    btn_narrate: '🔊 음성 안내',
-    btn_qr: '📱 음성 QR 만들기',
-    btn_stop: '⏹ 정지',
+    btn_payment: '💳 결제 후 상세 및 설명 보기',
     btn_close: '닫기',
     btn_open_link: '링크 열기',
     qr_title: '음성 QR',
@@ -706,6 +696,16 @@ async function playNarrationInstant(location) {
   const selectedLang = getPreferredLanguage();
   let narrationLocation = location;
 
+  if (!window.narrationPayment?.payForNarration) {
+    throw new Error('Thiếu mô-đun thanh toán thuyết minh.');
+  }
+
+  const payment = await window.narrationPayment.payForNarration({
+    locationId: location.id,
+    targetLanguage: selectedLang,
+    locationName: location.name
+  });
+
   // Hard lock: when Vietnamese is selected, always narrate from raw Vietnamese source data.
   if (selectedLang === 'vi') {
     const raw = (Array.isArray(rawLocations) ? rawLocations : []).find((item) => item.id === location.id);
@@ -734,12 +734,14 @@ async function playNarrationInstant(location) {
 
   if (selectedLang === 'vi') {
     try {
-      const response = await fetch('/api/narrations/instant', {
+      const response = await fetch('/api/public/narrations/instant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locationId: narrationLocation.id,
-          targetLanguage: 'vi'
+          targetLanguage: 'vi',
+          participantId: payment.participantId,
+          paymentToken: payment.paymentToken
         })
       });
 
@@ -795,10 +797,16 @@ async function playNarrationInstant(location) {
 }
 
 function localizeLocationsByCurrentLanguage(locations) {
+  console.log('localizeLocationsByCurrentLanguage input:', locations);
   const lang = getPreferredLanguage();
-  return (Array.isArray(locations) ? locations : []).map((item) => (
-    window.localizeLocationData ? window.localizeLocationData(item, lang) : item
-  ));
+  console.log('Current language:', lang);
+  const result = (Array.isArray(locations) ? locations : []).map((item) => {
+    const localized = window.localizeLocationData ? window.localizeLocationData(item, lang) : item;
+    console.log('Localized item:', item.id, localized);
+    return localized;
+  });
+  console.log('localizeLocationsByCurrentLanguage output count:', result.length);
+  return result;
 }
 
 function getNarrationLocationById(locationId) {
@@ -817,6 +825,14 @@ function getNarrationLocationById(locationId) {
 
 function renderFoodGroups(locations) {
   if (!foodGroupsHost) {
+    console.error('foodGroupsHost not found');
+    return;
+  }
+
+  console.log('Rendering with locations count:', locations?.length);
+  
+  if (!locations || locations.length === 0) {
+    foodGroupsHost.innerHTML = `<article class="card">${escapeHtml(pageText('no_data'))}</article>`;
     return;
   }
 
@@ -851,17 +867,8 @@ function renderFoodGroups(locations) {
             <h3>${escapeHtml(location.name)}</h3>
             <p>${escapeHtml(location.shortIntro)}</p>
             <p>${escapeHtml(location.descriptionVi)}</p>
-            <div class="card-meta">
-              <span><strong>${escapeHtml(pageText('card_address'))}:</strong> ${escapeHtml(location.address)}</span>
-              <span><strong>${escapeHtml(pageText('card_hours'))}:</strong> ${escapeHtml(location.openingHours)}</span>
-              <span><strong>${escapeHtml(pageText('card_phone'))}:</strong> ${escapeHtml(location.contactPhone || pageText('na'))}</span>
-              <span><strong>${escapeHtml(pageText('card_price'))}:</strong> ${escapeHtml(location.priceRange || pageText('na'))}</span>
-              <span><strong>${escapeHtml(pageText('card_highlight'))}:</strong> ${escapeHtml(location.highlight)}</span>
-            </div>
             <div class="food-card-actions">
-              <button type="button" class="button button-primary" data-location-id="${escapeHtml(location.id)}">${escapeHtml(pageText('btn_narrate'))}</button>
-              <button type="button" class="button button-secondary" data-location-qr-id="${escapeHtml(location.id)}">${escapeHtml(pageText('btn_qr'))}</button>
-              <button type="button" class="button button-secondary" data-stop-audio="true">${escapeHtml(pageText('btn_stop'))}</button>
+              <button type="button" class="button button-primary" data-payment-id="${escapeHtml(location.id)}">${escapeHtml(pageText('btn_payment'))}</button>
             </div>
           </article>
         `)
@@ -946,14 +953,17 @@ async function initFoodPage() {
       window.speechSynthesis.addEventListener('voiceschanged', refreshBrowserVoices);
     }
 
-    const response = await fetch('/api/locations');
+    const response = await fetch('/api/public/locations');
     if (!response.ok) {
       throw new Error(pageText('loading_places_failed'));
     }
 
     const data = await response.json();
+    console.log('API response:', data);
     rawLocations = Array.isArray(data) ? data : (data.value ?? []);
+    console.log('rawLocations:', rawLocations);
     allLocations = localizeLocationsByCurrentLanguage(rawLocations);
+    console.log('allLocations:', allLocations);
 
     renderFoodGroups(applySearchFilter());
 
@@ -963,50 +973,17 @@ async function initFoodPage() {
       });
     }
 
-    foodGroupsHost.addEventListener('click', async (event) => {
-      const stopButton = event.target.closest('[data-stop-audio]');
-      if (stopButton) {
-        stopNarrationPlayback();
-        return;
-      }
-
-      const button = event.target.closest('[data-location-id]');
-      const qrButton = event.target.closest('[data-location-qr-id]');
-      if (qrButton) {
-        const qrLocationId = qrButton.getAttribute('data-location-qr-id');
-        const qrLocation = getNarrationLocationById(qrLocationId);
-        if (qrLocation) {
-          openQrModalForLocation(qrLocation);
-        }
-        return;
-      }
-
-      if (!button) {
-        return;
-      }
-
-      const locationId = button.getAttribute('data-location-id');
-      const location = getNarrationLocationById(locationId);
-      if (!location) {
-        return;
-      }
-
-      const previousText = button.textContent;
-      button.setAttribute('disabled', 'disabled');
-      button.textContent = pageText('state_generating');
-
-      try {
-        await playNarrationInstant(location);
-      } catch (error) {
-        speakWithBrowserTts(location);
-        alert(`${error.message}\nĐã chuyển sang đọc bằng giọng trình duyệt.`);
-      } finally {
-        button.removeAttribute('disabled');
-        button.textContent = previousText;
+    foodGroupsHost.addEventListener('click', (event) => {
+      const paymentButton = event.target.closest('[data-payment-id]');
+      if (paymentButton) {
+        const locationId = paymentButton.getAttribute('data-payment-id');
+        const currentLang = getPreferredLanguage();
+        window.location.href = `/payment.html?locationId=${encodeURIComponent(locationId)}&lang=${encodeURIComponent(currentLang)}`;
       }
     });
   } catch (error) {
-    foodGroupsHost.innerHTML = `<article class="card card-skeleton">${escapeHtml(error.message)}</article>`;
+    console.error('Error initializing food page:', error);
+    foodGroupsHost.innerHTML = `<article class="card card-skeleton">❌ Lỗi: ${escapeHtml(String(error.message || error))}</article>`;
   }
 }
 

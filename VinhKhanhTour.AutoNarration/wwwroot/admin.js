@@ -2,7 +2,8 @@ const adminKeyInput = document.getElementById('adminKey');
 const saveAdminKeyBtn = document.getElementById('saveAdminKey');
 const refreshAllBtn = document.getElementById('refreshAll');
 const dashboardStats = document.getElementById('dashboardStats');
-const topPages = document.getElementById('topPages');
+const userTrafficStats = document.getElementById('userTrafficStats');
+const listensByLocationTable = document.getElementById('listensByLocationTable');
 
 const locationForm = document.getElementById('locationForm');
 const approveLocationBtn = document.getElementById('approveLocation');
@@ -27,6 +28,38 @@ const adminNarrationText = document.getElementById('adminNarrationText');
 const adminNarrationSubmit = document.getElementById('adminNarrationSubmit');
 const adminNarrationResult = document.getElementById('adminNarrationResult');
 const adminTranslatedText = document.getElementById('adminTranslatedText');
+
+// Real-time participant tracking
+function initializeParticipantTracking() {
+  const basePart = localStorage.getItem('participantId') || Math.random().toString(36).substr(2, 9);
+  localStorage.setItem('participantId', basePart);
+  const participantId = 'admin_' + basePart;
+  
+  // Send heartbeat every 20 seconds
+  setInterval(() => {
+    fetch('/api/public/live-participants/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantId: participantId }),
+      keepalive: true
+    }).catch(() => {}); // Silently fail if endpoint not available
+  }, 20000);
+  
+  // Also send heartbeat on page visibility change
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      fetch('/api/public/live-participants/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantId: participantId }),
+        keepalive: true
+      }).catch(() => {});
+    }
+  });
+}
+
+initializeParticipantTracking();
+
 const adminUsedVoice = document.getElementById('adminUsedVoice');
 const adminAudioPlayer = document.getElementById('adminAudioPlayer');
 const adminAudioLink = document.getElementById('adminAudioLink');
@@ -78,20 +111,27 @@ let adminNarrationTemplates = [];
 adminKeyInput.value = localStorage.getItem('adminKey') ?? '';
 
 function getAdminKey() {
-  return adminKeyInput.value.trim();
+  const inputVal = adminKeyInput.value.trim();
+  const storedVal = localStorage.getItem('adminKey');
+  const finalKey = inputVal || storedVal || 'dev-admin-123';
+  console.log('🔑 Admin Key Debug:', { inputVal, storedVal, finalKey });
+  return finalKey;
 }
 
 async function adminFetch(url, options = {}) {
+  const key = getAdminKey();
+  console.log('📡 Sending request to:', url, 'with key:', key);
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'X-Admin-Key': getAdminKey(),
+      'X-Admin-Key': key,
       ...(options.headers ?? {})
     }
   });
 
   if (response.status === 401) {
+    console.error('❌ 401 Unauthorized. Key was:', key);
     throw new Error('Sai Admin API Key.');
   }
 
@@ -117,6 +157,11 @@ async function adminFetch(url, options = {}) {
 function toCurrency(value) {
   const number = Number(value) || 0;
   return number.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+function toCurrencyVnd(value) {
+  const number = Number(value) || 0;
+  return number.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 }
 
 function safe(text) {
@@ -271,6 +316,8 @@ async function generateAdminNarration() {
 
 async function loadDashboard() {
   const data = await adminFetch('/api/admin/dashboard');
+  console.log('Dashboard data:', data);
+  console.log('Daily visits:', data.dailyVisits);
   dashboardStats.innerHTML = [
     { label: 'Địa điểm', value: data.locationCount },
     { label: 'Public', value: data.publishedLocationCount },
@@ -286,12 +333,133 @@ async function loadDashboard() {
     </div>
   `).join('');
 
-  topPages.innerHTML = (data.topPages ?? []).map((page) => `
-    <article class="card">
-      <h3>${safe(page.path)}</h3>
-      <p>Số lượt truy cập: <strong>${safe(page.visits)}</strong></p>
-    </article>
-  `).join('');
+  if (userTrafficStats) {
+    userTrafficStats.innerHTML = [
+      { label: 'Truy cập 7 ngày', value: data.visitsThisWeek ?? 0 },
+      { label: 'Truy cập 30 ngày', value: data.visitsThisMonth ?? 0 },
+      { label: 'Người dùng hiện thời', value: data.activeParticipantsNow ?? 0 },
+      { label: 'Tổng lượt nghe', value: data.totalListenCount ?? 0 },
+      { label: 'Doanh thu nghe', value: toCurrencyVnd(data.totalRevenueVnd ?? 0) }
+    ].map((item) => `
+      <div class="stat-card">
+        <div class="value">${safe(item.value)}</div>
+        <div class="label">${safe(item.label)}</div>
+      </div>
+    `).join('');
+  }
+
+  if (listensByLocationTable) {
+    const rows = Array.isArray(data.listensByLocation) ? data.listensByLocation : [];
+    listensByLocationTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Quán ăn</th>
+          <th>Lượt nghe</th>
+          <th>Doanh thu</th>
+          <th>Lần nghe gần nhất</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.length === 0 ? '<tr><td colspan="4">Chưa có dữ liệu lượt nghe trả phí.</td></tr>' : rows.map((row) => `
+          <tr>
+            <td>${safe(row.locationName || row.locationId || '-')}</td>
+            <td>${safe(row.listenCount ?? 0)}</td>
+            <td>${safe(toCurrencyVnd(row.revenueVnd ?? 0))}</td>
+            <td>${safe(formatLocalDateTime(row.lastListenedAt))}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    `;
+  }
+
+  // Render daily visits chart
+  if (data.dailyVisits && Array.isArray(data.dailyVisits)) {
+    renderDailyVisitsChart(data.dailyVisits);
+  }
+}
+
+function renderDailyVisitsChart(dailyVisits) {
+  const canvas = document.getElementById('dailyVisitsChart');
+  if (!canvas || !window.Chart) {
+    return;
+  }
+
+  // Destroy existing chart if it exists
+  if (window.dailyVisitsChartInstance) {
+    window.dailyVisitsChartInstance.destroy();
+  }
+
+  const dates = dailyVisits.map(d => {
+    const date = new Date(d.date);
+    return date.toLocaleDateString('vi-VN', { weekday: 'short', month: 'short', day: 'numeric' });
+  });
+
+  const visits = dailyVisits.map(d => d.visits);
+
+  window.dailyVisitsChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Số lượt truy cập',
+        data: visits,
+        backgroundColor: '#d4af37',
+        borderColor: '#c9a227',
+        borderWidth: 1,
+        borderRadius: 4,
+        hoverBackgroundColor: '#e5c158'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      indexAxis: 'y',
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#333',
+            font: {
+              family: "'Be Vietnam Pro', sans-serif",
+              size: 14,
+              weight: '500'
+            },
+            padding: 15
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)',
+            drawBorder: false
+          },
+          ticks: {
+            color: '#666',
+            font: {
+              family: "'Be Vietnam Pro', sans-serif",
+              size: 12
+            }
+          }
+        },
+        y: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: '#666',
+            font: {
+              family: "'Be Vietnam Pro', sans-serif",
+              size: 12
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  console.log('Chart rendered with data:', visits, 'Labels:', dates);
 }
 
 async function loadLocations() {
@@ -562,7 +730,9 @@ async function refreshAll() {
     loadLocations(),
     loadVoices(),
     loadTemplates(),
-    loadLogs()
+    loadLogs(),
+    loadUserStats(),
+    loadPaymentStats()
   ]);
 
   await loadAdminNarrationSources();
@@ -724,6 +894,218 @@ if (adminNarrationForm) {
     }
   });
 }
+
+// User Management - Visit Stats
+let currentVisitPeriod = 'daily';
+let visitStatsChartInstance = null;
+
+async function loadUserStats() {
+  const data = await adminFetch(`/api/admin/user-stats?period=${currentVisitPeriod}`);
+  
+  // Render visit stats chart
+  renderVisitStatsChart(data.visitStats);
+  
+  // Render recent visits table
+  const recentVisitsTable = document.getElementById('recentVisitsTable');
+  if (recentVisitsTable) {
+    const tBody = recentVisitsTable.querySelector('tbody');
+    tBody.innerHTML = (data.recentVisits ?? []).map(visit => `
+      <tr>
+        <td style="padding: 0.8rem; border-bottom: 1px solid #f0e68c;">${safe(visit.device)}</td>
+        <td style="padding: 0.8rem; border-bottom: 1px solid #f0e68c;">${safe(visit.path)}</td>
+        <td style="padding: 0.8rem; border-bottom: 1px solid #f0e68c;">${safe(formatLocalDateTime(visit.visitedAt))}</td>
+      </tr>
+    `).join('');
+  }
+}
+
+function renderVisitStatsChart(stats) {
+  const canvas = document.getElementById('visitStatsChart');
+  if (!canvas || !window.Chart) return;
+  
+  if (visitStatsChartInstance) {
+    visitStatsChartInstance.destroy();
+  }
+
+  const labels = stats.map(s => s.period);
+  const visits = stats.map(s => s.visits);
+
+  visitStatsChartInstance = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Số lượt truy cập',
+        data: visits,
+        backgroundColor: '#d4af37',
+        borderColor: '#c9a227',
+        borderWidth: 1,
+        borderRadius: 4,
+        hoverBackgroundColor: '#e5c158'
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          labels: {
+            color: '#333',
+            font: {
+              family: "'Be Vietnam Pro', sans-serif",
+              size: 14,
+              weight: '500'
+            },
+            padding: 15
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0, 0, 0, 0.05)', drawBorder: false },
+          ticks: { color: '#666', font: { family: "'Be Vietnam Pro', sans-serif", size: 12 } }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#666', font: { family: "'Be Vietnam Pro', sans-serif", size: 12 } }
+        }
+      }
+    }
+  });
+}
+
+// User Management - Payment Stats
+let paymentRatioChartInstance = null;
+
+async function loadPaymentStats() {
+  const data = await adminFetch('/api/admin/payment-stats');
+  
+  // Render payment stats table
+  const paymentTable = document.getElementById('paymentStatsTable');
+  if (paymentTable) {
+    const tBody = paymentTable.querySelector('tbody');
+    tBody.innerHTML = (data.paymentStats ?? []).map(stat => `
+      <tr onclick="showPaymentDetail('${safe(stat.participantId)}', ${JSON.stringify(stat).replace(/'/g, "&apos;")}, ${data.paymentStats.find(s => s.participantId === stat.participantId) ? 'true' : 'false'})" style="cursor: pointer;">
+        <td style="padding: 0.8rem; border-bottom: 1px solid #f0e68c;">${safe(stat.participantId.substring(0, 20))}...</td>
+        <td style="padding: 0.8rem; border-bottom: 1px solid #f0e68c;">${safe(toCurrencyVnd(stat.totalRevenueVnd))}</td>
+        <td style="padding: 0.8rem; border-bottom: 1px solid #f0e68c;">${safe(stat.transactionCount)}</td>
+      </tr>
+    `).join('');
+  }
+  
+  // Render QR vs Web-only pie chart
+  renderPaymentRatioChart(data.qrPaymentRatio);
+}
+
+function renderPaymentRatioChart(dataRatio) {
+  const canvas = document.getElementById('paymentRatioChart');
+  if (!canvas || !window.Chart) return;
+  
+  if (paymentRatioChartInstance) {
+    paymentRatioChartInstance.destroy();
+  }
+
+  const qrPercentage = dataRatio.paymentPercentage;
+  const webPercentage = 100 - qrPercentage;
+
+  paymentRatioChartInstance = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Thanh toán QR', 'Chỉ browse web'],
+      datasets: [{
+        data: [qrPercentage, webPercentage],
+        backgroundColor: ['#d4af37', '#f0e68c'],
+        borderColor: ['#c9a227', '#e5c158'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            color: '#333',
+            font: { family: "'Be Vietnam Pro', sans-serif", size: 12, weight: '500' },
+            padding: 15
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': ' + context.parsed + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function showPaymentDetail(participantId, stat, _unused) {
+  const modal = document.getElementById('paymentDetailModal');
+  const content = document.getElementById('paymentDetailContent');
+  
+  if (!modal || !content) return;
+
+  let locationsList = '';
+  if (stat.recentLocations && stat.recentLocations.length > 0) {
+    locationsList = stat.recentLocations.map(loc => `
+      <div style="background: #f9f5f0; padding: 0.8rem; border-radius: 4px; margin-top: 0.5rem; border-left: 3px solid #d4af37;">
+        <div style="font-weight: 600; color: #d4af37;">${safe(loc.locationName)}</div>
+        <div style="color: #666; font-size: 0.9rem; margin-top: 0.3rem;">Thanh toán: ${safe(loc.payments)} | Doanh thu: ${safe(toCurrencyVnd(loc.amountVnd))}</div>
+      </div>
+    `).join('');
+  }
+
+  content.innerHTML = `
+    <div style="margin-bottom: 1.5rem;">
+      <div style="color: #666; margin-bottom: 0.5rem;">ID người dùng:</div>
+      <div style="font-weight: 600; color: #333; word-break: break-all;">${safe(participantId)}</div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <div style="color: #666; margin-bottom: 0.5rem;">Tổng doanh thu:</div>
+      <div style="font-size: 1.5rem; font-weight: 600; color: #d4af37;">${safe(toCurrencyVnd(stat.totalRevenueVnd))}</div>
+    </div>
+
+    <div style="margin-bottom: 1.5rem;">
+      <div style="color: #666; margin-bottom: 0.5rem;">Số lần thanh toán: ${safe(stat.transactionCount)}</div>
+      <div style="color: #666; margin-bottom: 0.5rem;">Lần thanh toán gần nhất: ${safe(formatLocalDateTime(stat.lastPaymentAt))}</div>
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <div style="font-weight: 600; color: #d4af37; margin-bottom: 0.8rem;">Quán ăn được chọn thuyết minh:</div>
+      ${locationsList || '<div style="color: #999;">Không có dữ liệu</div>'}
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
+function closePaymentModal() {
+  const modal = document.getElementById('paymentDetailModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+// Period filter for visit stats
+document.querySelectorAll('.period-filter-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    currentVisitPeriod = btn.dataset.period;
+    document.querySelectorAll('.period-filter-btn').forEach(b => {
+      b.style.background = b.dataset.period === currentVisitPeriod ? '#d4af37' : '#e5c158';
+      b.style.color = b.dataset.period === currentVisitPeriod ? '#fff' : '#333';
+    });
+    await loadUserStats();
+  });
+});
 
 saveAdminKeyBtn.addEventListener('click', async () => {
   localStorage.setItem('adminKey', getAdminKey());

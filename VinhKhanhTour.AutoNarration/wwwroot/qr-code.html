@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code - Vĩnh Khánh Culinary Tourism</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin: 10px 0;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .qr-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .qr-card h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .qr-card p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .url-display {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #333;
+            word-break: break-all;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .button {
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .button:hover {
+            background: #1976D2;
+        }
+        
+        .button.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .button.secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .ip-display {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .ip-display h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .ip-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2196F3;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+        
+        .copy-btn {
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #45a049;
+        }
+        
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍜 Vĩnh Khánh Culinary Tourism</h1>
+            <p>Quét mã QR để truy cập trên điện thoại</p>
+        </div>
+        
+        <div class="ip-display">
+            <h3>📱 IP LAN của máy tính:</h3>
+            <div class="ip-value" id="ipValue">172.20.10.3</div>
+            <p style="color: #666; font-size: 14px;">Sử dụng IP này để mở web trên các thiết bị khác trong cùng mạng WiFi</p>
+            <button class="copy-btn" onclick="copyIP()">📋 Sao chép IP</button>
+        </div>
+        
+        <div class="note">
+            <strong>💡 Lưu ý:</strong> Đảm bảo điện thoại kết nối cùng WiFi với máy tính để mở được web.
+        </div>
+        
+        <div class="qr-grid">
+            <!-- Trang danh sách món ngon -->
+            <div class="qr-card">
+                <h2>🍽️ Danh sách Món ngon</h2>
+                <p>Xem danh sách các quán ăn nổi tiếng trên phố Vĩnh Khánh</p>
+                <div class="url-display">http://172.20.10.3:5292/mon-ngon.html</div>
+                <div id="qr-mon-ngon" class="qr-container"></div>
+                <button class="button" onclick="openURL('http://172.20.10.3:5292/mon-ngon.html')">Mở trên máy tính</button>
+            </div>
+            
+            <!-- Trang chủ -->
+            <div class="qr-card">
+                <h2>🏠 Trang chủ</h2>
+                <p>Khám phá hệ thống phố ẩm thực Vĩnh Khánh</p>
+                <div class="url-display">http://172.20.10.3:5292</div>
+                <div id="qr-home" class="qr-container"></div>
+                <button class="button" onclick="openURL('http://172.20.10.3:5292')">Mở trên máy tính</button>
+            </div>
+            
+            <!-- Bản đồ -->
+            <div class="qr-card">
+                <h2>🗺️ Bản đồ</h2>
+                <p>Xem vị trí các quán ăn trên bản đồ tương tác</p>
+                <div class="url-display">http://172.20.10.3:5292/ban-do.html</div>
+                <div id="qr-map" class="qr-container"></div>
+                <button class="button" onclick="openURL('http://172.20.10.3:5292/ban-do.html')">Mở trên máy tính</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Generate QR codes
+        function generateQRCode(elementId, url) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = ''; // Clear previous content
+            new QRCode(element, {
+                text: url,
+                width: 200,
+                height: 200,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // Generate all QR codes when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            generateQRCode('qr-mon-ngon', 'http://172.20.10.3:5292/mon-ngon.html');
+            generateQRCode('qr-home', 'http://172.20.10.3:5292');
+            generateQRCode('qr-map', 'http://172.20.10.3:5292/ban-do.html');
+        });
+        
+        // Open URL function
+        function openURL(url) {
+            window.open(url, '_blank');
+        }
+        
+        // Copy IP to clipboard
+        function copyIP() {
+            const ip = '172.20.10.3';
+            navigator.clipboard.writeText(ip).then(() => {
+                alert('✅ Đã sao chép IP: ' + ip);
+            }).catch(() => {
+                alert('❌ Không thể sao chép. Vui lòng sao chép thủ công: ' + ip);
+            });
+        }
+    </script>
+</body>
+</html>

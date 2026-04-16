@@ -27,6 +27,9 @@ public interface IAdminManagementService
     void TrackRoutePlan(RoutePlanLogEntry routePlanLog);
     IReadOnlyCollection<RoutePlanLogEntry> GetRoutePlanLogs(int take);
 
+    void TrackNarrationListen(NarrationListenLogEntry listenLog);
+    IReadOnlyCollection<NarrationListenLogEntry> GetNarrationListenLogs(int take);
+
     // Merchant Request Management
     MerchantRequest SubmitMerchantRequest(MerchantRequest request);
     IReadOnlyCollection<MerchantRequest> GetMerchantRequests(string? status = null, string? currentUserEmail = null);

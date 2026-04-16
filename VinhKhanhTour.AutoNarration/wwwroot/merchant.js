@@ -264,7 +264,7 @@ async function previewNarration() {
       targetLanguage: normalizeLanguage(merchantLanguageSelect.value)
     };
 
-    const response = await fetch('/api/public/narrations/instant', {
+    const response = await fetch('/api/narrations/instant', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)

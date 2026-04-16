@@ -1,3 +1,44 @@
+// Real-time participant tracking for live participant counter
+(function initParticipantTracking() {
+  const participantId = 'user_' + (sessionStorage.getItem('participantId') || Math.random().toString(36).substr(2, 12));
+  sessionStorage.setItem('participantId', participantId);
+  
+  // Send heartbeat every 25 seconds
+  const heartbeatInterval = setInterval(() => {
+    fetch('/api/public/live-participants/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantId }),
+      keepalive: true
+    }).catch(() => {});
+  }, 25000);
+  
+  // Send initial heartbeat immediately
+  fetch('/api/public/live-participants/heartbeat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ participantId }),
+    keepalive: true
+  }).catch(() => {});
+  
+  // Send heartbeat on visibility change (when tab becomes visible)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      fetch('/api/public/live-participants/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participantId }),
+        keepalive: true
+      }).catch(() => {});
+    }
+  });
+  
+  // Clean up on page unload
+  window.addEventListener('beforeunload', () => {
+    clearInterval(heartbeatInterval);
+  });
+})();
+
 const locationsGrid = document.getElementById('locationsGrid');
 const locationSelect = document.getElementById('locationSelect');
 const narrationForm = document.getElementById('narrationForm');
@@ -583,12 +624,24 @@ function speakWithBrowserFallback(text, language) {
 async function playNarrationInstant(location) {
   const selectedLanguage = languageSelect?.value || getPreferredLanguage();
 
-  const response = await fetch('/api/narrations/instant', {
+  if (!window.narrationPayment?.payForNarration) {
+    throw new Error('Thiếu mô-đun thanh toán thuyết minh.');
+  }
+
+  const payment = await window.narrationPayment.payForNarration({
+    locationId: location.id,
+    targetLanguage: selectedLanguage,
+    locationName: location.name
+  });
+
+  const response = await fetch('/api/public/narrations/instant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       locationId: location.id,
-      targetLanguage: selectedLanguage
+      targetLanguage: selectedLanguage,
+      participantId: payment.participantId,
+      paymentToken: payment.paymentToken
     })
   });
 
@@ -637,15 +690,26 @@ async function generateNarration() {
     return;
   }
 
+  if (!window.narrationPayment?.payForNarration) {
+    throw new Error('Thiếu mô-đun thanh toán thuyết minh.');
+  }
+
+  const payment = await window.narrationPayment.payForNarration({
+    locationId: locationSelect.value,
+    targetLanguage: languageSelect.value
+  });
+
   const payload = {
     locationId: locationSelect.value,
     customTextVi: customText.value.trim() || null,
     targetLanguage: languageSelect.value,
     voiceName: voiceName.value.trim() || null,
-    speakingRate: Number.parseFloat(speakingRate.value) || 1
+    speakingRate: Number.parseFloat(speakingRate.value) || 1,
+    participantId: payment.participantId,
+    paymentToken: payment.paymentToken
   };
 
-  const response = await fetch('/api/narrations', {
+  const response = await fetch('/api/public/narrations', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -1211,10 +1275,25 @@ async function playStopNarration(stop, source = 'manual') {
   }
 
   const selectedLanguage = getPreferredLanguage();
-  const response = await fetch('/api/narrations/instant', {
+  if (!window.narrationPayment?.payForNarration) {
+    throw new Error('Thiếu mô-đun thanh toán thuyết minh.');
+  }
+
+  const payment = await window.narrationPayment.payForNarration({
+    locationId: stop.locationId,
+    targetLanguage: selectedLanguage,
+    locationName: stop.name
+  });
+
+  const response = await fetch('/api/public/narrations/instant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ locationId: stop.locationId, targetLanguage: selectedLanguage })
+    body: JSON.stringify({
+      locationId: stop.locationId,
+      targetLanguage: selectedLanguage,
+      participantId: payment.participantId,
+      paymentToken: payment.paymentToken
+    })
   });
 
   const result = await response.json();

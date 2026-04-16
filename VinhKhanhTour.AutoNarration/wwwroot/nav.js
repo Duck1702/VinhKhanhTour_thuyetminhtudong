@@ -36,6 +36,12 @@
   }
 
   function createLanguageSelector() {
+    // Skip language selector for admin and merchant pages (Vietnamese only)
+    const path = (window.location.pathname || '/').toLowerCase();
+    if (path.includes('admin') || path.includes('merchant')) {
+      return;
+    }
+
     if (nav.querySelector('.language-switcher')) {
       return;
     }
@@ -111,53 +117,7 @@
   }
 
   function createAuthActions(user) {
-    if (nav.querySelector('.auth-actions')) {
-      return;
-    }
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'auth-actions';
-
-    if (user?.email) {
-      const accountLink = document.createElement('a');
-      accountLink.className = 'button button-primary auth-link';
-      accountLink.href = withLang('/account.html');
-      accountLink.textContent = t('account');
-      wrapper.appendChild(accountLink);
-
-      const userChip = document.createElement('span');
-      userChip.className = 'auth-user-chip';
-      userChip.textContent = user.fullName || user.email;
-      wrapper.appendChild(userChip);
-
-      const logoutButton = document.createElement('button');
-      logoutButton.type = 'button';
-      logoutButton.className = 'button button-secondary auth-logout-btn';
-      logoutButton.textContent = t('logout');
-      logoutButton.addEventListener('click', async () => {
-        try {
-          await fetch('/api/auth/logout', { method: 'POST' });
-        } finally {
-          window.location.href = withLang('/login.html');
-        }
-      });
-      wrapper.appendChild(logoutButton);
-    } else {
-      const loginLink = document.createElement('a');
-      loginLink.className = 'button button-secondary auth-link';
-      loginLink.href = `${withLang('/login.html')}&returnUrl=${getReturnUrl()}`;
-      loginLink.textContent = t('login');
-
-      const registerLink = document.createElement('a');
-      registerLink.className = 'button button-primary auth-link';
-      registerLink.href = `${withLang('/register.html')}&returnUrl=${getReturnUrl()}`;
-      registerLink.textContent = t('register');
-
-      wrapper.appendChild(loginLink);
-      wrapper.appendChild(registerLink);
-    }
-
-    getNavTools().appendChild(wrapper);
+    // No auth buttons displayed - admin/merchant access only via direct URLs
   }
 
   createLanguageSelector();

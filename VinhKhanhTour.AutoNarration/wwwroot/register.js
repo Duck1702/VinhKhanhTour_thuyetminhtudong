@@ -5,7 +5,7 @@ const loginLink = document.getElementById('loginLink');
 const labels = {
   vi: {
     title: 'Tạo tài khoản',
-    subtitle: 'Tạo tài khoản mới để truy cập toàn bộ tính năng của website.',
+    subtitle: 'Tạo tài khoản chủ quán để quản lý nội dung và mã QR của quán.',
     fullName: 'Họ và tên',
     email: 'Email',
     password: 'Mật khẩu',
@@ -158,7 +158,7 @@ async function onSubmit(event) {
   const fullName = document.getElementById('fullName')?.value?.trim() || '';
   const email = document.getElementById('email')?.value?.trim() || '';
   const password = document.getElementById('password')?.value || '';
-  const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
+  const role = 'merchant';
 
   if (submitButton) {
     submitButton.disabled = true;
@@ -184,12 +184,7 @@ async function onSubmit(event) {
     
     // Chuyển hướng dựa trên role
     const lang = getLang();
-    let redirectUrl = `/?lang=${encodeURIComponent(lang)}`;
-    if (role === 'merchant') {
-      redirectUrl = `/merchant.html?lang=${encodeURIComponent(lang)}`;
-    } else if (role === 'admin') {
-      redirectUrl = `/admin.html?lang=${encodeURIComponent(lang)}`;
-    }
+    const redirectUrl = `/merchant.html?lang=${encodeURIComponent(lang)}`;
     
     window.location.href = redirectUrl;
   } catch (error) {

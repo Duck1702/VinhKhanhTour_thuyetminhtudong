@@ -7,4 +7,6 @@ public sealed class GenerateNarrationRequest
     public string TargetLanguage { get; init; } = "en";
     public string? VoiceName { get; init; }
     public double SpeakingRate { get; init; } = 1.0;
+    public string? ParticipantId { get; init; }
+    public string? PaymentToken { get; init; }
 }

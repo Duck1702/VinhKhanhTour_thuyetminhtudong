@@ -11,6 +11,7 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
     private readonly List<VisitLogEntry> _visitLogs = [];
     private readonly List<AiUsageLogEntry> _aiUsageLogs = [];
     private readonly List<RoutePlanLogEntry> _routePlanLogs = [];
+    private readonly List<NarrationListenLogEntry> _narrationListenLogs = [];
     private readonly List<MerchantRequest> _merchantRequests = [];
 
     public InMemoryLocationContentService()
@@ -51,6 +52,87 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
         _templates = new Dictionary<string, NarrationTemplate>(StringComparer.OrdinalIgnoreCase);
 
         _merchantRequests.AddRange(SeedMerchantRequests());
+
+        // Initialize sample visit data for dashboard chart (development only)
+        InitializeSampleVisitData();
+    }
+
+    private void InitializeSampleVisitData()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var random = new Random(42); // Fixed seed for consistent data
+        var pages = new[] { "/index.html", "/mon-ngon.html", "/scan-narration.html", "/ban-do.html", "/account.html" };
+        var devices = new[] { "Mozilla/5.0 (iPhone)", "Mozilla/5.0 (Android)", "Mozilla/5.0 (Windows NT)", "Mozilla/5.0 (Macintosh)" };
+        
+        // Generate sample visits for the last 7 days
+        for (int dayOffset = 6; dayOffset >= 0; dayOffset--)
+        {
+            var targetDate = now.AddDays(-dayOffset);
+            // More visits on recent days
+            int visitCount = dayOffset switch
+            {
+                0 => random.Next(35, 50),  // Today: 35-50 visits
+                1 => random.Next(30, 45),  // Yesterday: 30-45 visits
+                2 => random.Next(25, 40),  // 2 days ago: 25-40 visits
+                3 => random.Next(20, 35),  // 3 days ago: 20-35 visits
+                4 => random.Next(15, 30),  // 4 days ago: 15-30 visits
+                5 => random.Next(10, 25),  // 5 days ago: 10-25 visits
+                6 => random.Next(5, 20),   // 6 days ago: 5-20 visits
+                _ => 0
+            };
+
+            for (int i = 0; i < visitCount; i++)
+            {
+                var visitTime = targetDate.Date.AddHours(random.Next(0, 24)).AddMinutes(random.Next(0, 60));
+                _visitLogs.Add(new VisitLogEntry
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Path = pages[random.Next(pages.Length)],
+                    Method = "GET",
+                    VisitedAt = visitTime,
+                    UserAgent = devices[random.Next(devices.Length)]
+                });
+            }
+        }
+
+        // Generate sample payment logs (narration listens with payment)
+        var locations = SeedLocations().Select(x => x.Id).ToList();
+        var languages = new[] { "vi", "en", "fr", "ja" };
+        
+        for (int dayOffset = 6; dayOffset >= 0; dayOffset--)
+        {
+            var targetDate = now.AddDays(-dayOffset);
+            int paymentCount = dayOffset switch
+            {
+                0 => random.Next(8, 15),   // Today: 8-15 payments
+                1 => random.Next(5, 12),   // Yesterday: 5-12 payments
+                2 => random.Next(3, 10),
+                3 => random.Next(2, 8),
+                4 => random.Next(1, 6),
+                5 => random.Next(0, 4),
+                6 => random.Next(0, 3),
+                _ => 0
+            };
+
+            for (int i = 0; i < paymentCount; i++)
+            {
+                var paymentTime = targetDate.Date.AddHours(random.Next(6, 22)).AddMinutes(random.Next(0, 60));
+                var participantId = $"user_{dayOffset}_{i}_{random.Next(1000, 9999)}";
+                var locationId = locations[random.Next(locations.Count)];
+                
+                _narrationListenLogs.Add(new NarrationListenLogEntry
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    LocationId = locationId,
+                    ParticipantId = participantId,
+                    TargetLanguage = languages[random.Next(languages.Length)],
+                    CurrencyCode = "VND",
+                    PaidAmount = 20000,
+                    PaidAmountVnd = 20000,
+                    ListenedAt = paymentTime
+                });
+            }
+        }
     }
 
     private static IReadOnlyCollection<StreetLocation> SeedLocations() =>
@@ -829,6 +911,53 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
                     GeneratedBy = x.GeneratedBy,
                     StopSummary = x.StopSummary,
                     CreatedAt = x.CreatedAt
+                })
+                .ToArray();
+        }
+    }
+
+    public void TrackNarrationListen(NarrationListenLogEntry listenLog)
+    {
+        lock (_syncLock)
+        {
+            _narrationListenLogs.Add(new NarrationListenLogEntry
+            {
+                Id = string.IsNullOrWhiteSpace(listenLog.Id) ? Guid.NewGuid().ToString("N") : listenLog.Id,
+                LocationId = listenLog.LocationId,
+                ParticipantId = listenLog.ParticipantId,
+                UserEmail = listenLog.UserEmail,
+                TargetLanguage = listenLog.TargetLanguage,
+                CurrencyCode = listenLog.CurrencyCode,
+                PaidAmount = listenLog.PaidAmount,
+                PaidAmountVnd = listenLog.PaidAmountVnd,
+                ListenedAt = listenLog.ListenedAt == default ? DateTimeOffset.UtcNow : listenLog.ListenedAt
+            });
+
+            if (_narrationListenLogs.Count > 10000)
+            {
+                _narrationListenLogs.RemoveRange(0, _narrationListenLogs.Count - 10000);
+            }
+        }
+    }
+
+    public IReadOnlyCollection<NarrationListenLogEntry> GetNarrationListenLogs(int take)
+    {
+        lock (_syncLock)
+        {
+            return _narrationListenLogs
+                .OrderByDescending(x => x.ListenedAt)
+                .Take(Math.Clamp(take, 1, 5000))
+                .Select(x => new NarrationListenLogEntry
+                {
+                    Id = x.Id,
+                    LocationId = x.LocationId,
+                    ParticipantId = x.ParticipantId,
+                    UserEmail = x.UserEmail,
+                    TargetLanguage = x.TargetLanguage,
+                    CurrencyCode = x.CurrencyCode,
+                    PaidAmount = x.PaidAmount,
+                    PaidAmountVnd = x.PaidAmountVnd,
+                    ListenedAt = x.ListenedAt
                 })
                 .ToArray();
         }

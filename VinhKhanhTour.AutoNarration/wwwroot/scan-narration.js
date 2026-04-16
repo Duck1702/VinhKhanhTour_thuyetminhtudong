@@ -444,7 +444,7 @@ async function loadLocation(locationId) {
   return result;
 }
 
-async function requestNarrationAudio(locationId, language) {
+async function requestNarrationAudio(locationId, language, payment) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort('timeout'), 8000);
 
@@ -455,7 +455,9 @@ async function requestNarrationAudio(locationId, language) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         locationId,
-        targetLanguage: language
+        targetLanguage: language,
+        participantId: payment?.participantId,
+        paymentToken: payment?.paymentToken
       }),
       signal: controller.signal
     });
@@ -482,6 +484,15 @@ async function onPlayClick() {
 
     const selectedLanguage = normalizeLanguage(languageSelectEl?.value);
     const fallbackText = buildFullNarrationText(activeLocation) || activeLocation.name;
+    if (!window.narrationPayment?.payForNarration) {
+      throw new Error('Thiếu mô-đun thanh toán thuyết minh.');
+    }
+
+    const payment = await window.narrationPayment.payForNarration({
+      locationId: activeLocation.id,
+      targetLanguage: selectedLanguage,
+      locationName: activeLocation.name
+    });
 
     if (!cloudNarrationAvailable) {
       const googlePlayback = await playGoogleTtsFallback(fallbackText, selectedLanguage);
@@ -507,7 +518,7 @@ async function onPlayClick() {
       return;
     }
 
-    const narration = await requestNarrationAudio(activeLocation.id, selectedLanguage);
+    const narration = await requestNarrationAudio(activeLocation.id, selectedLanguage, payment);
 
     if (String(narration.voiceName || '').toLowerCase() === 'demo-fallback-tone') {
       const cloudFallbackText = narration.translatedText || narration.sourceTextVi || fallbackText;
@@ -556,6 +567,15 @@ async function onPlayClick() {
       openAudioLinkEl.classList.remove('hidden');
     }
   } catch (error) {
+    const message = String(error?.message || '');
+    const paymentError = message.toLowerCase().includes('thanh toán')
+      || message.toLowerCase().includes('payment')
+      || message.toLowerCase().includes('hủy thanh toán');
+    if (paymentError) {
+      setStatus(message);
+      return;
+    }
+
     const selectedLanguage = normalizeLanguage(languageSelectEl?.value);
     const fallbackText = buildFullNarrationText(activeLocation) || activeLocation.name;
     const googlePlayback = await playGoogleTtsFallback(fallbackText, selectedLanguage);

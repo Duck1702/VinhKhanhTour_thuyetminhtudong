@@ -152,7 +152,11 @@ async function onSubmit(event) {
   const submitButton = loginForm.querySelector('button[type="submit"]');
   const email = document.getElementById('email')?.value?.trim() || '';
   const password = document.getElementById('password')?.value || '';
-  const role = document.querySelector('input[name="role"]:checked')?.value || 'user';
+  const role = document.querySelector('input[name="role"]:checked')?.value || 'merchant';
+  if (role !== 'merchant' && role !== 'admin') {
+    setMessage('Chỉ hỗ trợ đăng nhập admin và chủ quán.', true);
+    return;
+  }
 
   if (submitButton) {
     submitButton.disabled = true;
@@ -204,13 +208,17 @@ function setupRoleSelector() {
   const roleTabs = document.querySelectorAll('.role-tab');
   const roleInput = document.getElementById('selectedRole');
 
+  if (roleTabs.length === 0 || !roleInput) {
+    return;
+  }
+
   roleTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       roleTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       
       if (roleInput) {
-        roleInput.value = tab.dataset.role || 'user';
+        roleInput.value = tab.dataset.role || 'merchant';
       }
 
       const roleContents = document.querySelectorAll('.role-tab-content');

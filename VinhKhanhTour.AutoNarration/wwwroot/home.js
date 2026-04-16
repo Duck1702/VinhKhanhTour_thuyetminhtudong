@@ -21,6 +21,8 @@ const merchantAdModalTime = document.getElementById('merchantAdModalTime');
 const merchantAdModalDetailLink = document.getElementById('merchantAdModalDetailLink');
 const merchantAdModalMapLink = document.getElementById('merchantAdModalMapLink');
 const merchantAdModalCloseBtn = document.getElementById('merchantAdModalCloseBtn');
+const liveParticipantsText = document.getElementById('liveParticipantsText');
+const liveParticipantsHint = document.getElementById('liveParticipantsHint');
 
 const MERCHANT_AD_FALLBACK_IMAGES = [
   '/assets/vinh-khanh-banner.jpg',
@@ -32,6 +34,32 @@ let merchantAdsCurrentIndex = 0;
 let merchantAdsAutoSlideTimer;
 
 const SITE_LANGUAGE_KEY = 'siteLanguage';
+const LIVE_PARTICIPANT_KEY = 'vktour.liveParticipantId';
+const LIVE_HEARTBEAT_INTERVAL_MS = 15000;
+let liveHeartbeatTimer;
+
+const liveParticipantsI18n = {
+  vi: {
+    onlineText: (count) => `Dang co ${count} nguoi tham gia truc tuyen`,
+    hint: 'Mo them 2-3 thiet bi/trinh duyet de xem so luong tang realtime.'
+  },
+  en: {
+    onlineText: (count) => `${count} participants are online now`,
+    hint: 'Open 2-3 browsers/devices to verify realtime updates.'
+  },
+  fr: {
+    onlineText: (count) => `${count} participants en ligne actuellement`,
+    hint: 'Ouvrez 2-3 navigateurs/appareils pour verifier la mise a jour en temps reel.'
+  },
+  ja: {
+    onlineText: (count) => `現在 ${count} 人がオンラインで参加中`,
+    hint: '2-3台の端末またはブラウザを開くとリアルタイム更新を確認できます。'
+  },
+  ko: {
+    onlineText: (count) => `현재 ${count}명이 온라인 참여 중`,
+    hint: '브라우저/기기를 2-3개 열어 실시간 증가를 확인하세요.'
+  }
+};
 
 const i18n = {
   vi: {
@@ -350,10 +378,25 @@ function ensureQuickPlayer() {
 }
 
 async function playInstantNarration(locationId, locationName, lang) {
-  const response = await fetch('/api/narrations/instant', {
+  if (!window.narrationPayment?.payForNarration) {
+    throw new Error('Thiếu mô-đun thanh toán thuyết minh.');
+  }
+
+  const payment = await window.narrationPayment.payForNarration({
+    locationId,
+    targetLanguage: lang,
+    locationName
+  });
+
+  const response = await fetch('/api/public/narrations/instant', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ locationId, targetLanguage: lang })
+    body: JSON.stringify({
+      locationId,
+      targetLanguage: lang,
+      participantId: payment.participantId,
+      paymentToken: payment.paymentToken
+    })
   });
 
   const result = await response.json();
@@ -385,6 +428,7 @@ async function playInstantNarration(locationId, locationName, lang) {
 function applyI18n(lang) {
   const t = i18n[lang] ?? i18n.vi;
   const dealText = getDealsText(lang);
+  const liveText = liveParticipantsI18n[lang] ?? liveParticipantsI18n.vi;
   const heroTitle = document.getElementById('heroTitle');
   const heroSubtitle = document.getElementById('heroSubtitle');
   const heroPrimary = document.getElementById('heroPrimaryAction');
@@ -400,6 +444,8 @@ function applyI18n(lang) {
   if (featuredTitle) featuredTitle.textContent = t.featuredTitle;
   if (modalTitle) modalTitle.textContent = t.modalTitle;
   if (modalHint) modalHint.textContent = t.modalHint;
+  if (liveParticipantsText) liveParticipantsText.textContent = liveText.onlineText(0);
+  if (liveParticipantsHint) liveParticipantsHint.textContent = liveText.hint;
 
   const merchantAdsTitle = document.getElementById('merchantAdsTitle');
   const adsTypeFilterLabel = document.getElementById('adsTypeFilterLabel');
@@ -437,6 +483,75 @@ function applyI18n(lang) {
   if (window.siteI18n?.applySiteLanguage) {
     window.siteI18n.applySiteLanguage(lang);
   }
+}
+
+function getLiveParticipantsText(lang, count) {
+  const text = liveParticipantsI18n[lang] ?? liveParticipantsI18n.vi;
+  return text.onlineText(Math.max(0, Number(count) || 0));
+}
+
+function getOrCreateLiveParticipantId() {
+  try {
+    const existing = localStorage.getItem(LIVE_PARTICIPANT_KEY);
+    if (existing && existing.trim()) {
+      return existing;
+    }
+
+    const fallbackId = `guest-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const generated = globalThis.crypto?.randomUUID?.() || fallbackId;
+    localStorage.setItem(LIVE_PARTICIPANT_KEY, generated);
+    return generated;
+  } catch {
+    return `guest-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
+async function refreshLiveParticipants() {
+  if (!liveParticipantsText) {
+    return;
+  }
+
+  const participantId = getOrCreateLiveParticipantId();
+  const lang = getLang();
+
+  try {
+    const response = await fetch('/api/public/live-participants/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participantId })
+    });
+
+    if (!response.ok) {
+      throw new Error('Heartbeat failed');
+    }
+
+    const data = await response.json();
+    const count = Number(data?.activeParticipants) || 0;
+    liveParticipantsText.textContent = getLiveParticipantsText(lang, count);
+  } catch {
+    liveParticipantsText.textContent = getLiveParticipantsText(lang, 0);
+  }
+}
+
+function initLiveParticipantsHeartbeat() {
+  if (!liveParticipantsText) {
+    return;
+  }
+
+  void refreshLiveParticipants();
+  if (liveHeartbeatTimer) {
+    clearInterval(liveHeartbeatTimer);
+  }
+
+  liveHeartbeatTimer = setInterval(() => {
+    void refreshLiveParticipants();
+  }, LIVE_HEARTBEAT_INTERVAL_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      void refreshLiveParticipants();
+    }
+  });
 }
 
 function getCardImage(locationId) {
@@ -842,6 +957,7 @@ async function loadMerchantAds() {
 (async function initHomePage() {
   const lang = getLang();
   applyI18n(lang);
+  initLiveParticipantsHeartbeat();
   initLanguageModal();
   initAssistant();
   initMerchantAdModal();

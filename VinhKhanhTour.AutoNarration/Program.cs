@@ -40,6 +40,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddSingleton<InMemoryLocationContentService>();
 builder.Services.AddSingleton<ILocationContentService>(sp => sp.GetRequiredService<InMemoryLocationContentService>());
 builder.Services.AddSingleton<IAdminManagementService>(sp => sp.GetRequiredService<InMemoryLocationContentService>());
+builder.Services.AddSingleton<ILiveParticipantTracker, InMemoryLiveParticipantTracker>();
+builder.Services.AddSingleton<IPublicNarrationPaymentService, InMemoryPublicNarrationPaymentService>();
 builder.Services.AddSingleton<IUserAuthService, InMemoryUserAuthService>();
 builder.Services.AddScoped<ITranslationService, AzureTranslationService>();
 builder.Services.AddScoped<ISpeechSynthesisService, AzureSpeechSynthesisService>();
@@ -123,31 +125,15 @@ app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value ?? string.Empty;
-    var isHtmlPageRequest = HttpMethods.IsGet(context.Request.Method)
-        && (path.Equals("/", StringComparison.OrdinalIgnoreCase)
-            || path.EndsWith(".html", StringComparison.OrdinalIgnoreCase));
-    var isPublicAuthPage = path.Equals("/login.html", StringComparison.OrdinalIgnoreCase)
-        || path.Equals("/register.html", StringComparison.OrdinalIgnoreCase)
-        || path.Equals("/scan-narration.html", StringComparison.OrdinalIgnoreCase);
+    var isProtectedHtmlPage = HttpMethods.IsGet(context.Request.Method)
+        && (path.Equals("/admin.html", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/merchant.html", StringComparison.OrdinalIgnoreCase)
+            || path.Equals("/account.html", StringComparison.OrdinalIgnoreCase));
 
-    if (isHtmlPageRequest && !isPublicAuthPage && context.User.Identity?.IsAuthenticated != true)
+    if (isProtectedHtmlPage && context.User.Identity?.IsAuthenticated != true)
     {
         var returnUrl = Uri.EscapeDataString($"{context.Request.Path}{context.Request.QueryString}");
         context.Response.Redirect($"/login.html?returnUrl={returnUrl}");
-        return;
-    }
-
-    var isProtectedApi = path.StartsWith("/api", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/api/auth", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/api/admin", StringComparison.OrdinalIgnoreCase)
-        && !path.StartsWith("/api/public", StringComparison.OrdinalIgnoreCase);
-
-    if (isProtectedApi
-        && !HttpMethods.IsOptions(context.Request.Method)
-        && context.User.Identity?.IsAuthenticated != true)
-    {
-        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-        await context.Response.WriteAsJsonAsync(new { message = "Bạn cần đăng nhập để sử dụng chức năng này." });
         return;
     }
 
@@ -207,7 +193,13 @@ app.MapPost("/api/auth/register", async (
     IUserAuthService userAuthService,
     HttpContext httpContext) =>
 {
-    var result = userAuthService.Register(request.FullName, request.Email, request.Password, request.Role);
+    var normalizedRole = (request.Role ?? string.Empty).Trim().ToLowerInvariant();
+    if (!normalizedRole.Equals("merchant", StringComparison.OrdinalIgnoreCase))
+    {
+        return Results.BadRequest(new { message = "Chỉ tài khoản chủ quán được phép đăng ký trên hệ thống." });
+    }
+
+    var result = userAuthService.Register(request.FullName, request.Email, request.Password, normalizedRole);
     if (!result.Success || result.User is null)
     {
         return Results.BadRequest(new { message = result.Error ?? "Không thể đăng ký tài khoản." });
@@ -225,7 +217,13 @@ app.MapPost("/api/auth/login", async (
     IUserAuthService userAuthService,
     HttpContext httpContext) =>
 {
-    var result = userAuthService.Login(request.Email, request.Password, request.Role);
+    var normalizedRole = (request.Role ?? string.Empty).Trim().ToLowerInvariant();
+    if (normalizedRole is not ("admin" or "merchant"))
+    {
+        return Results.BadRequest(new { message = "Chỉ hỗ trợ đăng nhập cho admin và chủ quán." });
+    }
+
+    var result = userAuthService.Login(request.Email, request.Password, normalizedRole);
     if (!result.Success || result.User is null)
     {
         return Results.Json(
@@ -258,7 +256,7 @@ app.MapGet("/api/auth/me", (HttpContext httpContext) =>
         Id = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty,
         FullName = httpContext.User.FindFirstValue(ClaimTypes.Name) ?? string.Empty,
         Email = httpContext.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
-        Role = httpContext.User.FindFirstValue(ClaimTypes.Role) ?? "user"
+        Role = httpContext.User.FindFirstValue(ClaimTypes.Role) ?? "merchant"
     };
 
     return Results.Ok(user);
@@ -269,6 +267,12 @@ app.MapGet("/api/locations", (ILocationContentService locationContentService) =>
     return Results.Ok(locationContentService.GetAll());
 })
 .WithName("GetLocations");
+
+app.MapGet("/api/public/locations", (ILocationContentService locationContentService) =>
+{
+    return Results.Ok(locationContentService.GetAll());
+})
+.WithName("GetPublicLocations");
 
 app.MapGet("/api/public/locations/{locationId}", (
     string locationId,
@@ -316,9 +320,65 @@ app.MapGet("/api/public/tts-capabilities", (IOptions<AzureAiOptions> azureOption
 })
 .WithName("GetPublicTtsCapabilities");
 
+app.MapGet("/api/public/narrations/pricing", (
+    string? lang,
+    IPublicNarrationPaymentService paymentService) =>
+{
+    var quote = paymentService.GetQuote(lang ?? "vi");
+    return Results.Ok(new
+    {
+        language = quote.Language,
+        currencyCode = quote.CurrencyCode,
+        currencySymbol = quote.CurrencySymbol,
+        amount = quote.Amount,
+        amountVnd = quote.AmountVnd,
+        quotedAt = quote.QuotedAt
+    });
+})
+.WithName("GetPublicNarrationPricing");
+
+app.MapPost("/api/public/narrations/pay", (
+    PublicNarrationPaymentRequest request,
+    IPublicNarrationPaymentService paymentService) =>
+{
+    if (string.IsNullOrWhiteSpace(request.ParticipantId)
+        || string.IsNullOrWhiteSpace(request.LocationId))
+    {
+        return Results.BadRequest(new { message = "Thiếu dữ liệu thanh toán cho thuyết minh." });
+    }
+
+    try
+    {
+        var ticket = paymentService.CreatePayment(
+            request.ParticipantId,
+            request.LocationId,
+            request.TargetLanguage);
+
+        return Results.Ok(new
+        {
+            paymentToken = ticket.PaymentToken,
+            participantId = ticket.ParticipantId,
+            locationId = ticket.LocationId,
+            language = ticket.Language,
+            currencyCode = ticket.CurrencyCode,
+            currencySymbol = ticket.CurrencySymbol,
+            amount = ticket.Amount,
+            amountVnd = ticket.AmountVnd,
+            paidAt = ticket.PaidAt
+        });
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { message = ex.Message });
+    }
+})
+.WithName("PayPublicNarration");
+
 app.MapPost("/api/public/narrations/instant", async (
     GenerateNarrationRequest request,
     NarrationOrchestrator narrationOrchestrator,
+    IPublicNarrationPaymentService paymentService,
+    IAdminManagementService adminManagementService,
     HttpContext httpContext,
     CancellationToken cancellationToken) =>
 {
@@ -334,10 +394,40 @@ app.MapPost("/api/public/narrations/instant", async (
         return Results.BadRequest(new { message = "Ngôn ngữ không được hỗ trợ." });
     }
 
+    if (string.IsNullOrWhiteSpace(request.ParticipantId)
+        || string.IsNullOrWhiteSpace(request.PaymentToken))
+    {
+        return Results.Json(
+            new { message = "Bạn cần thanh toán trước khi nghe thuyết minh." },
+            statusCode: StatusCodes.Status402PaymentRequired);
+    }
+
+    if (!paymentService.TryConsumePayment(request.ParticipantId, request.LocationId, language, request.PaymentToken, out var ticket)
+        || ticket is null)
+    {
+        return Results.Json(
+            new { message = "Thanh toán không hợp lệ hoặc đã hết hạn. Vui lòng thanh toán lại." },
+            statusCode: StatusCodes.Status402PaymentRequired);
+    }
+
     try
     {
         var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
         var response = await narrationOrchestrator.GetOrCreateInstantAsync(request.LocationId, language, baseUrl, cancellationToken);
+
+        adminManagementService.TrackNarrationListen(new NarrationListenLogEntry
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            LocationId = request.LocationId,
+            ParticipantId = request.ParticipantId,
+            UserEmail = httpContext.User.FindFirstValue(ClaimTypes.Email),
+            TargetLanguage = language,
+            CurrencyCode = ticket.CurrencyCode,
+            PaidAmount = ticket.Amount,
+            PaidAmountVnd = ticket.AmountVnd,
+            ListenedAt = DateTimeOffset.UtcNow
+        });
+
         return Results.Ok(response);
     }
     catch (ArgumentException ex)
@@ -350,6 +440,71 @@ app.MapPost("/api/public/narrations/instant", async (
     }
 })
 .WithName("GeneratePublicInstantNarration");
+
+app.MapPost("/api/public/narrations", async (
+    GenerateNarrationRequest request,
+    NarrationOrchestrator narrationOrchestrator,
+    IPublicNarrationPaymentService paymentService,
+    IAdminManagementService adminManagementService,
+    HttpContext httpContext,
+    CancellationToken cancellationToken) =>
+{
+    if (string.IsNullOrWhiteSpace(request.LocationId))
+    {
+        return Results.BadRequest(new { message = "Bạn cần chọn quán ăn để tạo thuyết minh có thanh toán." });
+    }
+
+    var language = string.IsNullOrWhiteSpace(request.TargetLanguage) ? "vi" : request.TargetLanguage.Trim().ToLowerInvariant();
+    if (string.IsNullOrWhiteSpace(request.ParticipantId)
+        || string.IsNullOrWhiteSpace(request.PaymentToken))
+    {
+        return Results.Json(
+            new { message = "Bạn cần thanh toán trước khi nghe thuyết minh." },
+            statusCode: StatusCodes.Status402PaymentRequired);
+    }
+
+    if (!paymentService.TryConsumePayment(request.ParticipantId, request.LocationId, language, request.PaymentToken, out var ticket)
+        || ticket is null)
+    {
+        return Results.Json(
+            new { message = "Thanh toán không hợp lệ hoặc đã hết hạn. Vui lòng thanh toán lại." },
+            statusCode: StatusCodes.Status402PaymentRequired);
+    }
+
+    try
+    {
+        var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+        var response = await narrationOrchestrator.GenerateAsync(request, baseUrl, cancellationToken, null);
+
+        adminManagementService.TrackNarrationListen(new NarrationListenLogEntry
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            LocationId = request.LocationId,
+            ParticipantId = request.ParticipantId,
+            UserEmail = null,
+            TargetLanguage = language,
+            CurrencyCode = ticket.CurrencyCode,
+            PaidAmount = ticket.Amount,
+            PaidAmountVnd = ticket.AmountVnd,
+            ListenedAt = DateTimeOffset.UtcNow
+        });
+
+        return Results.Ok(response);
+    }
+    catch (ArgumentException ex)
+    {
+        return Results.BadRequest(new { message = ex.Message });
+    }
+    catch (InvalidOperationException ex)
+    {
+        return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
+    }
+    catch (HttpRequestException ex)
+    {
+        return Results.Problem($"Lỗi kết nối đến dịch vụ AI: {ex.Message}", statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+})
+.WithName("GeneratePublicPaidNarration");
 
 app.MapGet("/api/public/tts-proxy", async (
     string text,
@@ -396,6 +551,37 @@ app.MapGet("/api/public/tts-proxy", async (
     }
 })
 .WithName("ProxyPublicTts");
+
+app.MapPost("/api/public/live-participants/heartbeat", (
+    LiveParticipantHeartbeatRequest request,
+    ILiveParticipantTracker liveParticipantTracker) =>
+{
+    if (string.IsNullOrWhiteSpace(request.ParticipantId))
+    {
+        return Results.BadRequest(new { message = "Thiếu ParticipantId để theo dõi người tham gia." });
+    }
+
+    var snapshot = liveParticipantTracker.Touch(request.ParticipantId);
+    return Results.Ok(new
+    {
+        activeParticipants = snapshot.ActiveParticipants,
+        activeWindowSeconds = snapshot.ActiveWindowSeconds,
+        capturedAt = snapshot.CapturedAt
+    });
+})
+.WithName("HeartbeatPublicLiveParticipants");
+
+app.MapGet("/api/public/live-participants", (ILiveParticipantTracker liveParticipantTracker) =>
+{
+    var snapshot = liveParticipantTracker.GetSnapshot();
+    return Results.Ok(new
+    {
+        activeParticipants = snapshot.ActiveParticipants,
+        activeWindowSeconds = snapshot.ActiveWindowSeconds,
+        capturedAt = snapshot.CapturedAt
+    });
+})
+.WithName("GetPublicLiveParticipants");
 
 app.MapGet("/api/voice-profiles", (IAdminManagementService adminManagementService) =>
 {
@@ -446,7 +632,8 @@ app.MapPost("/api/narrations", async (
         return Results.Problem($"Lỗi kết nối đến dịch vụ AI (kiểm tra lại API Key hoặt kết nối mạng): {ex.Message}", statusCode: StatusCodes.Status503ServiceUnavailable);
     }
 })
-.WithName("GenerateNarration");
+.WithName("GenerateNarration")
+.RequireAuthorization();
 
 app.MapPost("/api/narrations/instant", async (
     GenerateNarrationRequest request,
@@ -477,7 +664,8 @@ app.MapPost("/api/narrations/instant", async (
         return Results.Problem(ex.Message, statusCode: StatusCodes.Status500InternalServerError);
     }
 })
-.WithName("GenerateInstantNarration");
+.WithName("GenerateInstantNarration")
+.RequireAuthorization();
 
 app.MapPost("/api/routes/plan", async (
     RoutePlanRequest request,
@@ -656,7 +844,8 @@ app.MapGet("/api/account/dashboard", (
 app.MapGet("/api/admin/dashboard", (
     HttpContext httpContext,
     IOptions<AdminOptions> adminOptions,
-    IAdminManagementService adminManagementService) =>
+    IAdminManagementService adminManagementService,
+    ILiveParticipantTracker liveParticipantTracker) =>
 {
     if (!IsAdmin(httpContext.Request, adminOptions))
     {
@@ -665,7 +854,14 @@ app.MapGet("/api/admin/dashboard", (
 
     var locations = adminManagementService.GetLocations();
     var aiLogs = adminManagementService.GetAiUsageLogs(1000);
-    var visits = adminManagementService.GetVisitLogs(1000);
+    var visits = adminManagementService.GetVisitLogs(5000);
+    var listens = adminManagementService.GetNarrationListenLogs(10000);
+    var liveSnapshot = liveParticipantTracker.GetSnapshot();
+    var now = DateTimeOffset.UtcNow;
+    var weekStart = now.AddDays(-7);
+    var monthStart = now.AddDays(-30);
+
+    var locationNameById = locations.ToDictionary(x => x.Id, x => x.Name, StringComparer.OrdinalIgnoreCase);
 
     var dashboard = new
     {
@@ -676,14 +872,66 @@ app.MapGet("/api/admin/dashboard", (
         narrationCount = aiLogs.Count,
         totalEstimatedCostUsd = aiLogs.Sum(x => x.EstimatedCostUsd),
         totalVisits = visits.Count,
+        visitsThisWeek = visits.Count(x => x.VisitedAt >= weekStart),
+        visitsThisMonth = visits.Count(x => x.VisitedAt >= monthStart),
+        activeParticipantsNow = liveSnapshot.ActiveParticipants,
+        totalListenCount = listens.Count,
+        totalRevenueVnd = listens.Sum(x => x.PaidAmountVnd),
+        dailyVisits = Enumerable.Range(0, 7)
+            .Select(i => new
+            {
+                date = weekStart.AddDays(i).Date,
+                visits = visits.Count(x => x.VisitedAt.Date == weekStart.AddDays(i).Date)
+            })
+            .ToList(),
         topPages = visits
             .GroupBy(x => x.Path)
             .Select(g => new { path = g.Key, visits = g.Count() })
             .OrderByDescending(x => x.visits)
-            .Take(10)
+            .Take(10),
+        listensByLocation = listens
+            .GroupBy(x => x.LocationId)
+            .Select(g => new
+            {
+                locationId = g.Key,
+                locationName = locationNameById.TryGetValue(g.Key, out var name) ? name : g.Key,
+                listenCount = g.Count(),
+                revenueVnd = g.Sum(x => x.PaidAmountVnd),
+                lastListenedAt = g.Max(x => x.ListenedAt)
+            })
+            .OrderByDescending(x => x.listenCount)
+            .Take(30)
     };
 
     return Results.Ok(dashboard);
+});
+
+app.MapGet("/api/admin/debug/participants", (
+    HttpContext httpContext,
+    IOptions<AdminOptions> adminOptions,
+    ILiveParticipantTracker liveParticipantTracker) =>
+{
+    if (!IsAdmin(httpContext.Request, adminOptions))
+    {
+        return UnauthorizedAdmin();
+    }
+
+    var snapshot = liveParticipantTracker.GetSnapshot();
+    
+    return Results.Ok(new
+    {
+        totalActive = snapshot.ActiveParticipants,
+        activeWindowSeconds = snapshot.ActiveWindowSeconds,
+        capturedAt = snapshot.CapturedAt,
+        participantIds = snapshot.ParticipantIds,
+        details = snapshot.ParticipantIds.Select((id, index) => new
+        {
+            index = index + 1,
+            participantId = id,
+            isAdmin = id.StartsWith("admin_", StringComparison.OrdinalIgnoreCase),
+            length = id.Length
+        }).ToList()
+    });
 });
 
 app.MapGet("/api/admin/locations", (
@@ -1110,5 +1358,144 @@ app.MapPost("/api/admin/merchant-requests/{requestId}/highlight", (
     return Results.Ok(new { message = "Đã cập nhật ưu tiên quảng cáo", request = updated });
 })
 .WithName("UpdateMerchantRequestHighlight");
+
+// User Management Analytics - Visit Stats
+app.MapGet("/api/admin/user-stats", (
+    HttpContext httpContext,
+    IOptions<AdminOptions> adminOptions,
+    IAdminManagementService adminManagementService,
+    string period = "daily") => // daily, weekly, monthly
+{
+    if (!IsAdmin(httpContext.Request, adminOptions))
+    {
+        return UnauthorizedAdmin();
+    }
+
+    var visits = adminManagementService.GetVisitLogs(10000);
+    var now = DateTimeOffset.UtcNow;
+    var locationNameById = adminManagementService.GetLocations()
+        .ToDictionary(x => x.Id, x => x.Name, StringComparer.OrdinalIgnoreCase);
+
+    var grouped = period switch
+    {
+        "weekly" => visits
+            .GroupBy(v => System.Globalization.CultureInfo.InvariantCulture.Calendar
+                .GetWeekOfYear(v.VisitedAt.DateTime, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday))
+            .Select(g => new { period = $"Week {g.Key}", visits = g.Count() })
+            .OrderBy(x => x.period),
+        "monthly" => visits
+            .GroupBy(v => v.VisitedAt.Date.AddDays(-(v.VisitedAt.Day - 1)))
+            .Select(g => new { period = g.Key.ToString("MMM yyyy"), visits = g.Count() })
+            .OrderBy(x => x.period),
+        _ => visits // daily (default)
+            .GroupBy(v => v.VisitedAt.Date)
+            .Select(g => new { date = g.Key, visits = g.Count() })
+            .OrderByDescending(x => x.date)
+            .Take(30)
+            .Select(x => new { period = x.date.ToString("ddd MMM dd"), visits = x.visits })
+            .AsEnumerable()
+    };
+
+    var recentVisits = visits
+        .OrderByDescending(x => x.VisitedAt)
+        .Take(50)
+        .Select(v => new
+        {
+            v.Id,
+            device = ExtractDeviceFromUserAgent(v.UserAgent),
+            visitedAt = v.VisitedAt,
+            path = v.Path,
+            userAgent = v.UserAgent
+        })
+        .ToList();
+
+    return Results.Ok(new
+    {
+        visitStats = grouped.ToList(),
+        recentVisits,
+        totalUniqueDevices = visits.Select(v => ExtractDeviceFromUserAgent(v.UserAgent)).Distinct().Count(),
+        totalVisits = visits.Count
+    });
+})
+.WithName("AdminUserStats");
+
+// User Management Analytics - Payment Stats
+app.MapGet("/api/admin/payment-stats", (
+    HttpContext httpContext,
+    IOptions<AdminOptions> adminOptions,
+    IAdminManagementService adminManagementService) =>
+{
+    if (!IsAdmin(httpContext.Request, adminOptions))
+    {
+        return UnauthorizedAdmin();
+    }
+
+    var listens = adminManagementService.GetNarrationListenLogs(10000);
+    var visits = adminManagementService.GetVisitLogs(10000);
+    var locations = adminManagementService.GetLocations()
+        .ToDictionary(x => x.Id, x => x.Name, StringComparer.OrdinalIgnoreCase);
+
+    // Payment stats grouped by participant
+    var paymentStats = listens
+        .GroupBy(x => x.ParticipantId)
+        .Select(g => new
+        {
+            participantId = g.Key,
+            transactionCount = g.Count(),
+            totalRevenueVnd = g.Sum(x => x.PaidAmountVnd),
+            lastPaymentAt = g.Max(x => x.ListenedAt),
+            recentLocations = g.GroupBy(x => x.LocationId)
+                .Select(lg => new
+                {
+                    locationId = lg.Key,
+                    locationName = locations.TryGetValue(lg.Key, out var name) ? name : lg.Key,
+                    payments = lg.Count(),
+                    amountVnd = lg.Sum(x => x.PaidAmountVnd)
+                })
+                .OrderByDescending(x => x.amountVnd)
+                .Take(3)
+                .ToList()
+        })
+        .OrderByDescending(x => x.totalRevenueVnd)
+        .Take(50)
+        .ToList();
+
+    // QR vs Web-Only ratio
+    var usersWithPayment = visits
+        .Where(v => listens.Any(l => l.ParticipantId.Contains(v.Id) || v.UserAgent.Contains(l.ParticipantId)))
+        .Count();
+    var qrPaymentUsers = listens.Select(x => x.ParticipantId).Distinct().Count();
+    var webOnlyUsers = Math.Max(0, visits.Count - usersWithPayment);
+
+    return Results.Ok(new
+    {
+        paymentStats,
+        totalRevenueVnd = listens.Sum(x => x.PaidAmountVnd),
+        totalTransactions = listens.Count,
+        uniquePayers = listens.Select(x => x.ParticipantId).Distinct().Count(),
+        qrPaymentRatio = new
+        {
+            qrUsers = qrPaymentUsers,
+            webOnlyUsers = Math.Max(1, webOnlyUsers),
+            paymentPercentage = listens.Count > 0 ? Math.Round((double)qrPaymentUsers / (qrPaymentUsers + webOnlyUsers) * 100, 1) : 0
+        }
+    });
+})
+.WithName("AdminPaymentStats");
+
+// Helper: Extract device type from UserAgent
+static string ExtractDeviceFromUserAgent(string userAgent)
+{
+    if (string.IsNullOrWhiteSpace(userAgent)) return "Unknown";
+    
+    var ua = userAgent.ToLower();
+    if (ua.Contains("iphone")) return "iPhone";
+    if (ua.Contains("ipad")) return "iPad";
+    if (ua.Contains("android")) return "Android";
+    if (ua.Contains("windows")) return "Windows PC";
+    if (ua.Contains("macintosh") || ua.Contains("mac os")) return "Mac";
+    if (ua.Contains("linux")) return "Linux";
+    return "Web Browser";
+}
 
 app.Run();

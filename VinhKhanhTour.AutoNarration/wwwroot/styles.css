@@ -235,6 +235,95 @@ nav .nav-links a.active {
     gap: 1rem;
 }
 
+.live-participants-panel {
+    margin: 1.25rem auto 0;
+    width: min(680px, 100%);
+    border: 1px solid rgba(147, 255, 208, 0.45);
+    background: linear-gradient(135deg, rgba(13, 28, 23, 0.8), rgba(17, 33, 49, 0.76));
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+.live-participants-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #37ffb2;
+    box-shadow: 0 0 0 0 rgba(55, 255, 178, 0.7);
+    animation: livePulse 1.8s ease-out infinite;
+}
+
+.live-participants-panel strong {
+    color: #e8fff7;
+    font-size: 0.95rem;
+}
+
+.live-participants-panel small {
+    width: 100%;
+    color: rgba(224, 246, 255, 0.86);
+    font-size: 0.8rem;
+}
+
+.narration-payment-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.narration-payment-modal.hidden {
+    display: none;
+}
+
+.narration-payment-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.narration-payment-card {
+    position: relative;
+    width: min(92vw, 440px);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 206, 153, 0.42);
+    background: linear-gradient(130deg, rgba(21, 30, 44, 0.95), rgba(18, 33, 31, 0.94));
+    padding: 1rem 1.1rem;
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.35);
+}
+
+.narration-payment-amounts {
+    margin: 0.8rem 0;
+    padding: 0.65rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.narration-payment-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+}
+
+@keyframes livePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(55, 255, 178, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(55, 255, 178, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(55, 255, 178, 0);
+    }
+}
+
 /* SECTIONS */
 section {
     max-width: 1100px;
@@ -1969,4 +2058,22 @@ body.auth-page::before {
     .auth-user-chip {
         display: none;
     }
+}
+
+/* Admin Dashboard - Light theme (yellow/white) */
+.admin-page::before {
+  background: none !important;
+}
+
+.admin-page::after {
+  background: none !important;
+}
+
+.admin-page section {
+  padding: 1.5rem;
+  background: #fff;
+  border: 2px solid #f0e68c;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
