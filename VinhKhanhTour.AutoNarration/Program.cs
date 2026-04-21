@@ -91,7 +91,7 @@ if (app.Environment.IsDevelopment())
         foreach (var loc in locations)
         {
             var email = $"{loc.Id}@vinh-khanh.test".ToLowerInvariant();
-            var password = "Merchant@1234";
+            var password = $"Merchant@{loc.Id}";
             var (success, error, _) = authService.Register(
                 loc.Name,
                 email,
@@ -100,7 +100,7 @@ if (app.Environment.IsDevelopment())
             );
             if (success)
             {
-                System.Console.WriteLine($"  ✅ Merchant: {loc.Name} ({email})");
+                System.Console.WriteLine($"  ✅ Merchant: {loc.Name} ({email}) / {password}");
                 merchantCount++;
             }
             else if (!error?.Contains("already") ?? false)

@@ -1,5 +1,6 @@
 const merchantRefreshBtn = document.getElementById('merchantRefreshBtn');
 const merchantLogoutBtn = document.getElementById('merchantLogoutBtn');
+const merchantGreeting = document.getElementById('merchantGreeting');
 
 const merchantUserName = document.getElementById('merchantUserName');
 const merchantUserEmail = document.getElementById('merchantUserEmail');
@@ -307,6 +308,9 @@ async function loadMerchantAccount() {
   }
   if (merchantUserEmail) {
     merchantUserEmail.textContent = currentAccount.email || '';
+  }
+  if (merchantGreeting) {
+    merchantGreeting.textContent = `Xin chào, ${currentAccount.fullName || currentAccount.email || 'quán của bạn'}`;
   }
 
   const dashboardRes = await fetch('/api/account/dashboard');
