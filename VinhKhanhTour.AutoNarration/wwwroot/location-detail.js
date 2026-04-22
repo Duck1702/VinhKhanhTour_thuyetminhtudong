@@ -290,7 +290,13 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function getCardImage(locationId) {
+function getCardImage(location) {
+  // Support both location object and locationId string
+  if (typeof location === 'object' && location && location.imageUrl) {
+    return location.imageUrl;
+  }
+  
+  const locationId = typeof location === 'string' ? location : (location?.id || '');
   return locationImages[locationId] ?? '/assets/map.svg';
 }
 
@@ -322,7 +328,7 @@ function renderLocationDetail() {
   detailLocationName.textContent = escapeHtml(currentLocation.name);
   detailLocationCategory.textContent = escapeHtml(currentLocation.category);
   
-  const imgUrl = getCardImage(currentLocation.id);
+  const imgUrl = getCardImage(currentLocation);
   detailImageContainer.innerHTML = `<img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(currentLocation.name)}" class="location-detail-image" />`;
 
   detailAddress.textContent = escapeHtml(currentLocation.address || 'N/A');

@@ -303,7 +303,13 @@ function groupIcon(groupKey) {
   return icons[groupKey] ?? icons.khac;
 }
 
-function getCardImage(locationId) {
+function getCardImage(location) {
+  // Support both location object and locationId string
+  if (typeof location === 'object' && location && location.imageUrl) {
+    return location.imageUrl;
+  }
+  
+  const locationId = typeof location === 'string' ? location : (location?.id || '');
   const images = {
     'oc-oanh': '/assets/vinh-khanh-street.jpg',
     'oc-vu': '/assets/vinh-khanh-street.jpg',
@@ -859,7 +865,7 @@ function renderFoodGroups(locations) {
       const cards = items
         .map((location) => `
           <article class="card food-card">
-            <img class="card-visual" src="${getCardImage(location.id)}" alt="${escapeHtml(location.name)}" />
+            <img class="card-visual" src="${getCardImage(location)}" alt="${escapeHtml(location.name)}" />
             <div class="card-head">
               <span class="tag">${escapeHtml(renderCategoryLabel(location.category))}</span>
               <span class="tag" style="background:var(--bg); color:var(--text-secondary); border: 1px solid var(--border);">${escapeHtml(location.bestTime)}</span>
