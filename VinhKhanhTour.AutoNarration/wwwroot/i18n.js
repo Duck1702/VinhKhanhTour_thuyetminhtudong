@@ -468,6 +468,14 @@
   }
 
   function getSiteLanguage() {
+    // Check URL query param first (highest priority)
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    if (urlLang && ['vi', 'en', 'fr', 'ja', 'ko'].includes(urlLang)) {
+      return normalize(urlLang);
+    }
+    
+    // Fall back to localStorage
     return normalize(localStorage.getItem(SITE_LANGUAGE_KEY) || 'vi');
   }
 

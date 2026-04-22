@@ -146,13 +146,14 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             ContactPhone = "0937 916 159",
             OpeningHours = "13:00 - 00:00",
             PriceRange = "80.000 - 250.000 VND/người",
-            ShortIntro = "Quán nổi tiếng nhất phố Vĩnh Khánh, hải sản tươi và nêm nếm đậm đà.",
+            ShortIntro = "Quán nổi tiếng nhất phố Vĩnh Khánh, hải sand tươi và nêm nếm đậm đà.",
             BestTime = "Sau 18:00",
             Highlight = "Ốc hương rang muối ớt, bạch tuộc nướng, chân gà nướng",
             DishSamples = "Ốc hương rang muối ớt, bạch tuộc nướng, chân gà nướng",
             DescriptionVi = "Không gian bình dân nhưng luôn đông khách nhờ món lên nhanh, vị ổn định và nguyên liệu tươi.",
             Latitude = 10.760865,
-            Longitude = 106.703808
+            Longitude = 106.703808,
+            ImageUrl = "https://images.unsplash.com/photo-1632778149955-e89aed0eeffa?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -169,7 +170,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Ốc len xào dừa, nghêu hấp thái, mì xào ốc giác",
             DescriptionVi = "Với hơn 15 năm hoạt động, quán ghi điểm nhờ hương vị ổn định và không gian thoáng cho nhóm đông.",
             Latitude = 10.761128,
-            Longitude = 106.703573
+            Longitude = 106.703573,
+            ImageUrl = "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -186,7 +188,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Răng mực xào bơ, ốc móng tay xào rau muống",
             DescriptionVi = "Món xào đậm vị, ăn kèm bánh mì rất cuốn; phù hợp khách thích phong cách hải sản kiểu Sài Gòn.",
             Latitude = 10.761092,
-            Longitude = 106.703402
+            Longitude = 106.703402,
+            ImageUrl = "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -203,7 +206,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Ốc sốt me, ốc sốt trứng muối, càng cua",
             DescriptionVi = "Quán có công thức nước chấm me đặc trưng, vị chua cay rõ nét và rất bắt vị.",
             Latitude = 10.762386,
-            Longitude = 106.703316
+            Longitude = 106.703316,
+            ImageUrl = "https://images.unsplash.com/photo-1625882814949-a2f84f4f8bfd?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -220,7 +224,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Ốc xào rau muống, sò lông nướng mỡ hành",
             DescriptionVi = "Là điểm hẹn quen thuộc của dân địa phương nhờ món đậm vị và thời gian lên món ổn định.",
             Latitude = 10.762108,
-            Longitude = 106.703061
+            Longitude = 106.703061,
+            ImageUrl = "https://images.unsplash.com/photo-1609954227505-5876f6aa4e90?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -237,7 +242,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Ốc len, sò huyết cháy tỏi",
             DescriptionVi = "Món ăn sạch sẽ, vừa vị, phù hợp khách muốn tìm quán ngon giá dễ chịu.",
             Latitude = 10.761721,
-            Longitude = 106.703915
+            Longitude = 106.703915,
+            ImageUrl = "https://images.unsplash.com/photo-1615521267537-b85faf00021d?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -254,7 +260,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Crawfish sốt cay, hải sản nướng muối ớt",
             DescriptionVi = "Không khí sôi động về đêm, phù hợp nhóm bạn thích tụ tập và gọi nhiều món nướng.",
             Latitude = 10.760988,
-            Longitude = 106.703655
+            Longitude = 106.703655,
+            ImageUrl = "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -271,7 +278,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Hào 24 vị, bò tảng nướng sốt trứng muối",
             DescriptionVi = "View nhìn xuống phố Vĩnh Khánh, menu lẩu nướng đa dạng, phù hợp khách đi nhóm.",
             Latitude = 10.761488,
-            Longitude = 106.703205
+            Longitude = 106.703205,
+            ImageUrl = "https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -288,7 +296,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Bò Wagyu A5, bò dát vàng, lẩu Mông Cổ",
             DescriptionVi = "Phù hợp khách muốn trải nghiệm menu bò thượng hạng với nước sốt đặc trưng.",
             Latitude = 10.762504,
-            Longitude = 106.703426
+            Longitude = 106.703426,
+            ImageUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -305,7 +314,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Lẩu Hong Kong 2 ngăn, viên thả lẩu",
             DescriptionVi = "Quán nổi bật ở phần nước lẩu và topping phong phú, phù hợp nhóm bạn trẻ.",
             Latitude = 10.760802,
-            Longitude = 106.703844
+            Longitude = 106.703844,
+            ImageUrl = "https://images.unsplash.com/photo-1564489551499-c9880eaf00d0?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -322,7 +332,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Bò lúc lắc, cua rang me, mực nướng ớt xiêm",
             DescriptionVi = "Món nêm theo hướng cay nồng đặc trưng, hợp nhóm thích đồ nhậu đậm vị.",
             Latitude = 10.760924,
-            Longitude = 106.703769
+            Longitude = 106.703769,
+            ImageUrl = "https://images.unsplash.com/photo-1585238341710-4dd0bd180a5f?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -339,7 +350,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Giò heo chiên giòn, phá lấu lòng, lưỡi vịt sapo",
             DescriptionVi = "Thực đơn hợp ngồi lai rai, giá vừa tầm và không khí nhậu đặc trưng Quận 4.",
             Latitude = 10.760936,
-            Longitude = 106.703745
+            Longitude = 106.703745,
+            ImageUrl = "https://images.unsplash.com/photo-1589521471499-bccf1d1dd103?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -356,7 +368,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Nướng ngói, bẹ sữa nướng muối ớt",
             DescriptionVi = "Không khí ấm cúng, món nướng lên đều tay, thích hợp đi nhóm bạn và gia đình.",
             Latitude = 10.762312,
-            Longitude = 106.703288
+            Longitude = 106.703288,
+            ImageUrl = "https://images.unsplash.com/photo-1555939594-58d7cb561341?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -373,7 +386,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Sashimi cá hồi, maki tôm nướng, salad rong biển",
             DescriptionVi = "Lựa chọn phù hợp nếu muốn đổi vị với món Nhật giữa khu phố ẩm thực đêm.",
             Latitude = 10.761934,
-            Longitude = 106.703121
+            Longitude = 106.703121,
+            ImageUrl = "https://images.unsplash.com/photo-1570921866519-16edbc60e1ea?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -390,7 +404,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Bún cá, bún mắm",
             DescriptionVi = "Món nước đặc sản miền Tây ngay giữa phố nhậu, phù hợp bữa sáng hoặc đổi vị.",
             Latitude = 10.762082,
-            Longitude = 106.703196
+            Longitude = 106.703196,
+            ImageUrl = "https://images.unsplash.com/photo-1555939594-58d7cb561341?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -407,7 +422,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Bún thịt nướng, nem nướng",
             DescriptionVi = "Nước mắm pha vừa miệng, thịt nướng thơm, phù hợp bữa sáng nhanh và no.",
             Latitude = 10.762446,
-            Longitude = 106.703423
+            Longitude = 106.703423,
+            ImageUrl = "https://images.unsplash.com/photo-1625882814949-a2f84f4f8bfd?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -424,7 +440,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Cơm chiên hải sản, sụn gà rang muối",
             DescriptionVi = "Quán phù hợp gia đình và nhóm bạn muốn menu đa dạng ngoài hải sản nướng.",
             Latitude = 10.760952,
-            Longitude = 106.703688
+            Longitude = 106.703688,
+            ImageUrl = "https://images.unsplash.com/photo-1618747267537-b85faf00021d?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -441,7 +458,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Nem nướng Nha Trang",
             DescriptionVi = "Rau sống tươi và nước chấm đặc trưng giúp quán luôn hút khách vào buổi chiều tối.",
             Latitude = 10.762662,
-            Longitude = 106.703514
+            Longitude = 106.703514,
+            ImageUrl = "https://images.unsplash.com/photo-1615521267537-b85faf00021d?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -458,7 +476,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Bún bò giò gân, bún bò nạm",
             DescriptionVi = "Là một trong các quán bún bò được đánh giá ổn định trên trục Vĩnh Khánh.",
             Latitude = 10.761654,
-            Longitude = 106.703486
+            Longitude = 106.703486,
+            ImageUrl = "https://images.unsplash.com/photo-1612874742237-415b5846d3c2?w=500&h=500&fit=crop"
         },
         new StreetLocation
         {
@@ -475,7 +494,8 @@ public sealed class InMemoryLocationContentService : ILocationContentService, IA
             DishSamples = "Lẩu mẹt đủ loại, đồ nướng đồng giá",
             DescriptionVi = "Giá dễ tiếp cận, menu phong phú và phục vụ nhanh cho các nhóm khách trẻ.",
             Latitude = 10.760702,
-            Longitude = 106.703902
+            Longitude = 106.703902,
+            ImageUrl = "https://images.unsplash.com/photo-1604914696071-2e1e00a1d5f5?w=500&h=500&fit=crop"
         }
     ];
 

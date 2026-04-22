@@ -98,7 +98,8 @@ public sealed class InMemoryPublicNarrationPaymentService : IPublicNarrationPaym
                 return false;
             }
 
-            _tokens.Remove(paymentKey);
+            // Note: We do NOT remove the token here - tokens are reusable until they expire
+            // This allows customers to listen multiple times without repaying
             ticket = data;
             return true;
         }

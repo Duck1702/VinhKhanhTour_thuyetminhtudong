@@ -81,8 +81,15 @@
         window.siteI18n.setSiteLanguage(selected);
       }
 
+      // Preserve all existing URL params, just update lang
       const url = new URL(window.location.href);
       url.searchParams.set('lang', selected);
+      
+      // Dispatch custom event before navigating
+      window.dispatchEvent(new CustomEvent('siteLanguageChanged', { 
+        detail: { language: selected } 
+      }));
+      
       window.location.href = url.toString();
     });
 

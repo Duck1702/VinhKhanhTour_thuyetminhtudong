@@ -69,28 +69,21 @@
           </div>
         </div>
 
-        <!-- Language selector & Narration -->
+        <!-- Narration -->
         <div class="location-detail-section">
           <h2>Nghe thuyết minh</h2>
-          <div class="location-narration-controls">
-            <label for="detailLanguageSelect" id="detailLanguageLabel">Chọn ngôn ngữ:</label>
-            <select id="detailLanguageSelect">
-              <option value="vi">Tiếng Việt</option>
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="ja">日本語</option>
-              <option value="ko">한국어</option>
-            </select>
-          </div>
           <div class="location-narration-actions">
             <button id="detailPlayBtn" type="button" class="button button-primary">
               🔊 Nghe thuyết minh
+            </button>
+            <button id="detailStopBtn" type="button" class="button button-secondary" style="display: none;">
+              ⏹️ Dừng
             </button>
             <button id="detailBackBtn" type="button" class="button button-secondary">
               ← Quay lại danh sách
             </button>
           </div>
-          <audio id="detailAudioPlayer" controls class="location-audio-player" style="width: 100%; margin-top: 1rem;"></audio>
+          <audio id="detailAudioPlayer" class="location-audio-player" style="width: 100%; margin-top: 1rem;"></audio>
         </div>
 
         <!-- Error message -->

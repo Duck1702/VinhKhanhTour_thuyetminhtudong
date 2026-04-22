@@ -16,4 +16,5 @@ public sealed class StreetLocation
     public string? DishSamples { get; init; }
     public double? Latitude { get; init; }
     public double? Longitude { get; init; }
+    public string? ImageUrl { get; init; }
 }

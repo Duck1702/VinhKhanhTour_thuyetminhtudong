@@ -120,9 +120,8 @@ const detailHighlight = document.getElementById('detailHighlight');
 const detailShortIntro = document.getElementById('detailShortIntro');
 const detailDescription = document.getElementById('detailDescription');
 const detailDishes = document.getElementById('detailDishes');
-const detailLanguageSelect = document.getElementById('detailLanguageSelect');
-const detailLanguageLabel = document.getElementById('detailLanguageLabel');
 const detailPlayBtn = document.getElementById('detailPlayBtn');
+const detailStopBtn = document.getElementById('detailStopBtn');
 const detailBackBtn = document.getElementById('detailBackBtn');
 const detailAudioPlayer = document.getElementById('detailAudioPlayer');
 
@@ -233,11 +232,22 @@ const locationImages = {
 };
 
 function getPreferredLanguage() {
+  // Use global i18n if available (which checks URL params first)
+  if (window.siteI18n?.getSiteLanguage) {
+    return window.siteI18n.getSiteLanguage();
+  }
+  
+  // Fallback to URL params
   const supported = new Set(['vi', 'en', 'fr', 'ja', 'ko']);
   
   const fromQuery = new URLSearchParams(window.location.search).get('lang');
   if (fromQuery && supported.has(fromQuery)) {
     return fromQuery;
+  }
+
+  const fromStorage = localStorage.getItem(SITE_LANGUAGE_KEY);
+  if (fromStorage && supported.has(fromStorage)) {
+    return fromStorage;
   }
 
   const fromNav = document.getElementById('site-language-select')?.value;
@@ -253,12 +263,22 @@ function pageText(key) {
   return i18n[lang]?.[key] ?? i18n.en[key] ?? key;
 }
 
-function updateUILanguage() {
+function updateAllUIText() {
   const lang = getPreferredLanguage();
-  detailLanguageLabel.textContent = pageText('languageLabel');
+  
+  // Update buttons
   detailPlayBtn.textContent = pageText('playBtn');
   detailBackBtn.textContent = pageText('backBtn');
-  detailLanguageSelect.value = lang;
+  
+  // Update all section headings
+  const h2s = document.querySelectorAll('.location-detail-section h2');
+  if (h2s[0]) h2s[0].textContent = pageText('basicInfo');
+  if (h2s[1]) h2s[1].textContent = pageText('highlightSection');
+  if (h2s[2]) h2s[2].textContent = pageText('narrationSection');
+}
+
+function updateUILanguage() {
+  updateAllUIText();
 }
 
 function escapeHtml(value) {
@@ -322,12 +342,21 @@ async function loadLocationData() {
   const locationId = params.get('locationId');
   const paymentToken = params.get('paymentToken');
 
-  if (!locationId || !paymentToken) {
+  if (!locationId) {
     showError(pageText('errorMissingParams'));
     return;
   }
 
-  currentPaymentToken = paymentToken;
+  // Payment token may come from URL or cached session
+  if (paymentToken) {
+    currentPaymentToken = paymentToken;
+    // Cache payment token for this location in session storage
+    sessionStorage.setItem(`paymentToken_${locationId}`, paymentToken);
+  } else {
+    // Try to get cached payment token for this location
+    currentPaymentToken = sessionStorage.getItem(`paymentToken_${locationId}`);
+  }
+
   participantId = localStorage.getItem('vktour.participantId') || 'participant-unknown';
 
   showLoading(pageText('loading'));
@@ -349,11 +378,11 @@ async function loadLocationData() {
 
 async function playNarration() {
   if (!currentLocation || !currentPaymentToken) {
-    showError('Thông tin không đủ');
+    showError('Thông tin không đủ để phát thuyết minh');
     return;
   }
 
-  const selectedLang = detailLanguageSelect.value;
+  const selectedLang = getPreferredLanguage();
   const previousText = detailPlayBtn.textContent;
   
   detailPlayBtn.disabled = true;
@@ -368,6 +397,8 @@ async function playNarration() {
       paymentToken: currentPaymentToken
     };
 
+    console.log('Requesting narration:', req);
+
     const resp = await fetch('/api/public/narrations/instant', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -376,40 +407,70 @@ async function playNarration() {
 
     if (!resp.ok) {
       const err = await resp.json();
+      console.error('Server error:', err);
       throw new Error(err.message || pageText('errorGenerating'));
     }
 
     const narration = await resp.json();
+    console.log('Received narration:', narration);
     
-    // Check if server returned a demo beep (fallback tone)
+    // Check if server returned a demo beep (fallback tone) - if so, use browser TTS instead
     if (String(narration.voiceName || '').toLowerCase() === 'demo-fallback-tone') {
-      throw new Error('server-demo-beep');
+      console.warn('Server returned fallback beep, using browser TTS instead');
+      throw new Error('server-using-fallback');
     }
 
-    // Set server audio
-    detailAudioPlayer.src = narration.audioUrl;
-    detailAudioPlayer.play().catch(e => {
-      console.warn('Auto-play failed:', e);
-    });
-    hideError();
+    // Server returned proper audio - try to play it
+    if (narration.audioUrl) {
+      detailAudioPlayer.src = narration.audioUrl;
+      detailPlayBtn.style.display = 'none';
+      detailStopBtn.style.display = 'inline-block';
+      
+      detailAudioPlayer.play().catch(e => {
+        console.warn('Auto-play failed:', e);
+        // If autoplay fails, show message but keep player visible
+        showError('Nhấn play để phát audio');
+      });
+      hideError();
+      return;
+    }
+
+    // No audio URL returned - use browser TTS
+    throw new Error('no-audio-url');
   } catch (error) {
-    // If server TTS failed or not available, fall back to browser TTS
-    if (error.message === 'server-demo-beep' || error.message.includes('Failed to fetch')) {
-      try {
-        detailPlayBtn.textContent = 'Đang phát bằng giọng nói trình duyệt...';
-        await speakWithBrowserTts(currentLocation, selectedLang);
-        detailAudioPlayer.removeAttribute('src');
-        hideError();
-      } catch (browserError) {
-        showError(`${pageText('errorGenerating')} ${browserError.message}`);
-      }
-    } else {
-      showError(`${pageText('errorGenerating')} ${error.message}`);
+    console.log('Server approach failed, falling back to browser TTS:', error.message);
+    
+    // Fallback to browser TTS
+    try {
+      detailPlayBtn.textContent = 'Đang phát bằng giọng nói trình duyệt...';
+      await speakWithBrowserTts(currentLocation, selectedLang);
+      detailPlayBtn.style.display = 'none';
+      detailStopBtn.style.display = 'inline-block';
+      detailAudioPlayer.removeAttribute('src');
+      hideError();
+    } catch (browserError) {
+      console.error('Browser TTS also failed:', browserError);
+      showError(`Không thể phát thuyết minh: ${browserError.message}`);
     }
   } finally {
     detailPlayBtn.disabled = false;
     detailPlayBtn.textContent = previousText;
   }
+}
+
+function stopNarration() {
+  // Stop audio playback
+  detailAudioPlayer.pause();
+  detailAudioPlayer.currentTime = 0;
+  
+  // Stop browser speech synthesis
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+  }
+  
+  // Show play button, hide stop button
+  detailPlayBtn.style.display = 'inline-block';
+  detailStopBtn.style.display = 'none';
 }
 
 function goBackToList() {
@@ -420,11 +481,28 @@ function goBackToList() {
 function init() {
   loadLocationData();
 
-  detailLanguageSelect.addEventListener('change', () => {
-    updateUILanguage();
+  // Listen for language changes from nav bar - either custom event or select change
+  const langSelect = document.getElementById('site-language-select');
+  if (langSelect) {
+    langSelect.addEventListener('change', () => {
+      // Update UI text when language changes
+      updateAllUIText();
+    });
+  }
+  
+  // Also listen for custom event from nav.js
+  window.addEventListener('siteLanguageChanged', (e) => {
+    updateAllUIText();
   });
 
   detailPlayBtn.addEventListener('click', playNarration);
+  detailStopBtn.addEventListener('click', stopNarration);
+  
+  // Handle audio end event
+  detailAudioPlayer.addEventListener('ended', () => {
+    detailPlayBtn.style.display = 'inline-block';
+    detailStopBtn.style.display = 'none';
+  });
   
   if (detailBackBtn && detailBackBtn.tagName === 'A') {
     // If it's a link, that's fine
